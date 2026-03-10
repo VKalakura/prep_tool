@@ -1,0 +1,96 @@
+@import url('css.css');
+@import url('css2-1.css');
+@import url('css2-2.css');
+@import url('css2.css');
+
+.figcaption [role="contentinfo"] {padding-left:0.4rem;/*margin-left:0.4rem;*/border-left:0.1rem solid #c6c6c6;}
+
+.p_final .article .preBody .pubBox * {color:#494847;font-size:1.4rem;line-height:2rem;font-weight:400;}
+.preBody .pubBox [aria-hidden="true"],.preBody .pubBox span:not(.datpub):not(.datrev) {font-weight:500;}
+
+div[id*="promo"] {display:none;}
+/** NO SE NECESITAN ICONOS DE COMPARTIR EN APP **/
+/************************************************/
+.app_noticias .preBody .shareBox {display:none;}
+.app_noticias .preBody .dataBox {padding-bottom:1.2rem;border-bottom:0.1rem solid #c6c6c6;width:calc(100vw - 2.4rem);margin:0 auto;}
+/** NO SE NECESITAN ICONOS DE COMPARTIR EN APP **/
+/** END *****************************************/
+
+/** PEGATINAS TAGS ESPECIALES *******************/
+/************************************************/
+.p_final.content main[tag-especial] .breadtabs,
+.pf_contentBox:has(.pretitle.ladillo) > .breadtabs {padding:2.4rem;}
+.p_final.content main[tag-especial] .breadtabs > ul,
+.pf_contentBox:has(.pretitle.ladillo) > .breadtabs ul {display:none;}
+.p_final.content .summary .hddn {visibility:visible;}
+.p_final.content .summary .pretitle.ladillo {font-size:1rem;}
+.p_final.content .summary .hddn > *,.p_final.content .summary .pretitle.ladillo > * {display:flex;align-items:center;column-gap:0.8rem;}
+.p_final.content .summary .hddn a,.p_final.content .summary .pretitle.ladillo a {border:0 none;justify-content:flex-start;}
+.p_final.content .summary .hddn em,.p_final.content .summary .hddn strong,
+.p_final.content .summary .pretitle.ladillo strong,
+.p_final.content .summary .pretitle.ladillo a:before {text-transform:uppercase;font-style:normal;font-weight:700;letter-spacing:0.25pt;line-height:2.4rem;}
+.p_final.content .summary .hddn a > em,
+.p_final.content .summary .hddn a > strong,
+.p_final.content .summary .pretitle.ladillo strong {border-bottom:0.1rem solid transparent;}
+/* texto previo*/
+.p_final.content .summary .pretitle.ladillo.noticia a:before {content:"Noticia"}
+.p_final.content .summary .pretitle.ladillo.television a:before {content:"Televisi\0f3n"}
+.p_final.content .summary .pretitle.ladillo.radio a:before {content:"Radio"}
+.p_final.content .summary .pretitle.ladillo.deportes a:before {content:"Deportes"}
+
+.p_final.content .summary .pretitle.ladillo.recetas a:before {content:"Recetas"}
+.p_final.content .summary .pretitle.ladillo.entrevista a:before {content:"Entrevista"}
+.p_final.content .summary .pretitle.ladillo.reportaje a:before {content:"Reportaje"}
+.p_final.content .summary .pretitle.ladillo.tribuna a:before {content:"Tribuna"}
+.p_final.content .summary .pretitle.ladillo.analisis a:before {content:"An\0e1lisis"}
+
+
+
+/* ladillo / pegatina 
+.p_final.content .summary h2.ladillo {position:absolute;top:0;left:0;display:flex;align-items: center;}
+.p_final.content .summary h2.ladillo strong {font-size:1.8rem;color:#666;font-weight:700;text-transform:uppercase;font-style:normal;letter-spacing:1pt;padding-left:1rem;}
+.p_final.content .summary h2.ladillo a {display:flex;flex-direction:row;align-items:center;border-bottom:none;}
+.p_final.content .summary h2.ladillo a img {width:4rem;height:4rem;}*/
+
+/** PEGATINAS TAGS ESPECIALES *******************/
+/** END *****************************************/
+
+/** SUBCABECERA AUTORES *************************/
+/************************************************/
+/*colores*/
+.signBox {color:#6B6969;}
+/*fuentes*/
+.signBox .author {font-family:'Noto Serif','Roboto Slab','Roboto',sans-serif;font-size:1.7rem;line-height:2rem;font-weight:400;letter-spacing:-0.125pt;}
+.signBox .role {font-size:1.4rem;line-height:1.8rem;font-style:normal;padding-left:0.2rem;}
+/*estructura*/
+.signBox {justify-content:center;column-gap:2.8rem;position:relative;}
+.signBox,.signBox > * > div {display:flex;}
+.signBox > *:not(strong) {display:grid;grid-template-rows:1fr;grid-template-columns:6.4rem auto;align-items:center;column-gap:0.4rem;}
+.signBox > * > div {flex-direction:column;}
+
+.signBox .avatar {aspect-ratio:1;height:6rem;width:auto;border-radius:100%;}
+.signBox .avatar img {position:relative;height:7.6rem;width:auto;filter:grayscale(1) contrast(1.15);left:50%;transform:translate(-50%,-0.2rem);}
+.signBox .author {border-bottom:0.1rem solid transparent;}
+.signBox .avatar.no_ima {background:linear-gradient(90deg,#e9e9e9,#f9f9f9);position:relative;}
+.signBox .avatar.no_ima:before {content:'';border-radius:100%;overflow:hidden;width:100%;height:100%;display:inline-block;position:absolute;background:url("") no-repeat 50%;background-size:4rem;opacity:0.34;}
+/** SUBCABECERA AUTORES *************************/
+/** END *****************************************/
+
+
+/*datos/compartir*/
+.preBody .shareBox > li > a,.preBody .shareBox > li > button {padding:1.2rem;display:inline-block;overflow:hidden;}
+.preBody .shareBox .icon-label .rtve-icons {width:2.4rem;height:2.4rem;display:inline-block;background-repeat:no-repeat;background-position:50%;}
+	.preBody .shareBox .fbook .rtve-icons {background-image:url("");}
+	.preBody .shareBox .fcebk .rtve-icons {background-image:url("");}
+	.preBody .shareBox .equis .rtve-icons {background-image:url("");}
+	.preBody .shareBox .whats .rtve-icons {background-image:url("");}
+	.preBody .shareBox .blsky .rtve-icons {background-image:url("");}
+	.preBody .shareBox .links .rtve-icons {background-image:url("");}
+	.preBody .shareBox .bmark .rtve-icons {background-image:url("");}
+/*quitamos "anyadir a mis listas"*/
+.preBody .shareBox > li:has(.bmark) {display:none;}	
+/*mensajes emergentes botones*/
+.shareBox li:has(.links) {position:relative;}
+.preBody .shareBox .links + .toolBox {position:absolute;left:50%;top:50%;transform:translate(calc(-50% - 4.8rem - 2.4rem),-50%);padding:1.2rem;text-align:center;background-color:#fff;border:0.1rem solid lightgray;border-radius:0.6rem;box-shadow:0 0 1.6rem rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;width:calc(4.8rem * 6);height:calc(3.6rem + 2.4rem);z-index:1;}
+.preBody .shareBox .links + .toolBox strong {font-size:1.2rem;line-height:1.6rem;}
+.preBody .shareBox .links + .toolBox img,.preBody .shareBox .links:not(.be_on) + .toolBox {display:none;}

@@ -1,0 +1,42 @@
+@charset 'UTF-8';
+@import url('basics.fonts.css');
+@import url('basics.core.css');
+@import url('basics.icons.css');
+
+@import url('basics.header.css');
+@import url('basics.footer.css');
+
+@import url('basics.service.css');
+@import url('basics.breaking.css');
+
+
+@import url('basics.position.css');
+
+/*promociones*/
+.promo_mod > a,.promo_mod > a img,.promo_mod > object {display:inline-block;width:100%;}
+.promo_mod > a,.promo_mod > object {height:100%;}
+.promo_mod > a img {height:auto;}
+.promo_mod > div {display:inline-block;width:100% !important;}
+.promo_mod iframe {position:absolute;top:0;left:0;width:100% !important;height:100% !important;margin:0 auto}
+.promo_mod.f90x9 {overflow:hidden;}
+
+.listag *,.shortBox li a {display:inline-block;}
+.listag .boton a,.shortBox li a {padding:0 1.2rem;}
+.tag_head .listag .boton a,
+.navTag .listag .boton a,.shortBox li a {background-color:#e2e2e2;}
+.listag {padding:1em;}
+.listag li,.shortBox li {padding:0 0.2em;}
+body .totem .listag .boton a:hover,body .totem .listag .boton a:focus,
+.tag_head .listag .boton a:hover,.tag_head .listag .boton a:focus,
+.navTag .listag .boton a:hover,.navTag .listag .boton a:focus {background:#000;}
+.tag_head .listag .boton a:hover strong,.tag_head .listag .boton a:focus strong,
+.navTag .listag .boton a:hover strong,.navTag .listag .boton a:focus strong {color:#fff;}
+
+.photoBox .socialBox .share .blind {display:inline-block;}
+.photoBox .socialBox .share .blind img {background-image: url("");opacity:0.5;}
+
+/*player*/
+.figure .mediaBox .ico.redad {display:none}
+.figure span.redad img {left:0;top:0;width:2.8rem;height: 2.8rem;bottom:auto;opacity:1}
+.figure .video-js:not(.vjs-playing) .redad {opacity:1;display:inline-block!important;left:1.5em;top:1.5em;border-radius:100%;overflow:hidden;width:5.2rem;height:5.2rem;}
+.figure .video-js .redad img {background-image: url("");background-repeat:no-repeat;background-size: auto 100%;width: 4rem;height:4rem;}

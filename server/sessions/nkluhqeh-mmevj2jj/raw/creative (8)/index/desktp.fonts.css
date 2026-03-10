@@ -1,0 +1,360 @@
+html {-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+
+/*90px*//*hiperladillos*/
+.gointo > .g1.grid > h1 span:not(.titaux),
+.gointo > .g1.grid > .secBox span:not(.titaux),
+.bigTit > .grid > h1 span:not(.titaux),
+.bigTit > .grid > .secBox span:not(.titaux) {font-size:900%;line-height:1;}
+
+/*60px*//*marcadores en modulos de portada*/
+.notory .scoreBox .teams .score {font-size:600%;}
+.scoreBox .teams .score {line-height:1.1167em;}/*67*/
+
+
+/*42px*//*titulo nivel 1*//*caja busqueda pf*/
+.notory.g1 > .cell:first-child .mainBox .maintitle,.notory.g1 > .cell:first-child .mainBox .pretitle,
+.notory.g1 > .gridBox > .cell:first-child .mainBox .maintitle,.notory.g1 > .gridBox > .cell:first-child .mainBox .pretitle,
+.p_final_buscado .seekrBox input,
+.article h1 .maintitle,.article .pretitle,.boxComm .countBox strong,.tag_head .cell li span,
+.gointo h1 > .titaux,
+.gointo .secBox > .titaux,
+.bigTit h1 > .titaux,
+.bigTit .secBox > .titaux,
+.inside .slaves.size100.g2 .gridBox > .cell:first-child .txtBox .maintitle,.inside .slaves.size100.g2 .gridBox > .cell:first-child .txtBox .pretitle,
+.inside .slaves.size100.g3 .gridBox > .cell:first-child .txtBox .maintitle,.inside .slaves.size100.g3 .gridBox > .cell:first-child .txtBox .pretitle,
+.bloody:not(.inside) .slaves.size100.g2 .gridBox > .cell .maintitle,.bloody:not(.inside) .slaves.size100.g2 .gridBox > .cell .pretitle,
+.narracion .marcador_minuto div[class*='equipo'] .score span
+{font-size:420%;}
+.notory.g1 > .cell:first-child .mainBox .maintitle,.notory.g1 > .cell:first-child .mainBox .pretitle,
+.notory.g1 > .gridBox > .cell:first-child .mainBox .maintitle,.notory.g1 > .gridBox > .cell:first-child .mainBox .pretitle,
+.simply.arrays .no_ima .mainBox .maintitle,.article h1 .maintitle,.article .pretitle,.boxComm .countBox strong,
+.tag_head .cell li span,.gointo h1 > .titaux,.bigTit h1 > .titaux	{line-height:1;}/*42*/
+.p_final_buscado .seekrBox input {line-height:1.1429;}/*48*/
+.narracion .marcador_minuto div[class*='equipo'] .score span {line-height:1.1904761904761904761904761904762;}/*50*/
+
+
+/*30px*//*titulos nivel 2*/
+.notory > .cell:first-child .mainBox .maintitle,.notory > .cell:first-child .mainBox .pretitle,
+.notory > .gridBox > .cell:first-child .mainBox .maintitle,.notory > .gridBox > .cell:first-child .mainBox .pretitle,
+.bloody .g2 .slavesBox .mainBox .maintitle,.bloody .g2 .slavesBox .mainBox .pretitle,
+.simply.g1 .mainBox .maintitle,.simply.g1 .mainBox .pretitle,
+.simply.arrays .no_ima .mainBox .maintitle,
+.simply.arrays .no_ima .mainBox .pretitle,
+.scoreBox .teams strong,
+.services .searchBox input,
+.searchBox .results a,.lisComm .author + span
+{font-size:300%;}
+
+.notory > .cell:first-child .mainBox .maintitle,.notory > .cell:first-child .mainBox .pretitle,
+.notory > .gridBox > .cell:first-child .mainBox .maintitle,.notory .gridBox > .cell:first-child .mainBox .pretitle,
+.bloody .g2 .slavesBox .mainBox .maintitle,.bloody .g2 .slavesBox .mainBox .pretitle,
+.g2.size100 .slavesBox .mainBox .maintitle,.g2.size100 .slavesBox .mainBox .pretitle,
+.simply.g1 .mainBox .maintitle,.simply.g1 .mainBox .pretitle {line-height:1;} /*30px*/
+
+.simply.arrays .no_ima .mainBox .pretitle {line-height:1.1333;}/*34*/
+.scoreBox .teams strong {line-height:1.2000;}/*36px*/
+.lisComm .author + span {line-height:1.333333333333333}/*40px*/
+.services .searchBox input,
+.searchBox .results a {line-height:2;}/*60px*/
+
+/*26px*/
+.vjs-captions > * {font-size:260%;}
+.vjs-captions > * {line-height:1.25;}/*30*/
+
+/*24px*//*ladillos contenedores horizontales*//*subtitulos players*/
+.sliderBox header span,
+.more_galery > h3 span,
+.sliderBox header span,
+.striplayer .carta.article .falseH1 .maintitle,.recetasGen caption span {font-size:240%;}
+.sliderBox header span,.more_galery > h3 span,.sliderBox header span,.striplayer .carta.article .falseH1 .maintitle,.recetasGen caption span {line-height:1;}/*26*/
+
+/*22px*//*entradillas nivel 1*/
+.notory.g1 > .cell:first-child .mainBox .auxBox p,.notory.g1 > .cell:first-child .mainBox .auxBox li,
+.notory.g1 > .gridBox > .cell:first-child .mainBox .auxBox p,.notory.g1 .gridBox > .cell:first-child .mainBox .auxBox li,
+.sliderBox .xtras .datnum,
+.hooksBox .hour_,
+.bloody .simply.g3 .mainBox .maintitle,.bloody .simply.g3 .mainBox .pretitle,
+.simply.g2 .mainBox .maintitle,.simply.g2 .mainBox .pretitle,
+.mainBox .maintitle,.mainBox .pretitle,
+.grid.arrays .mainBox .maintitle,.grid.arrays .mainBox .pretitle,
+.notory.g1 > .gridBox > .cell:first-child .vjs-related .listBox .txtBox .maintitle
+{font-size:220%;}
+
+.mainBox .maintitle,.mainBox .pretitle,
+.grid.arrays .mainBox .maintitle,.grid.arrays .mainBox .pretitle {line-height:1;line-height:2.4rem;}/*22*/
+.hooksBox .hour_ {line-height:1.2273;}/*27*/
+.sliderBox .xtras .datnum {line-height:3.0909;}/*68*/
+ {line-height:1.090909090909091;}/*24*/
+
+/*21px*/
+.artBody .ladillo,.recetasGen thead th {font-size:2.1rem;}
+.artBody .ladillo,.recetasGen thead th {line-height:1.4286;}/*30*/
+
+/*20px*/
+.summary p,.summary >h2,.summary li,.tabH1,.breadtabs span,
+.grid > h1 span, .grid > h2 span,
+.grid > .secBox span,
+.artBody > p,.artBody > ul li,.artBody > ol li,
+.artBody > section > p,
+.artBody > .section > p,
+.cartela p,
+.cartela li,
+.artBody > section > ul li,
+.artBody > section > ol li,
+.artBody > .section > ul li,
+.artBody > .section > ol li {font-size:2rem;}
+
+.grid > h1 span, .grid > h2 span, .grid > .secBox span  {line-height:1.2;}/*24*/
+.summary li,.breadtabs span {line-height:1.3;}/*26*/
+.summary p,.summary >h2,.artBody p,.artBody ul li,.artBody ol li {line-height:1.5;}/*30*/
+.tabH1 {line-height:2;}/*40*/
+
+
+/*18px*//*entradillas nivel 2*//*pie de fotos en galerias*/
+.maintabs .blindBox .ico span,.subheader nav li .ico span,
+.notory > .cell:first-child .mainBox .auxBox p,.notory > .cell:first-child .mainBox .auxBox li,
+.simply.g2 .mainBox .auxBox p,.simply.g2 .mainBox .auxBox li,
+.simply.g3 .mainBox .auxBox p,.simply.g3 .mainBox .auxBox li,
+.simply.g1 .mainBox .auxBox p,.simply.g1 .mainBox .auxBox li,
+.legend > span,legend > span,.datesBox label,.radioBox label span,
+.boxComm .more_ span,
+.slideV + .controlBox .more_ span,
+.slideV + .spinnBox + .controlBox .more_ span,
+
+.sliderBox figcaption > div,.sliderBox figcaption .maintitle,
+.sliderBox [itemprop="description"],
+
+.article figcaption span,
+.article .figcaption span,
+.emisBox .navBox li span,
+.mainBox .auxBox p,.mainBox .auxBox li,
+.boton strong,.tag_head aside > span,
+.totemBox .mainBox .maintitle,
+.shortBox li a,.relcont li span,
+.artBody blockquote p,.botonera .botones input,
+.tab_direc .boton span,
+.minuto_a_minuto .texto {font-size:180%;}
+
+.tab_direc .boton span {line-height:2.222222222222222;}/*40*/
+.boton strong,.shortBox li a,.tag_head aside > span,.botonera .botones input {line-height:2;}/*36*/
+.artBody blockquote p {line-height:1.6667;}/*30*/
+.emisBox .navBox li span {line-height:1.7059;}/*29*/
+.legend > span,legend > span,.datesBox label,.radioBox label span {line-height:1.5294;}/*26*/
+
+.minuto_a_minuto .texto p {line-height:1.3333333333333333333333333333333;}/*24*/
+
+.sliderBox figcaption > div *,.sliderBox figcaption .maintitle,
+.sliderBox [itemprop="description"],
+.notory > .cell:first-child .mainBox .auxBox p,.notory > .cell:first-child .mainBox .auxBox li,
+.simply.g2 .mainBox .auxBox p,.simply.g2 .mainBox .auxBox li,
+.simply.g3 .mainBox .auxBox p,.simply.g3 .mainBox .auxBox li,
+.simply.g1 .mainBox .auxBox p,.simply.g1 .mainBox .auxBox li,
+.article figcaption span,
+.article .figcaption span,
+.mainBox .auxBox p,.mainBox .auxBox li,
+.totemBox .mainBox .maintitle,.relcont li span {line-height:1.2222222222222222222222222222222;}/*22*/
+
+
+
+.slideV + .controlBox .more_ span,
+.slideV + .spinnBox + .controlBox .more_ span,
+.boxComm .more_ span {line-height:3.333333333333333;}/*60*/
+
+/*17px*//*elementos totem*/
+.totemBox .mainBox .maintitle,.formsBox textarea,
+#divformcomentarios textarea,#divformcomentarios label,#divformcomentarios label + input, .searchBox input,
+.striplayer .carta.article .summary p,.recetasGen ol li,
+.recetasGen ul li {font-size:170%;}
+.totemBox .mainBox .maintitle {line-height:1.117647058823529;}/*19*/
+.formsBox textarea,#divformcomentarios textarea,#divformcomentarios label + input,
+.striplayer .carta.article .summary p,.recetasGen ol li,.recetasGen ul li {line-height:1.235294117647059;}/*21*/
+#divformcomentarios label {line-height:2;}
+
+/*16px*//*listados de tags*/
+.alfaBox li span,.article cite span,.services .mainBox .maintitle,.services .mainBox .pretitle {font-size:160%;}
+.alfaBox li span {line-height:1;}
+.services .mainBox .maintitle {line-height:1.25;}/*20*/
+
+/*15px*//*entradillas nivel 3*//*firma y fecha fotos en galerias*/
+.breadtabs .endtag,.signBlock .pubBox span,.mainBox .pubBox span,.arrow .more_ .maintitle,
+.videoDirecto .topBox .datpub strong,
+.videoDirecto .topBox .txtBox > *,.author em, .author span:first-child, .narracion .name strong,
+.totemBox .signBlock span,
+.boxComm .countBox span,
+.lisComm p,
+.tag_head p,.artBody .figcaption span,.boxComm nav li span,
+.sliderBox figcaption em,.sliderBox figcaption .fecha,.emisBox .txtBox .pretitle,
+.article .figcaption div > em,
+.artBody .figcaption p[itemprop="description"],
+.narracion .marcador_minuto div[class*='equipo'] .nombre {font-size:150%;}
+.narracion .marcador_minuto div[class*='equipo'] .nombre {line-height:1.133333333333333;}/*17*/
+.boxComm .countBox span,.narracion .name strong {line-height:1.2667;}/*19*/
+.tag_head p,.arrow .more_ .maintitle,.lisComm p,.artBody .figcaption span {line-height:1.333333333333333;}/*20*/
+.article .figcaption div > em {line-height:2.2rem;}
+.sliderBox figcaption em,.sliderBox figcaption .fecha {line-height:1.5333333333333333333333333333333;}/*23*/
+.pubBox span, .article .pubBox + .author .name,
+.videoDirecto .pagBox .datpub strong,
+.videoDirecto .pagBox .txtBox > *,.emisBox .txtBox .pretitle {line-height:1.6667;}/*25*/
+.boxComm nav li span {line-height:2;}/*30*/
+
+/*14px*/
+.emisBox .txtBox .maintitle,.services .mainBox .pubBox span,.services .mainBox .duration {font-size:140%;}
+.emisBox .txtBox .maintitle {line-height:1.1428571428571428571428571428571;}/*16*/
+.services .mainBox .pubBox span {line-height:2rem;}
+
+
+/*13px*/
+.tematics li span,
+.ico.play > span,
+.listBox .txtBox span,
+.prograBox .datpub strong,
+.mainBox .datpub,
+form .nota,textarea + em,.formsBox .vSlide span,#botonCaptcha,
+.narracion .marcador_minuto .min_apunte span {font-size:130%;}
+.listBox .txtBox span {line-height:1.2308;}/*16*/
+.prograBox .datpub strong {line-height:1.3077;}/*17*/
+.totemBox .mainBox .datpub {line-height:1.615384615384615;}/*21*/
+.tematics li span,.ico.play > span,form .nota,textarea + em,.formsBox .vSlide span,#botonCaptcha {line-height:2;}/*26*/
+
+
+
+.videoDirecto .topBox .datpub strong,
+.videoDirecto .topBox .txtBox > * {font-size:150%;}
+.videoDirecto .pagBox .datpub strong,
+.videoDirecto .pagBox .txtBox > * {line-height:1.6667;font-family:'Haas55','Helvetica','Arial',sans-serif;font-weight:normal;}
+
+
+
+/*12px*/
+.hooksBox .date_,.socialBox .datnum,.hooksBox a > em,.scoreBox .teams em {font-size:120%;}
+.socialBox .datnum,.hooksBox a > em,.scoreBox .teams em {line-height:1.1667;}/*14*/
+.hooksBox .date_ {line-height:1;}/*12*/
+
+
+
+
+/*efectos*/
+.pepe {text-transform:uppercase;}
+
+/*kerning*/
+
+
+.totemBox .mainBox .maintitle,.services .mainBox .maintitle {letter-spacing:0;}
+
+.mainBox .maintitle,.mainBox .pretitle {letter-spacing:-0.25pt;}
+.mainBox .auxBox p,.mainBox .auxBox li,.mainBox .relcont li {letter-spacing:0.25pt;}
+
+
+.artBody > p,.artBody > section > p,.artBody > .section > p,
+.cartela p,
+.artBody .figcaption span {letter-spacing:0.15pt;}
+
+.mainBox .auxBox p,.mainBox .auxBox li,.mainBox .relcont li,.totemBox .mainBox .maintitle {word-spacing:-0.75pt;}
+.mainBox .maintitle,.mainBox .pretitle,.artBody .figcaption span {word-spacing:-1pt;}
+
+.sliderBox header span,
+.more_galery > h3 span,
+.sliderBox header span {letter-spacing:0.5pt;word-spacing:-2pt;}
+.tabH1 {word-spacing:normal;}
+
+.grid > h1 span, .grid > h2 span {letter-spacing:0;word-spacing:-1pt;}
+
+
+.notory.g1 > .gridBox > .cell:first-child .mainBox .maintitle, .notory.g1 > .gridBox > .cell:first-child .mainBox .pretitle {word-spacing:-2pt;}
+
+
+.tag_head .cell li span {letter-spacing:-1pt;}
+.tag_head .cell li h1 span {letter-spacing:-0.25pt;word-spacing:-2pt;}
+
+.gointo > .g1.grid > h1 span:not(.titaux),.bigTit > .grid > h1 span:not(.titaux),
+.gointo > .g1.grid > .secBox span:not(.titaux),.bigTit > .grid > .secBox span:not(.titaux){letter-spacing:-1.5pt;}
+.gointo h1 > .titaux {}
+
+.tab_direc .boton span {letter-spacing:0.2pt;}
+.maintabs .blindBox .ico span {letter-spacing:0.4pt;}
+
+.artBody > p,.artBody > section > p,.artBody > .section > p,
+.artBody > .section > ul li, .artBody > .section > ol li,
+.cartela p,
+.sliderBox figcaption p,.sliderBox figcaption span,.arrow .more_ .maintitle,.emisBox .navBox li span
+{letter-spacing:0.25pt;}
+.emisBox .txtBox .pretitle,.emisBox .txtBox .maintitle,.hooksBox .date_,.article figcaption span,.article > .figure .figcaption span
+{letter-spacing:0.5pt;}
+.stat1 .date_ {letter-spacing:1.25pt;}
+.vjs-captions > * {letter-spacing:1pt;}
+
+.article h1 .maintitle,.article .pretitle {word-spacing:0.5pt;}
+
+
+/** new SIZES ****************************/
+/************************************************/
+
+/*por defecto*/.mainBox .maintitle {font-size:2.2rem;line-height:2.6rem;}
+/*por defecto*/article .mainBox .auxBox * {font-size:1.7rem !important;line-height:2.3rem !important;}
+              .gridBox>.cell:first-child .mainBox .auxBox li {font-size:1.7rem !important;line-height:2.3rem !important;}
+/*por defecto*/article .mainBox .auxBox > *:not(.author) {margin-top:0.8rem;}
+/*por defecto*/article .mainBox .auxBox ul > li {margin:0.4rem 0;padding-left:1.6rem;}
+
+.mod.notic_mod.falseMaintitle .auxBox #spanEntrad {margin-top: 0.8rem;display:inline-block;width:100%;}
+
+.mainBox a>.pretitle,.mainBox a>.maintitle {border-bottom:0.1rem solid transparent;margin-bottom:-0.1rem;}
+
+.container[data-tipo=mod_maquetacion]:not(.inside):not(.striplayer) .mainBox a:hover>.pretitle,
+.container[data-tipo=mod_maquetacion]:not(.inside):not(.striplayer) .mainBox a:hover>.maintitle {color:#000;}
+
+.container[data-tipo=mod_maquetacion].inside .mainBox a:hover>.pretitle,
+.container[data-tipo=mod_maquetacion].inside .mainBox a:hover>.maintitle {color:#fff;}
+
+.container[data-tipo=mod_maquetacion]:not(.bloody):not(.striplayer) .g3.notory .gridBox>.cell:nth-child(2) a:hover > .maintitle,
+.container[data-tipo=mod_maquetacion]:not(.bloody):not(.striplayer) .g3.notory .gridBox>.cell:nth-child(3) a:hover > .maintitle,
+.container[data-tipo=mod_maquetacion]:not(.bloody):not(.striplayer) .g3.notory .gridBox>.cell:nth-child(2) a:hover > .pretitle,
+.container[data-tipo=mod_maquetacion]:not(.bloody):not(.striplayer) .g3.notory .gridBox>.cell:nth-child(3) a:hover > .pretitle,
+.g3.notory.size100 .slavesBox>.cell a:hover > .maintitle {color:#000;}
+
+
+.txtsize_05 .txtBox h2,.txtsize_04 .txtBox h2 {font-size:inherit;}
+
+.notory.size_75>.gridBox>.cell:first-child .txtsize_03 .mainBox .maintitle {font-size:3rem;line-height:3.6rem;}
+.notory.size_75>.gridBox>.cell:first-child .txtsize_04 .mainBox .maintitle {font-size:3.4rem;line-height:4rem;}
+.notory.size_75>.gridBox>.cell:first-child .txtsize_05 .mainBox .maintitle {font-size:4.2rem;line-height:4.8rem;line-height:4.6rem;}
+
+.notory.size_75>.gridBox>.cell:nth-child(2) .txtsize_04 .mainBox .maintitle,
+.notory.size_75>.gridBox>.cell:nth-child(3) .txtsize_04 .mainBox .maintitle {font-size:2.6rem;line-height:3rem;}
+.notory.size_75>.gridBox>.cell:nth-child(2) .txtsize_05 .mainBox .maintitle,
+.notory.size_75>.gridBox>.cell:nth-child(3) .txtsize_05 .mainBox .maintitle {font-size:3rem;line-height:3.4rem;}
+.notory.size_75>.gridBox>.cell:nth-child(2) .txtsize_06 .mainBox .maintitle,
+.notory.size_75>.gridBox>.cell:nth-child(3) .txtsize_06 .mainBox .maintitle {font-size:3.4rem;line-height:3.8rem;}
+
+.notory.size_75>.gridBox>.cell:first-child .txtsize_06 .mainBox .maintitle {font-size:5.4rem;line-height:6rem;line-height:5.8rem;}
+.notory.size_60>.gridBox>.cell:first-child .txtsize_03 .mainBox .maintitle {font-size:3rem;line-height:3.6rem;}
+.notory.size_60>.gridBox>.cell:first-child .txtsize_04 .mainBox .maintitle {font-size:3.4rem;line-height:4rem;}
+.notory.size_60>.gridBox>.cell:first-child .txtsize_05 .mainBox .maintitle {font-size:4.2rem;line-height:4.8rem;line-height:4.6rem;}
+.notory.size_60>.gridBox>.cell:first-child .txtsize_06 .mainBox .maintitle {font-size:5.4rem;line-height:6rem;line-height:5.8rem;}
+.notory.size100>.gridBox>.cell:first-child .txtsize_03 .mainBox .maintitle {font-size:4.2rem;line-height:4.6rem;}
+.notory.size100>.gridBox>.cell:first-child .txtsize_04 .mainBox .maintitle {font-size:4.6rem;line-height:5.2rem;}
+.notory.size100>.gridBox>.cell:first-child .txtsize_05 .mainBox .maintitle {font-size:5.4rem;line-height:6rem;line-height:5.8rem;}
+.notory.size100>.gridBox>.cell:first-child .txtsize_06 .mainBox .maintitle {font-size:6.6rem;line-height:7.2rem;line-height:7rem;}
+
+
+.simply.size_50 .txtsize_04 .mainBox .maintitle {font-size:2.6rem;line-height: 3rem;}
+.simply.size_50 .txtsize_05 .mainBox .maintitle {font-size: 3rem;line-height: 3.4rem;}
+.simply.size_50 .txtsize_06 .mainBox .maintitle {font-size: 3.4rem;line-height: 3.8rem;}
+
+.simply.size_25 .txtsize_04 .mainBox .maintitle {font-size:2.6rem;line-height: 3rem;}
+.simply.size_25 .txtsize_05 .mainBox .maintitle {font-size: 3rem;line-height: 3.4rem;}
+.simply.size_25 .txtsize_06 .mainBox .maintitle {font-size: 3.4rem;line-height: 3.8rem;}
+
+/** SIMULACION SIZES ****************************/
+/** END *****************************************/
+
+
+
+
+
+/*texto enlace con tamano de titulo*/
+.links_mod.txtsize_01 .mainBox .maintitle {font-size:1.6rem;line-height:2.2rem;}
+.links_mod.txtsize_02 .mainBox .maintitle {font-size:1.8rem;line-height:2.4rem;}
+.links_mod.txtsize_03 .mainBox .maintitle {font-size:2rem;line-height:2.6rem;}
+.links_mod.txtsize_04 .mainBox .maintitle {font-size:2.4rem;line-height:3.2rem;}
+.links_mod.txtsize_05 .mainBox .maintitle {font-size:2.8rem;line-height:3.4rem;}
+.links_mod.txtsize_06 .mainBox .maintitle {font-size:3.4rem;line-height:4rem;}

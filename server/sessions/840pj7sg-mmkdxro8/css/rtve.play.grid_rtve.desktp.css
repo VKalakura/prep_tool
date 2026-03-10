@@ -1,0 +1,119 @@
+@charset 'UTF-8';
+@import url('rtve.play.grids.basics.css');
+
+/** TIRAS BANNERS 4:1 ***************************/
+/************************************************/
+.video_mod {position:relative;}
+.video_mod .ima {padding-top:46.25%;}
+.incluBox .video_mod .rtve-icons:after {display:none;}
+
+/* texto*/
+.video_mod .content {position:absolute;display:flex;align-items:flex-end;height:100%;bottom:0;z-index:2;}
+.video_mod .txtBox {padding:0 50% 7rem 2.6rem;}
+.video_mod .txtBox * {color:#fff;font-size:1.5rem;line-height:2.1rem;}
+.video_mod .pretitle {display:block;font-size:1.3rem;text-transform:uppercase;font-weight:500;letter-spacing:1pt;padding-bottom:0.4rem;}
+.video_mod .maintitle {display:block;color:#fff;font-size:2.8rem;line-height:3.2rem;font-weight:300;padding-bottom:0.8rem;}
+.video_mod .txtBox p:not(.legend) {font-weight:300;margin-bottom:0;}
+
+.video_mod .ima .i_logo {top:auto;left:auto;bottom:1rem;right:2rem;width:20%;max-width:24rem;z-index:2;}
+.video_mod .ima .i_prvw {height:100%;width:auto;right:0;left:calc(50% + 4.6rem);top:50%;transform: translate(-50%, -50%) scale(1.25);}
+.video_mod.bkg_black .ima:before {content:'';width:50%;height:100%;position:absolute;left:0;top:0;display:inline-block;
+	background:rgba(17,17,17,0.67);
+	background:-moz-linear-gradient(left,rgba(17,17,17,1) 9.6rem, rgba(17,17,17,0) 100%);
+	background:-webkit-linear-gradient(left,rgba(17,17,17,1) 9.6rem,rgba(17,17,17,0) 100%);
+	background:linear-gradient(to right,rgba(17,17,17,1) 9.6rem,rgba(17,17,17,0) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#111111',endColorstr='#00111111',GradientType=1);
+	z-index:1;}
+.video_mod.bkg_color .ima:before {content:'';width:100%;height:100%;position:absolute;left:0;top:0;display:inline-block;z-index:1;
+	background-repeat:no-repeat;background-position:0 0;background-size:auto 100%;
+	background-image:url("");}
+
+/*.video_mod .goto_media {z-index:2;}*/
+.video_mod .goto_media .progressBar {position:absolute;display:flex;width:15rem;height:3.6rem;left:2.6rem;bottom:2rem;text-align:center;background:rgba(255,255,255,1);border-radius:0.3rem;overflow:hidden;opacity:0.67;z-index:1;}
+.video_mod a:hover .goto_media .progressBar {opacity:1;}
+.video_mod .goto_media .progressBar em {position:absolute;top:1.2rem;left:4rem;font-style:normal;font-size:1.4rem;text-transform:uppercase;letter-spacing:0.25pt;font-weight:700;color:#000;}
+.video_mod .goto_media .progressBar strong {display:flex;align-items:center;justify-content:flex-start;height:100%;}
+.video_mod .goto_media .progressBar strong:before {content:'';background:url("") no-repeat 50%;background-size:100%;
+	position:absolute;top:0.8rem;left:0.5rem;width:2rem;height:2rem;display:inline-block;opacity:0.67;margin:0 0.8rem;}
+
+.incluBox .video_mod .goto_media .rtve-icons {position:absolute;width:10rem;height:4rem;top:1.4rem;left:2.8rem;z-index:1;}
+.incluBox .video_mod.bkg_black .goto_media .rtve-icons {background:url("") no-repeat;background-size:100%;}
+.incluBox .video_mod.bkg_color .goto_media .rtve-icons {background:url("") no-repeat;}
+
+/*noticias*/
+.noticias .video_mod .ima {padding-top:46.25%;background-color:#000;}
+.noticias .video_mod .ima .i_logo {top:2.4rem;left:auto;right:2rem;width:20%;max-width:24rem;z-index:2;}
+.noticias .video_mod .ima .i_prvw {height:calc(100% - 4.8rem);width:auto;right:2.4rem;left:auto;top:50%;transform: translateY(-50%);}
+
+/*playz*/
+.playz .video_mod .txtBox {position:static;}
+.playz .incluBox {border:0;background:transparent;}
+
+@media only screen and (max-width:1159px){
+	/*.video_mod .pretitle {font-size:1.3rem;}*/
+	body:not(.pfvideo.embed) .video_mod .maintitle {font-size:2.4rem;line-height:3rem;}
+	body:not(.pfvideo.embed) .video_mod .txtBox p:not(.legend) {font-size:1.4rem;line-height:2rem;}
+}
+@media only screen and (max-width:1090px){
+	body:not(.pfvideo.embed) .video_mod .txtBox p:not(.legend) {display:none;}
+}
+/** TIRAS BANNERS 4:1 ***************************/
+/** END *****************************************/
+
+/** INCLUBOX VIDEO ******************************/
+/************************************************/
+.incluBox .video_mod .content {bottom:5rem;}
+.incluBox .video_mod .goto_media .progressBar {position:relative;display:inline-block;width:auto;height:3.6rem;left:2.6rem;bottom:5.5rem;background:rgba(255,255,255,1);border-radius:0.3rem;overflow:hidden;opacity:0.67;z-index:1;}
+.incluBox .video_mod .goto_media .progressBar em {position:static;top:1.2rem;left:4rem;padding-right:1.5rem;padding-left:4.5rem;font-style:normal;font-size:1.4rem;text-transform:uppercase;letter-spacing:0.25pt;font-weight:700;color:#000;}
+.incluBox .video_mod .goto_media .progressBar strong {position:relative;display:flex;width:auto;height:100%;align-items:center;justify-content:flex-start;}
+.incluBox .video_mod a:hover .goto_media .progressBar {opacity:1;}
+/** INCLUBOX VIDEO ******************************/
+/** END *****************************************/
+
+/** INCLUBOX AUDIO ******************************/
+/************************************************/
+/* general */
+.incluBox .audio_mod {position:relative;overflow:hidden;width:100%;height:100vh;max-height:27.2rem;}
+.incluBox .audio_mod .mainBox {position:relative;overflow:hidden;display:flex;width:100%;height:100vh;max-height:27.2rem;}
+/* texto*/
+.incluBox .audio_mod .txtBox * {color:#fff;font-size:1.2rem;line-height:1.6rem;}
+.incluBox .audio_mod .content {padding:2.5rem;padding-bottom:5rem;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;;width:50%;z-index:0;}
+.incluBox .audio_mod .maintag {margin-bottom:1rem;float:left;order:1;z-index:1;}
+.incluBox .audio_mod .txtBox {order:2;padding:0 0 0.8rem 0;width:100%;z-index:1;}
+.incluBox .audio_mod .pretitle {display:block;text-transform:uppercase;letter-spacing:1pt;padding-bottom:0.4rem;word-spacing:0.3pt;}
+.incluBox .audio_mod .maintitle {display:block;color:#fff;font-size:1.8rem;line-height:2.2rem;font-weight:400;padding-bottom:0.8rem;letter-spacing:0;word-spacing:0;}
+.incluBox .maintag span {padding:0.4rem 0.8rem;}
+.incluBox .maintag {border-radius:0.3rem;background:#a30950;
+	background: -moz-linear-gradient(-30deg, #a30950 0%, #ff4200 100%);
+	background: -webkit-linear-gradient(-30deg, #a30950 0%, #ff4200 100%);
+	background: linear-gradient(125deg, #a30950 0%, #ff4200 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a30950', endColorstr='#ff4200',GradientType=1 );}
+.incluBox .maintag span {display: inline-block;color:#fff;font-size:1.2rem;font-weight:500;text-transform:uppercase;line-height:1.6rem;letter-spacing:0.5pt;}
+/* imagen general*/
+.incluBox .audio_mod .ima .ico {top:auto;left:auto;bottom:1rem;right:2rem;width:20%;max-width:24rem;z-index:2;}
+.incluBox .audio_mod .ima {width:50%;}
+.incluBox .audio_mod .ima img {height:100%;width:auto;left:50%;top:0;transform:translate(-50%, 0);}
+.incluBox .audio_mod.bkg_color .content:before {content:'';width:100%;height:100%;position:absolute;left:-40%;top:0;display:inline-block;opacity:0.85;z-index:0;
+	background-repeat:no-repeat;background-position:0 0;background-size:auto 100%;transform:rotateY(180deg);
+	background-image:url("");}
+/* icono rtve */
+.incluBox .audio_mod .goto_media .rtve-icons {position:absolute;width:10rem;height:4rem;top:1.4rem;left:2.8rem;z-index:1;}
+.incluBox .audio_mod.bkg_black .goto_media .rtve-icons {background:url("") no-repeat;background-size:100%;}
+.incluBox .audio_mod.bkg_color .goto_media .rtve-icons {background:url("") no-repeat;}
+
+/*embed solo enlace*/
+.incluBox .audio_mod .goto_media .progressBar {position:relative;display:inline-block;width:auto;height:3.6rem;left:2.6rem;bottom:5.5rem;background:rgba(255,255,255,1);border-radius:0.3rem;overflow:hidden;opacity:0.67;z-index:1;}
+.incluBox .audio_mod .goto_media .progressBar em {top:1.2rem;left:4rem;padding-right:1.5rem;font-style:normal;font-size:1.4rem;text-transform:uppercase;letter-spacing:0.25pt;font-weight:700;color:#000;}
+.incluBox .audio_mod .goto_media .progressBar strong {position:relative;display:flex;width:auto;height:100%;align-items:center;justify-content:flex-start;}
+.incluBox .audio_mod .goto_media .progressBar strong:before {content:'';background:url("") no-repeat 50%;background-size:100%;
+	top:0.8rem;left:0.5rem;width:2rem;height:2rem;display:inline-block;opacity:0.67;margin:0 0.8rem 0 1.5rem;}
+/*imagen de fondo*/
+.incluBox .audio_mod {background-color:#000;}
+.incluBox .audio_mod .backimaging {position:absolute;left:0;top:0;width:100%;height:100%;background-size:100% auto;background-repeat:no-repeat;background-position:50%;opacity:0.5;filter:blur(0.3rem);}
+.incluBox .audio_mod a:hover .goto_media .progressBar {opacity:1;}
+
+/* reset */
+.incluBox .audio_mod .rtve-icons:after {display:none;}
+
+/** INCLUBOX AUDIO ******************************/
+/** END *****************************************/

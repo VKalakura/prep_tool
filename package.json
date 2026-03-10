@@ -1,0 +1,14 @@
+{
+  "name": "offer-prep-tool",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "_dev": "concurrently --names \"API,UI\" --prefix-colors \"cyan,magenta\" \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "build": "npm --prefix client run build",
+    "start": "concurrently --names \"API,UI\" \"npm --prefix server run start\" \"npm --prefix client run preview\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

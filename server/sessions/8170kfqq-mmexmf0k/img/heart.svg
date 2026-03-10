@@ -1,0 +1,11 @@
+<svg aria-label="" class="d_D atm-icon__heart g_fW g_fW" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="heart-lg-7" x1="50.4781161%" x2="49.5650705%" y1="15.180353%" y2="83.9872167%">
+            <stop offset="0%" stop-color="#808080"></stop>
+            <stop offset="100%" stop-color="#909090"></stop>
+        </linearGradient>
+    </defs>
+    <path class="d_fY d_aL"
+          d="M22.061 3.95a6.604 6.604 0 00-4.696-1.935 6.62 6.62 0 00-4.701 1.94l-.656.653-.667-.663A6.637 6.637 0 006.635 2c-1.77 0-3.44.689-4.691 1.934A6.532 6.532 0 000 8.614a6.55 6.55 0 001.954 4.673l9.555 9.51c.132.132.31.203.483.203a.688.688 0 00.484-.197l9.575-9.495A6.558 6.558 0 0024 8.628 6.527 6.527 0 0022.06 3.95z"
+          fill="url(#heart-lg-7)" fill-rule="evenodd"></path>
+</svg>

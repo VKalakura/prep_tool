@@ -1,0 +1,20 @@
+@import url('rtve.basics.commons.css');
+@import url('rtve.desktp.commons.css');
+@import url('rtve.basics.p_final.content.css');
+@import url('rtve.desktp.p_final.content.css');
+@import url('rtve.p_final.desktp.css');
+
+/*tabBox*/
+.tabBox .tab {overflow: hidden; border: 1px solid #ccc; background-color: #f1f1f1;}
+.tabBox .tab button {background-color: inherit; float: left; border: none; outline: none; cursor: pointer; padding: 14px 16px; transition: 0.3s; font-size: 17px;}
+.tabBox .tab button:hover {background-color: #ddd;}
+.tabBox .tab button.active {background-color: #ccc;}
+
+.tabBox .tabcontent {display:none;}
+.tabBox .tabcontent.active {display:block;}
+
+
+/*ESTA ES EL CSS ORIGINAL DE LAS PFS DE RTVE*/
+
+/* arreglo iframe */
+iframe[src*="ebu"] {min-height:24rem;}

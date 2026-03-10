@@ -1,0 +1,1672 @@
+@charset "utf-8";
+
+/*#opta-widgets-motor-detalle div, #opta-widgets-motor-detalle span,
+#opta-widgets-motor-detalle h2, #opta-widgets-motor-detalle h3, #opta-widgets-motor-detalle h4,
+#opta-widgets-motor-detalle h5, #opta-widgets-motor-detalle h6, #opta-widgets-motor-detalle p, 
+#opta-widgets-motor-detalle blockquote, #opta-widgets-motor-detalle pre, #opta-widgets-motor-detalle a, 
+#opta-widgets-motor-detalle abbr, #opta-widgets-motor-detalle acronym, #opta-widgets-motor-detalle address,
+#opta-widgets-motor-detalle big, #opta-widgets-motor-detalle cite, #opta-widgets-motor-detalle code,
+#opta-widgets-motor-detalle del, #opta-widgets-motor-detalle dfn, #opta-widgets-motor-detalle em,
+#opta-widgets-motor-detalle img, #opta-widgets-motor-detalle ins, #opta-widgets-motor-detalle kbd,
+#opta-widgets-motor-detalle q, #opta-widgets-motor-detalle s, #opta-widgets-motor-detalle samp,
+#opta-widgets-motor-detalle small, #opta-widgets-motor-detalle strike, #opta-widgets-motor-detalle strong,
+#opta-widgets-motor-detalle sub, #opta-widgets-motor-detalle sup, #opta-widgets-motor-detalle tt,
+#opta-widgets-motor-detalle var, #opta-widgets-motor-detalle b, #opta-widgets-motor-detalle u,
+#opta-widgets-motor-detalle i, #opta-widgets-motor-detalle center, #opta-widgets-motor-detalle dl,
+#opta-widgets-motor-detalle dt, #opta-widgets-motor-detalle dd, #opta-widgets-motor-detalle ol, 
+#opta-widgets-motor-detalle ul, #opta-widgets-motor-detalle li, #opta-widgets-motor-detalle fieldset,
+#opta-widgets-motor-detalle form, #opta-widgets-motor-detalle label, #opta-widgets-motor-detalle legend,
+#opta-widgets-motor-detalle table, #opta-widgets-motor-detalle caption, #opta-widgets-motor-detalle tbody,
+#opta-widgets-motor-detalle tfoot, #opta-widgets-motor-detalle thead, #opta-widgets-motor-detalle tr,
+#opta-widgets-motor-detalle th, #opta-widgets-motor-detalle td, #opta-widgets-motor-detalle article,
+#opta-widgets-motor-detalle aside, #opta-widgets-motor-detalle canvas, #opta-widgets-motor-detalle details,
+#opta-widgets-motor-detalle embed, #opta-widgets-motor-detalle figure, #opta-widgets-motor-detalle figcaption,
+#opta-widgets-motor-detalle footer, #opta-widgets-motor-detalle header, #opta-widgets-motor-detalle hgroup, 
+#opta-widgets-motor-detalle menu, #opta-widgets-motor-detalle nav, #opta-widgets-motor-detalle output,
+#opta-widgets-motor-detalle ruby, #opta-widgets-motor-detalle section, #opta-widgets-motor-detalle summary,
+#opta-widgets-motor-detalle time, #opta-widgets-motor-detalle mark, #opta-widgets-motor-detalle audio,
+#opta-widgets-motor-detalle video {
+	margin:0;
+	padding:0;
+	border:0;
+	font-size:100%;
+	font-style:normal;
+	font:inherit;
+	vertical-align:baseline;
+}*/
+
+
+
+
+/*
+-----------------------------------------------------
+	WIDGET OPTA MOTOR
+-----------------------------------------------------
+*/
+#opta-widgets-motor-detalle {
+	font-family:Arial, Consolas, Arial, Helvetica, sans-serif;
+	font-size:13px;
+}
+
+#opta-widgets-motor-detalle .opta-powerby {
+	margin:4px;
+	float:right;
+}
+#opta-widgets-motor-detalle .opta-tabla{
+	margin:0;padding:0;border:0;
+	padding-top:0px;
+}
+
+#opta-widgets-motor-detalle .opta-linea-18{
+	width:100%;
+	line-height:18px;
+}
+#opta-widgets-motor-detalle .opta-linea-18-border{width:100%;line-height:18px;border-bottom: 1px solid #CCC;}
+
+#opta-widgets-motor-detalle .opta-linea-fondos-cab{
+	background:#E4E4E4;
+	font-weight:bold;
+
+}
+
+#opta-widgets-motor-detalle .opta-linea-2{
+	line-height:2px;
+	background:#FFF;
+}
+
+#opta-widgets-motor-detalle .opta-linea-5-borde{
+	line-height:5px;
+	background:#FFF;
+	border:0.1rem solid #CCC;
+}
+
+#opta-widgets-motor-detalle .opta-linea-22{
+	line-height:22px;
+	margin-bottom:4px;
+	width:100%;
+}
+
+#opta-widgets-motor-detalle .opta-linea-25-borde{
+	line-height:25px;background:#FFF;border:1px solid #CCC;border-top: none;
+}
+	
+#opta-widgets-motor-detalle .opta-bandera{
+	max-width: 100%;
+}
+
+
+#opta-widgets-motor-detalle .opta-linea-25-borde:hover{
+	background:#e4e4e4;
+	cursor:default;
+	
+}
+
+#opta-widgets-motor-detalle .opta-linea-cal-flag{
+	width:100%;
+	line-height:20px;
+}
+#opta-widgets-motor-detalle .opta-linea-cal-fecha{
+	line-height:10px;
+}
+#opta-widgets-motor-detalle .opta-celda{
+	float:left;
+	width:20%
+	
+}
+#opta-widgets-motor-detalle .opta-celda-comparar{
+	float:left;
+	/*width:20%
+	*/
+	
+}
+
+#opta-widgets-motor-detalle .opta-celda-right{
+	float:right;
+}
+
+
+/*
+--------------------------------------------------------
+MENU
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-menu {margin:0;padding:0;border:0;}
+
+#opta-widgets-motor-detalle .opta-menu .opta-linea-menu{background:#FC1E2E;background:#e5e5e5;}
+#opta-widgets-motor-detalle .opta-menu .opta-opcion{width: 25% !important;display: inline-grid;font-size:16px;text-align:center;color:#666;	
+	*zoom: 1;
+	*display: inline;text-overflow: ellipsis;overflow: hidden;padding: 1.6rem 1rem;
+}
+#opta-widgets-motor-detalle .opta-menu .opta-opcion.activa {color:#FFF;background: #504f4f;}
+
+
+
+/*
+--------------------------------------------------------
+CALENDARIO
+--------------------------------------------------------
+*/
+
+#opta-widgets-motor-detalle .opta-calendario .opta-cal-titulo{
+	line-height:25px;
+	color:#FFF;
+	background:#FC1E2E;background:#e5e5e5;
+	padding:6px;
+	margin-bottom:3px;border-left:1px solid #FC1E2E;border-color:#e5e5e5;
+}
+#opta-widgets-motor-detalle .opta-calendario {
+	margin:0;padding:0;border:0;
+}
+
+#opta-widgets-motor-detalle .opta-calendario .opta-linea-cab{
+	line-height:20px;
+	background:#666;
+}
+#opta-widgets-motor-detalle .opta-calendario .opta-texto-cab{color:#FFF;}
+#opta-widgets-motor-detalle .opta-calendario .opta-linea-det{line-height:25px;}
+#opta-widgets-motor-detalle .opta-calendario .opta-linea-det:hover{
+	line-height:25px;
+	background:#e4e4e4;
+}
+
+#opta-widgets-motor-detalle .opta-calendario .opta-jornada-cab{
+	width:4%;
+	
+}
+#opta-widgets-motor-detalle .opta-calendario .opta-jornada{
+	width:4%;
+	text-align:center;
+	color:#000;
+	background:#FC1E2E;background:#e5e5e5;
+}
+#opta-widgets-motor-detalle .opta-calendario .opta-pais{
+	width:24px;
+	margin-left:5px;
+	vertical-align:middle;
+}
+
+#opta-widgets-motor-detalle .opta-calendario .opta-gpremio{
+	padding-left:5px;
+	width:40%;
+	border-bottom:0.1rem solid #CCC;
+}
+#opta-widgets-motor-detalle .opta-calendario .opta-circuito{
+	width:38%;
+	border-left:0.1rem solid #CCC;
+	border-bottom:0.1rem solid #CCC;
+}
+#opta-widgets-motor-detalle .opta-calendario .opta-fecha{
+	width:16%;
+	text-align:CENTER;
+	border-left:0.1rem solid #CCC;
+	border-bottom:0.1rem solid #CCC;
+		border-right:0.1rem solid #CCC;
+
+}
+#opta-widgets-motor-detalle .opta-calendario .opta-horas{
+	vertical-align:middle;
+	text-align:center;
+}
+
+#opta-widgets-motor-detalle .opta-calendario  .opta-ficha-circuito{
+	margin-top:15px;
+	margin-bottom:15px;
+}
+#opta-widgets-motor-detalle .opta-calendario .opta-ficha-circuito .scroll-ganadores { 
+	max-height:125px;
+}
+
+
+/*
+--------------------------------------------------------
+CALNDARIO HORIZONTAL
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-calendario-horizontal {
+	margin:0;border:0;
+	background:#0F924C;
+	line-height:40px;
+	margin-bottom:10px;
+}
+#opta-widgets-motor-detalle .opta-calendario-horizontal .opta-cal-gp-flag{
+	width:5%;
+	text-align:center;
+}
+#opta-widgets-motor-detalle .opta-calendario-horizontal .opta-cal-gp-pais{
+	width:5%;
+	text-align:center;
+	font-weight:bold;
+	color:#FFF;
+	font-size:9px;
+}
+#opta-widgets-motor-detalle .opta-calendario-horizontal .opta-cal-gp-pais-activo{
+	width:5%;
+	text-align:center;
+	font-weight:bold;
+	color:#FF0;
+	font-size:9px;
+}
+
+
+/*
+--------------------------------------------------------
+GRAN PREMIO
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-gran-premio .opta-gran-premio-nombre{
+	text-align:left;
+	color:#FFF;
+	font-size:18px;
+	font-weight:bold;
+	padding-left:3px;
+	margin-bottom:8px;
+	background-color:#0F924C;
+	line-height:35px;
+}
+#opta-widgets-motor-detalle .opta-gran-premio .opta-gran-premio-nombre-mini{
+	text-align:left;
+	color:#FFF;
+	font-size:14px;
+	font-weight:bold;
+	padding-left:3px;
+	margin-bottom:8px;
+	background-color:#0F924C;
+	line-height:35px;
+}
+#opta-widgets-motor-detalle .opta-gran-premio .opta-gran-premio-pais{
+	vertical-align:middle;
+}
+
+/*  JFE 2016-04-12
+*/
+#opta-widgets-motor-detalle .opta-directo .opta-circuito-historial{
+	background:#CCC;
+	padding:5px;/*padding:5px;*/
+	border-radius:8px; 
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;
+	margin-bottom:6px;
+}
+
+#opta-widgets-motor-detalle .opta-directo .opta-circuito-datos-historial {
+	
+	padding-left:0px;
+	/*
+	width:37%;
+	*/
+}
+
+
+#opta-widgets-motor-detalle .opta-directo .opta-circuito-his-titulos {
+	background:#0F924C;
+	color:#FFF;
+	text-align:center;
+	line-height:21px;
+}
+#opta-widgets-motor-detalle .opta-directo .opta-circuito-his-datos { 
+	text-align:center;
+	background:#FFF;
+	line-height:21px;
+	margin-bottom:6px;
+}
+
+/************************************* FIN JFe **********************************************************************/
+
+/*
+--------------------------------------------------------
+CATEGORIAS. OPCIONES
+--------------------------------------------------------
+*/
+
+#opta-widgets-motor-detalle .opta-categorias{
+	margin:0;padding:0;border:0;
+	font-weight:bold;
+	background:#666;
+	line-height:25px;
+	margin-bottom:5px;
+}
+#opta-widgets-motor-detalle .opta-categorias.categoria{
+	display:inline-block;
+	text-decoration:none;
+	padding:2px;
+	color:#FFF;
+	background:#666;
+	border-right:1px solid #FFF;
+	cursor:pointer;
+	text-transform: uppercase;
+	float:right;
+	*zoom: 1;
+	*display: inline;
+	width:13%;
+	/*text-overflow: ellipsis;*/
+	
+	white-space: nowrap;
+	overflow: hidden;
+	
+}
+#opta-widgets-motor-detalle .opta-categorias.categoria-cat{
+	display:inline-block;
+	text-decoration:none;
+	padding:6px;
+	color:#FFF;
+	/*background:#666;*/
+	border-right:1px solid #FFF;
+	cursor:pointer;
+	text-transform: uppercase;
+	*zoom: 1;
+	*display: inline;
+	width:31%;
+	text-align:center;
+	
+}
+#opta-widgets-motor-detalle .opta-categorias.categoria-cat:last-child{
+	border:none;
+}
+#opta-widgets-motor-detalle .opta-categorias.categoria:hover,
+#opta-widgets-motor-detalle .opta-categorias.categoria-cat:hover{
+	color:#EEE;
+}
+
+#opta-widgets-motor-detalle .opta-categorias.categoria.active,
+#opta-widgets-motor-detalle .opta-categorias.categoria-cat.active{
+	color:#FF0;
+}
+/*
+--------------------------------------------------------
+RESULTADOS
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-resultados{
+	
+}
+/*
+--------------------------------------------------------
+RESULTADOS. OPCIONES
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-resultados-carpetas {
+	margin:0;padding:0;border:0;
+	font-size:10px;
+	font-weight:bold;
+	color:#FFF;
+	margin-bottom:10px;
+}
+#opta-widgets-motor-detalle .opta-resultados-carpetas .opta-linea-carpetas{
+	font-weight:bold;
+	background:#FC1E2E;background:#e5e5e5;
+	line-height:25px;
+}
+
+#opta-widgets-motor-detalle .opta-resultados-carpetas .prueba{
+	display:inline-block;
+	text-decoration:none;
+	padding:6px;
+	color:#000;
+	border-right:1px solid #FFF;
+	cursor:pointer;
+	*zoom: 1;
+	*display: inline;
+	
+}
+/*
+#opta-widgets-motor-detalle .opta-resultados-carpetas .categoria{
+	display:inline-block;
+	text-decoration:none;
+	padding:6px;
+	color:#FFF;
+	background:#666;
+	border-right:1px solid #FFF;
+	cursor:pointer;
+	text-transform: uppercase;
+	float:right;
+	*zoom: 1;
+	*display: inline;
+	
+}
+*/
+#opta-widgets-motor-detalle .opta-resultados-carpetas .prueba:hover{
+	color:#666;
+}
+#opta-widgets-motor-detalle .opta-resultados-carpetas .prueba.active{
+	font-weight: 600;
+}
+/*
+--------------------------------------------------------
+RESULTADOS. PRUEBA
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-resultados-prueba-detalle .opta-res-datos-puesto{
+	width:4%;
+	text-align:center;
+	color:#000;
+	background:#FC1E2E;background:#e5e5e5;
+	padding: 1rem 0;
+}
+#opta-widgets-motor-detalle .opta-resultados-prueba-detalle .opta-res-datos-puesto-mini{
+	width:5%;
+	text-align:center;
+	color:#000;
+	background:#FC1E2E;background:#e5e5e5;
+}
+#opta-widgets-motor-detalle .opta-resultados-prueba-detalle .opta-res-datos-pais{
+	width:16px;
+	vertical-align:middle;
+}
+
+#opta-widgets-motor-detalle .opta-resultados-prueba-detalle .opta-res-datos-piloto{
+	width:40%;
+	padding-left:3px;
+	text-align:left;
+	border-left:none;
+	padding: 1rem;
+
+}
+
+#opta-widgets-motor-detalle .opta-resultados-prueba-detalle .opta-res-datos-piloto-mini{
+	width:35%;
+	padding-left:3px;
+	text-align:left;
+	border-left:none;
+	border-right:0.1rem solid #CCC;
+	font-size:11px;
+}
+
+#opta-widgets-motor-detalle .opta-resultados-prueba-detalle .opta-res-datos-equipo{
+	padding-left:3px;
+	text-align:left;
+	width:35%;
+	padding: 1rem 0;
+	font-size:11px;
+}
+
+#opta-widgets-motor-detalle .opta-resultados-prueba-detalle .opta-res-datos-equipo-mini{
+	width:35%;
+	padding-left:3px;
+	border-left:none;
+	padding: 1rem;
+	font-size:11px;
+
+}
+#opta-widgets-motor-detalle .opta-resultados-prueba-detalle .opta-res-datos-tiempo{
+	width:18%;
+	text-align:right;
+	overflow:hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	padding: 1rem 0;
+}
+#opta-widgets-motor-detalle .opta-resultados-prueba-detalle .opta-res-datos-tiempo-mini{
+	width:20%;
+	text-align:right;
+	font-size:11px;
+}
+#opta-widgets-motor-detalle .opta-resultados-prueba-detalle .opta-res-datos-puntos-mini{
+	width:25%;
+	text-align:center;
+	font-weight:bold;
+	border-left:0.1rem solid #CCC;
+	font-size:11px;
+}
+/*
+-------------------------------------------------------
+HORARIOS
+-------------------------------------------------------
+*/
+
+#opta-widgets-motor-detalle .opta-horarios{
+	margin-top:8px;
+	margin-bottom:8px;
+	border-left:0.1rem solid #CCC;
+	border-right:0.1rem solid #CCC;
+
+}
+#opta-widgets-motor-detalle .opta-horarios-titulo{
+	font-weight:bold;
+	color:#000;
+	background:#ccc;
+}
+#opta-widgets-motor-detalle .opta-calendario .opta-horarios-fecha{
+	width:42%;
+	/*padding-left:5px;*/
+	text-align:left;
+	border-right:0.1rem solid #CCC;
+	border-bottom:0.1rem solid #CCC;
+}
+#opta-widgets-motor-detalle .opta-calendario .opta-horarios-prueba{
+	width:37%;
+	/*text-align:left;*/
+	padding-left:5px;
+	border-right:0.1rem solid #CCC;
+	border-bottom:0.1rem solid #CCC;
+}
+#opta-widgets-motor-detalle .opta-calendario .opta-horarios-hora{
+	width:15%;
+	text-align:center;
+	border-bottom:0.1rem solid #CCC;
+}
+#opta-widgets-motor-detalle .opta-calendario .opta-horarios-min{
+	font-size:11px;
+}
+
+
+/*
+--------------------------------------------------------
+RESULTADOS. FICHAS DE PILOTOS Y EQUIPOS EN DIV
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-resultados  .opta-ficha-piloto{
+	margin-top:25px;
+	margin-bottom:25px;
+}
+#opta-widgets-motor-detalle .opta-resultados  .opta-ficha-equipo{
+	margin-top:25px;
+	margin-bottom:25px;
+}
+/*
+--------------------------------------------------------
+RESULTADOS
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-directo{
+	
+}
+
+
+/*
+--------------------------------------------------------
+DIRECTO. OPCIONES
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-directo-carpetas {
+	margin:0;padding:0;border:0;
+	font-size:10px;
+	font-weight:bold;
+	color:#FFF;
+	margin-bottom:10px;
+}
+#opta-widgets-motor-detalle .opta-directo-carpetas .opta-linea-carpetas{
+	font-weight:bold;
+	background:#FC1E2E;background:#e5e5e5;
+	line-height:25px;
+}
+
+#opta-widgets-motor-detalle .opta-directo-carpetas .prueba{
+	display:inline-block;
+	text-decoration:none;
+	padding:6px;
+	color:#000;
+	border-right:1px solid #FFF;
+	cursor:pointer;
+	*zoom: 1;
+	*display: inline;
+}
+/*
+#opta-widgets-motor-detalle .opta-directo-carpetas .categoria{
+	display:inline-block;
+	text-decoration:none;
+	padding:6px;
+	color:#FFF;
+	background:#666;
+	border-right:1px solid #FFF;
+	cursor:pointer;
+	text-transform: uppercase;
+	*zoom: 1;
+	*display: inline;
+
+}
+*/
+#opta-widgets-motor-detalle .opta-directo-carpetas .prueba:hover{
+	color:#666;
+}
+#opta-widgets-motor-detalle .opta-directo-carpetas .prueba.active{
+	font-weight: 600;
+}
+/*
+#opta-widgets-motor-detalle .opta-directo-carpetas .categoria:hover{
+	color:#EEE;
+}
+#opta-widgets-motor-detalle .opta-directo-carpetas .categoria.active{
+	color:#FF0;
+}
+*/
+/*
+--------------------------------------------------------
+DIRECTO. SITUACION DE CARRERA
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-scroll-detalle{
+	max-height:220px;
+}
+
+
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-titulo{
+	text-align:center;
+	color:#000;
+	font-weight:bold;
+	background:#CCC;
+	margin-bottom:3px;
+	line-height:25px;
+}
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-linea-cab{
+	line-height:20px;
+	background:#666;
+}
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-linea-det{
+	line-height:25px;
+	border:0.1rem solid #CCC;
+}
+
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-texto-cab{
+	font-weight:bold;
+	color:#FFF;
+}
+
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-datos-puesto{
+	width:4%;
+	text-align:center;
+	color:#000;
+	background:#FC1E2E;background:#e5e5e5;
+	padding: 1rem 0;
+}
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-datos-puesto-cab{
+	width:4%;
+}
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-datos-puesto-mini{
+	width:5%;
+	text-align:center;
+	color:#000;
+	background:#FC1E2E;background:#e5e5e5;
+}
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-datos-pais{
+	width:16px;
+	vertical-align:middle;
+}
+
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-datos-piloto{
+	width:40%;
+	text-align:left;
+	border-left:none;
+	padding: 1rem;
+}
+
+
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-datos-piloto-5F1{
+	width:34%;
+	text-align:left;
+	border-left:none;
+	border-right:0.1rem solid #CCC;
+
+}
+
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-datos-piloto-mini{
+	width:35%;
+	padding-left:3px;
+	text-align:left;
+	border-left:none;
+	border-right:0.1rem solid #CCC;
+	font-size:11px;
+}
+
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-datos-equipo{
+	text-align:left;
+	width:36%;
+	padding: 1rem;
+}
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-datos-equipo-5F1{
+	text-align:left;
+	width:30%;
+}
+
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-tiempo-q-5F1{
+	text-align:right;
+	width:10%;
+}
+
+
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-datos-equipo-mini{
+	width:35%;
+	padding-left:3px;
+	border-left:none;
+	border-right:0.1rem solid #CCC;
+	font-size:11px;
+}
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-datos-tiempo{
+	width:18%;
+	text-align:right;
+	padding: 1rem 0;
+}
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-datos-tiempo-mini{
+	width:20%;
+	text-align:right;
+	font-size:11px;
+}
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-tiempo-q{
+	width:10%;
+	text-align:center;
+	border-left:0.1rem solid #CCC;
+}
+#opta-widgets-motor-detalle .opta-directo-situacion .opta-abandono{
+	width:100%;
+	text-align:center;
+	background:#eee;
+	font-weight:bold;
+}
+
+
+
+/*
+--------------------------------------------------------
+DIRECTO. NARRACION
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-directo-narracion{
+}
+#opta-widgets-motor-detalle .opta-directo-narracion .opta-scroll-detalle{
+	max-height:600px;
+}
+
+
+#opta-widgets-motor-detalle .opta-directo-narracion .opta-titulo{
+	text-align:center;
+	color:#000;
+	font-weight:bold;
+	background:#CCC;
+	margin-bottom:3px;
+	line-height:25px;
+	margin-top:5px;
+}
+#opta-widgets-motor-detalle .opta-directo-narracion .opta-detalle{
+	border:1px solid #CCC;
+}
+#opta-widgets-motor-detalle .opta-directo-narracion .opta-linea-det{
+	line-height:25px;
+	border:0.1rem solid #CCC;
+}
+
+#opta-widgets-motor-detalle .opta-directo-narracion .opta-previa{
+	padding:0 5px 0 5px;
+	text-align:center;
+	color:#FFF;
+	width:10%;
+}
+#opta-widgets-motor-detalle .opta-directo-narracion .opta-vuelta{
+	padding:0 5px 0 5px;
+	text-align:center;
+	color:#FFF;
+	width:10%;
+	background:#0F924C;
+}
+
+#opta-widgets-motor-detalle .opta-directo-narracion .opta-comentario{
+	padding: 1rem;
+	text-align:justify;
+	font-size: 1.6rem;
+	width:85%;
+	border-left:0.1rem solid #CCC;
+}
+
+/*
+--------------------------------------------------------
+CLASIFICACION
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-clasificacion{
+}
+/*
+--------------------------------------------------------
+CLASIFICACION OPCIONES
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-clasificaciones-carpetas {
+	margin:0;padding:0;border:0;
+	font-size:10px;
+	font-weight:bold;
+	color:#FFF;
+	margin-bottom:20px;
+}
+#opta-widgets-motor-detalle .opta-clasificaciones-carpetas .opta-linea-carpetas{
+	
+}
+	
+#opta-widgets-motor-detalle .opta-clasificaciones-carpetas .prueba{
+	display: inline-grid;
+	text-decoration:none;
+	padding:0.5rem 1rem;color:#000;cursor:pointer;	*zoom: 1;	*display: inline;
+	width:17%;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+
+
+}
+#opta-widgets-motor-detalle .opta-clasificaciones-carpetas .prueba:hover{
+	color:#666;
+}
+#opta-widgets-motor-detalle .opta-clasificaciones-carpetas .prueba.active{color:#504f4f;max-width:15%;text-overflow: ellipsis;white-space: nowrap;overflow: hidden;border-bottom: 0.2rem solid #504f4f;}
+/*
+#opta-widgets-motor-detalle .opta-clasificaciones-carpetas .categoria{
+	display:inline-block;
+	text-decoration:none;
+	padding:6px;
+	color:#FFF;
+	background:#666;
+	border-right:1px solid #FFF;
+	cursor:pointer;
+	text-transform: uppercase;
+	*zoom: 1;
+	*display: inline;
+}
+#opta-widgets-motor-detalle .opta-clasificaciones-carpetas .categoria:hover{
+	color:#EEE;
+}
+#opta-widgets-motor-detalle .opta-clasificaciones-carpetas .categoria.active{
+	color:#FF0;
+}
+*/
+/*
+--------------------------------------------------------
+CLASIFICACION PRUEBAS
+--------------------------------------------------------
+*/
+
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-titulo{
+	line-height:25px;
+	color:#FFF;
+	background:#FC1E2E;background:#e5e5e5;
+	padding:6px;
+	margin-bottom:3px;
+	font-weight:bold;
+	border-left:1px dotted #FC1E2E;border-color:#e5e5e5;
+}
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-datos-puesto{
+	width:4%;
+	text-align:center;
+	color:#000;
+	background:#FC1E2E;background:#e5e5e5;
+	padding: 1rem 0;
+}
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-datos-puesto-mini{
+	width:15%;
+	text-align:center;
+	color:#000;
+	background:#FC1E2E;background:#e5e5e5;
+}
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-datos-pais{
+	width:16px;
+	vertical-align:middle;
+}
+
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-datos-piloto{
+	padding-left:1px;
+	text-align:left;
+	border-left:none;
+	white-space: nowrap;
+	overflow: hidden;
+	padding: 1rem;
+}
+
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-datos-piloto-mini{
+	width:50%;
+	padding-left:3px;
+	text-align:left;
+	border-left:none;
+
+}
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-datos-puntos{
+	width:5%;
+	padding-right:5px;
+	text-align:center;
+	background:#FC1E2E;background:#e5e5e5;
+	font-weight:bold;
+	padding: 1rem 0;
+}
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-datos-puntos-mini{
+	width:25%;
+	text-align:center;
+	font-weight:bold;
+	border-left:0.1rem solid #CCC;
+}
+
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-datos-puntos-gp{
+	text-align:center;
+	font-size:10px;
+	width:2.7%;
+	/*border-left:0.1rem solid #CCC;*/
+}
+
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-cabeceras{
+	background:#fff;
+}
+
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-cabeceras-mini{
+	color:#000;
+	font-size:11px;
+	text-align:center;
+}
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-datos-puesto-cab-mini{
+	width:15%;
+}
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-datos-piloto-cab-mini{
+	width:50%;
+}
+#opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-datos-puntos-gp-cab{
+	text-align:center;
+	width:3%;
+}
+
+
+
+
+/*
+--------------------------------------------------------
+CLASIFICACIONES. FICHAS DE PILOTOS Y EQUIPOS EN DIV
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-clasificacion  .opta-ficha-piloto{
+	margin-top:25px;
+	margin-bottom:25px;
+}
+#opta-widgets-motor-detalle .opta-clasificacion  .opta-ficha-equipo{
+	margin-top:25px;
+	margin-bottom:25px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+-----------------------------
+GR�FICA
+-----------------------------
+*/
+#opta-widgets-motor-detalle .grafica-clasificacion {
+	background:#FFF;
+	padding-top:10px;
+}
+#opta-widgets-motor-detalle .grafica-clasificacion .opta-clf-datos-pais{
+	width:16px;
+	vertical-align:middle;
+}
+#opta-widgets-motor-detalle .grafica-clasificacion .opta-clf-titulo{
+	line-height:25px;
+	color:#FFF;
+	background:#FC1E2E;background:#e5e5e5;
+	padding:6px;
+	margin-bottom:3px;
+	font-weight:bold;
+	border-left:1px dotted #FC1E2E;border-color:#e5e5e5;
+}
+#opta-widgets-motor-detalle .opta-motor-grafica-clasificacion-pilotos{
+	font-weight:bold;
+}
+
+#opta-widgets-motor-detalle .opta-motor-grafica-piloto-seleccion {
+	border: 1px solid #CCC;
+	-moz-border-radius: 7px;
+	-webkit-border-radius: 7px;
+	padding: 5px;
+	width:28%;
+}
+#opta-widgets-motor-detalle .opta-motor-grafica-grafica-seleccion {
+	border: 1px solid #CCC;
+	-moz-border-radius: 7px;
+	-webkit-border-radius: 7px;
+	padding: 5px;
+	width:28%;
+}
+#opta-widgets-motor-detalle .opta-motor-grafica-clasificacion-combos{
+	margin-bottom:10px;
+	position:absolute;
+}
+
+#opta-widgets-motor-detalle .opta-motor-grafica-combo-piloto {
+	width:100%;
+	font-weight: normal;
+	/*background:#ccc;*/
+	border: 1px solid #CCC;
+	box-shadow: 3px 3px 0 #EEE;
+   -webkit-box-shadow: 3px 3px 0 #EEE;
+   -moz-box-shadow: 3px 3px 0 #EEE;
+   	position:absolute;
+
+}
+#opta-widgets-motor-detalle .opta-motor-grafica-texto-grafica {
+	width:28%;
+	margin-left:8px;
+	border: 1px solid #CCC;
+	box-shadow: 3px 3px 0 #EEE;
+   -webkit-box-shadow: 3px 3px 0 #EEE;
+   -moz-box-shadow: 3px 3px 0 #EEE;
+}
+#opta-widgets-motor-detalle .opta-motor-grafica-combo-grafica {
+	width:28%;
+	margin-left:8px;
+	border: 1px solid #CCC;
+	box-shadow: 3px 3px 0 #EEE;
+   -webkit-box-shadow: 3px 3px 0 #EEE;
+   -moz-box-shadow: 3px 3px 0 #EEE;
+   position:absolute;
+   background:#fff;
+   cursor:pointer;
+
+}
+#opta-widgets-motor-detalle .grafica-clasificacion .opta-motor-grafica-puesto{
+	width:15%;
+	text-align:center;
+	margin-right:3px;
+}
+#opta-widgets-motor-detalle .grafica-clasificacion .opta-motor-grafica-puesto1{
+	background:#0096FF;
+	color:#000;
+}
+#opta-widgets-motor-detalle .grafica-clasificacion .opta-motor-grafica-puesto2{
+	background:#00CC00;
+	color:#000;
+}
+
+#opta-widgets-motor-detalle .opta-motor-grafica-combo-piloto .opta-motor-grafica-pais{
+	width:16px;
+	margin:5px 5px 0 0;
+}
+#opta-widgets-motor-detalle .opta-motor-grafica-bandera{
+	width:16px;
+	margin:2px 5px 0 0;
+}
+#opta-widgets-motor-detalle .opta-motor-grafica-flecha{
+	margin-top:5px;
+	cursor:pointer;
+}
+#opta-widgets-motor-detalle .opta-motor-grafica-combo-piloto .opta-motor-grafica-piloto{
+	width:60%;
+	padding-left:3px;
+	text-align:left;
+	border-left:none;
+	cursor:pointer;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+	
+}
+#opta-widgets-motor-detalle .opta-motor-grafica-clasificacion-gpremios{
+	margin-top:10px;
+}
+#opta-widgets-motor-detalle .opta-motor-grafica-clasificacion-canvas{
+	/*
+	margin-top:10px;
+	border: 1px solid #CCC;
+	-moz-border-radius: 7px;
+	-webkit-border-radius: 7px;
+	padding:2px;
+	*/
+}
+#opta-widgets-motor-detalle .scroll-pane {
+	overflow-x: hidden;
+	background: #FFF;
+}
+
+
+
+
+
+/*
+--------------------------------------------------------
+PILOTOS DATOS GENERALES
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-general{
+	background:#CCC;
+	padding:5px;
+	border-radius:8px; 
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;
+		
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-general{
+	background:#CCC;
+	padding:5px;
+	border-radius:8px; 
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;
+		
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-nombre{
+	text-align:left;
+	color:#FFF;
+	font-size:18px;
+	font-weight:bold;
+	padding-left:3px;
+	margin-bottom:8px;
+	background-color:#0F924C;
+	line-height:35px;
+	vertical-align:top;
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-pais{
+	vertical-align:middle;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-foto {
+	width:20%;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-datos-personales {
+	width:36%;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-datos-historial {
+	padding-left:5px;
+	width:43%;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-dp-titulos{
+	text-align:center;
+	background:#e9e9e9;
+	color:#FFF;
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-dp-datos { 
+	text-align:center;
+	background:#FFF;
+	border:1px solid #d6dde0;
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-dp-datos-margin { 
+	margin-bottom:10px;
+}
+
+
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-his-titulos {
+	background:#0F924C;
+	color:#FFF;
+	width:75%;
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-his-datos { 
+	text-align:center;
+	background:#FFF;
+	/*float:right;*/
+	width:25%;
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-his-datos-margin { 
+	margin-bottom:11px;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-linea-20{
+	line-height:20px;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-linea-25{
+	line-height:25px;
+	background:#eee;
+	margin-bottom: 10px;
+	-moz-shadow:1px 1px 1px rgba(0, 0, 0, 0.2);
+	 -webkit-box-shadow:1px 1px 1px rgba(0, 0, 0, 0.2);
+	 box-shadow:1px 1px 1px rgba(0, 0, 0, 0.2); 
+	
+}
+/*
+--------------------------------------------------------
+PILOTOS TEMPORADA ACTUAL
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-temporada-actual {
+	background:#CCC;
+	font-size:11px;
+	padding:5px;
+	margin-top:10px;
+	border-radius:8px; 
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-actual-titulo{
+	background:#0F924C;
+	color:#FFF;
+	text-align:center;
+	line-height:18px;
+	font-weight:bold;
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-actual-prueba{
+	color:#000;
+	/*width:20%;*/
+	/*padding-left:5px;*/
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-actual-puntos{
+	text-align:center;
+	width:3%;
+	border-left:0.1rem solid #CCC;
+	vertical-align:middle;
+	margin-top:3px;
+}
+
+
+/*
+--------------------------------------------------------
+PILOTOS TEMPORADAS ANTERIORES
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-trayectoria {
+	background:#CCC;
+	font-size:11px;
+	padding:5px;
+	margin-top:10px;
+	border-radius:8px; 
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-trayectoria-titulo{
+	background:#0F924C;
+	color:#FFF;
+	text-align:center;
+	line-height:18px;
+	font-weight:bold;
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-trayectoria-datos-piloto{
+	color:#000;
+	width:12%;
+	border-left:0.1rem solid #CCC;
+	text-align:center;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-trayectoria-datos-equipo{
+	color:#000;
+	border-left:0.1rem solid #CCC;
+	text-align:left;
+	width:25%;
+	padding-left:5px;
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-trayectoria-datos-temp{
+	color:#000;
+	width:7%;
+	border-left:0.1rem solid #CCC;
+	text-align:center;
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-trayectoria-datos-mod{
+	color:#000;
+	width:7%;
+	border-left:0.1rem solid #CCC;
+	text-align:center;
+}
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-trayectoria-datos-puestos,
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-trayectoria-datos-victorias,
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-trayectoria-datos-poles,
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-trayectoria-datos-podios,
+#opta-widgets-motor-detalle .opta-ficha-piloto .opta-piloto-trayectoria-datos-gpremios{
+	color:#000;
+	width:11%;
+	border-left:0.1rem solid #CCC;
+	text-align:center;
+}
+
+
+/*
+--------------------------------------------------------
+EQUIPOS
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-nombre{
+	text-align:left;
+	color:#FFF;
+	font-size:18px;
+	font-weight:bold;
+	padding-left:3px;
+	margin-bottom:8px;
+	background-color:#0F924C;
+	line-height:35px;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-pais{
+	vertical-align:middle;
+}
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-foto {
+	width:100%;
+  
+}
+
+/*
+--------------------------------------------------------
+EQUIPOS ESTAD�STICAS
+--------------------------------------------------------
+*/
+
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-datos-historial {
+	background:#CCC;
+	padding:5px;
+	border-radius:8px; 
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;
+	margin-top:10px;
+}
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-his-titulos {
+	background:#0F924C;
+	color:#FFF;
+	width:24%;
+	text-align:center;
+	border:2px solid #ccc;
+	
+}
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-his-datos { 
+	text-align:center;
+	background:#FFF;
+	/*float:right;*/
+	width:24%;
+	border:2px solid #ccc;
+}
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-his-datos-margin { 
+	margin-bottom:11px;
+}
+
+/*
+--------------------------------------------------------
+EQUIPOS. PILOTOS OFICIALES
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-pilotos{
+	background:#CCC;
+	padding:5px;
+	border-radius:8px; 
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;
+	margin-top:10px;
+}
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-piloto-nombre1 {
+	width:50%;
+	font-weight:bold;
+}
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-piloto-nombre2 {
+	width:50%;
+	text-align:right;
+	font-weight:bold;
+}
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-piloto-foto {
+	width:20%;
+	text-align:center;
+
+}
+
+
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-pilotos-datos-historial {
+	/*padding-left:5px;*/
+	width:56%;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-pilotos-his-titulos {
+	background:#0F924C;
+	color:#FFF;
+	width:66%;
+	text-align:center;
+	/*font-size:10px;*/
+}
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-pilotos-his-datos { 
+	text-align:center;
+	background:#FFF;
+	width:16%;
+	border:1px solid #ccc;
+	/*font-size:10px;*/
+	
+}
+#opta-widgets-motor-detalle .opta-ficha-equipo .scroll-trayectoria { 
+	max-height:275px;
+}
+
+
+/*
+--------------------------------------------------------
+EQUIPOS TEMPORADAS ANTERIORES
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-trayectoria {
+	background:#CCC;
+	font-size:11px;
+	padding:5px;
+	margin-top:10px;
+	border-radius:8px; 
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-trayectoria-titulo{
+	background:#0F924C;
+	color:#FFF;
+	text-align:center;
+	line-height:18px;
+	font-weight:bold;
+}
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-trayectoria-datos-piloto{
+	color:#000;
+	width:12%;
+	border-left:0.1rem solid #CCC;
+	text-align:center;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-trayectoria-datos-equipo{
+	color:#000;
+	border-left:0.1rem solid #CCC;
+	text-align:left;
+	width:25%;
+	padding-left:5px;
+}
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-trayectoria-datos-temp,
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-trayectoria-datos-mod,
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-trayectoria-datos-puestos,
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-trayectoria-datos-victorias,
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-trayectoria-datos-poles,
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-trayectoria-datos-podios,
+#opta-widgets-motor-detalle .opta-ficha-equipo .opta-equipo-trayectoria-datos-gpremios{
+	color:#000;
+	width:19%;
+	border-left:0.1rem solid #CCC;
+	text-align:center;
+}
+
+
+
+/*
+--------------------------------------------------------
+CIRCUITOS
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-ficha-circuito{
+	
+}
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-nombre{
+	text-align:left;
+	color:#FFF;
+	font-size:18px;
+	font-weight:bold;
+	padding-left:3px;
+	margin-bottom:8px;
+	background-color:#0F924C;
+	line-height:35px;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-pais{
+	vertical-align:middle;
+	width:24px; 
+}
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-foto {
+	width:100%;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-foto {
+	width:49%;
+}
+/*
+--------------------------------------------------------
+CIRCUITOS. HISTORIAL
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-historial{
+	background:#CCC;
+	padding:5px;/*padding:5px;*/
+	border-radius:8px; 
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;
+	margin-bottom:6px;
+}
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-foto {
+	/*width:60%;
+	*/
+}
+
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-datos-historial {
+	
+	padding-left:0px;
+	/*
+	width:37%;
+	*/
+}
+
+
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-his-titulos {
+	background:#0F924C;
+	color:#FFF;
+	text-align:center;
+	line-height:21px;
+}
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-his-datos { 
+	text-align:center;
+	background:#FFF;
+	line-height:21px;
+	margin-bottom:6px;
+}
+/*
+--------------------------------------------------------
+CIRCUITOS. OTRAS TEMPORADAS
+--------------------------------------------------------
+*/
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-ganadores{
+	background:#CCC;
+	padding:5px;
+	border-radius:8px; 
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;
+	margin-bottom:6px;
+}
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-ganadores-titulo{
+	background:#0F924C;
+	color:#FFF;
+	text-align:center;
+	line-height:18px;
+	font-weight:bold;
+}
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-ganadores-datos-pais{
+	width:16px;
+	vertical-align:middle;
+}
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-ganadores-datos-total{
+	text-align:center;
+	width:10%;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-ganadores-datos-piloto{
+	text-align:left;
+	width:47%;
+	border-left:0.1rem solid #CCC;
+}
+#opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-ganadores-datos-temp{
+	text-align:left;
+	width:42%;
+	border-left:0.1rem solid #CCC;
+}
+
+#opta-widgets-motor-detalle .opta-ficha-circuito .scroll-ganadores { 
+	/*max-height:125px;*/
+}
+
+
+
+/*
+---------------------------------------------------
+---------------------------------------------------
+*/
+
+ .tooltip2 {
+    display: inline-block;
+    position: relative;
+  }
+  
+ .tooltip2:before, .tooltip2:after {
+    position: absolute;
+    visibility: hidden;
+    opacity: 0;
+    z-index: 1000000;
+    pointer-events: none;
+}
+
+.tooltip2:hover:before, .tooltip2:hover:after, .tooltip2:focus:before, .tooltip2:focus:after {
+	visibility: visible;
+    opacity: 1;
+	transform: translate(-150px, -40px); 
+	-webkit-transform: translate(-150px, -40px);
+	-moz-transform: translate(-150px, -40px);
+	-ms-transform:translate(-150px, -40px); 
+}
+.tooltip2:before {
+    content: '';
+    position: absolute;
+    background: transparent;
+    z-index: 1000001; 
+}
+.tooltip2:after {
+	content: attr(tooltip);
+    background: #383838;
+    color: white;
+    text-shadow: 0 -1px 0px black;
+    padding: 8px 10px;
+    font-size: 14px;
+    line-height: 32px;
+    white-space: nowrap;
+    box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3); 
+	-moz-border-radius: 5px 5px 5px 5px;
+	-webkit-border-radius: 5px 5px 5px 5px;
+	border-radius: 5px 5px 5px 5px;
+}
+
+
+/*
+-------------------------------------------------------
+
+
+-------------------------------------------------------
+*/
+
+#opta-widgets-motor-detalle .floatstop {	clear:both;}
+#opta-widgets-motor-detalle .clearfix:after {	clear: both;	content:' ';	display: block;	font-size: 0;	line-height: 0;	visibility: hidden;	width: 0;	height: 0;}
+/* jfe 2018-03-08*/
+#opta-widgets-motor-detalle .clearfix {	display:block; width:100%}
+/*#opta-widgets-motor-detalle .clearfix {	display: block;}*/
+#opta-widgets-motor-detalle * html .clearfix {	height: 1%;}
+
+
+
+
+/** AJUSTES GENERICOS ***************************/
+/************************************************/
+
+.p_final [id*='opta-widgets'] * {font:400 1.4rem/1.8rem 'Roboto Condensed','Roboto',sans-serif;}
+.p_final #opta-widgets-motor-contenido {width:100% !important;}
+.p_final #opta-widgets-motor-detalle .opta-clasificaciones-pruebas .opta-clf-datos-puntos-gp {font-size:1.2rem;width:2rem;padding: 1rem 0;}
+.p_final #opta-widgets-motor-detalle .opta-ficha-circuito .opta-circuito-his-titulos td {color: #fff;}
+
+/** AJUSTES GENERICOS ***************************/
+/** END *****************************************/
+
+/* MOBILE */
+@media all and (max-width:1024px){
+	#opta-widgets-motor-contenedor {overflow-x: scroll;}
+	.p_final #opta-widgets-motor-contenido {width: 100vw !important;}
+}
+
+@media all and (max-width:630px){
+	#opta-widgets-motor-contenedor {overflow-x: scroll;}
+	.p_final #opta-widgets-motor-contenido {width: 200vw !important;}
+}

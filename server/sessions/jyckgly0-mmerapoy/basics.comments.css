@@ -1,0 +1,126 @@
+/************************************************/
+/*COMUNES EMAIL Y COMENTARIOS*/
+/************************************************/
+/*notas formulario*/
+#divformcomentarios .nota {color:#737578;}
+#divformcomentarios form > .nota em {font-style:normal;text-decoration:underline;line-height:1;padding-top:1rem;}
+#divformcomentarios .boxMail abbr, #divformcomentarios .boxComm abbr {text-decoration:none;}
+
+/*botones formulario*/
+#divformcomentarios .boton {/* padding:0 1.2rem; *//* background:#494847; */margin-top: 2rem;display: inline-block;/* float: left; *//* width: 100%; */}
+#divformcomentarios .boton input {border:0;color:#fff;background: #494847;cursor:pointer;padding: 0;font-weight: 400;padding: 0.4em 1em;}
+#divformcomentarios .boton input:hover {background:#000;}
+/************************************************/
+/** COMENTARIOS EN PF ***************************/
+/************************************************/
+/******COMUNES FLIP Y ASIDE*******/
+/*formulario de comentarios*/
+#divformcomentarios {padding-bottom:3rem;}
+#divformcomentarios ol {list-style:none;}
+#divformcomentarios form {width:100%;}
+#divformcomentarios textarea {width:100% !important;padding: 0.5em;min-height:6.941176470588235em;}
+#divformcomentarios label + input {padding:0.6rem 1.2rem;}
+#divformcomentarios label + input, #divformcomentarios textarea {border:0.1rem solid transparent;background:#fff;width:100%;height:auto;}
+#divformcomentarios label + input:focus, #divformcomentarios textarea:focus {box-shadow:0 0 1.6rem rgba(0,0,0,0.25);border:0.1rem solid #bcbcbc;}
+#divformcomentarios fieldset legend {}
+#divformcomentarios .OK {padding:1rem;background:#fff;border:0.1rem solid #d9d9d9;}
+#divformcomentarios .OK p {color:#737578;font-size:150%;line-height:1.466;}
+#divformcomentarios .KO, .cabComms+#divformcomentarios .KO {padding:1rem;border:0.1rem solid #d70105;background-color:#737578;margin:0 auto;}
+#divformcomentarios .KO p, .cabComms+#divformcomentarios .KO p {font-size:1.6rem;color:#fff;font-weight:500;line-height: 1;margin: 0;}
+#divformcomentarios .KO li, .cabComms+#divformcomentarios .KO li {margin:0;line-height: 1;}
+#divformcomentarios .KO li a, .cabComms+#divformcomentarios .KO li a {font-size:1.4rem;color:#fff;line-height: 1.2;width:auto;}
+.cabComms+#divformcomentarios .KO li a {line-height: 1.428;}
+#divformcomentarios .KO li a:focus {outline:none;border-bottom: 0.1rem solid #e1e1e1;}
+#divformcomentarios .aviso.KO li:before {content:none;}
+#divformcomentarios #mail + em.komsg + .nota a {}
+#divformcomentarios #commentmsg {border-style:solid;border-color:transparent;}
+#divformcomentarios .form.grid {background:none;margin:0;}
+#divformcomentarios .form.grid li {border-bottom: 1rem solid transparent;display:block;width:100%;float:left;}
+#divformcomentarios .form.grid .nota {display:block;}
+#divformcomentarios .nota .loginPopUp {width:100%;display:block;float:left;text-align: right;text-decoration: underline;padding-bottom: 1rem;}
+#divformcomentarios .komsg {color:#737578;border-bottom:0;font-style:normal;font-family:'Roboto','arial',sans-serif;font-weight:300;line-height:1;text-decoration:underline;}
+.vis_comms .boxComm {background:rgba(225,225,225,0.8);}
+#divformcomentarios fieldset legend {padding: 2rem 0 1rem 0;font-size: 180%;}  
+
+/*ajustes formulario logado*/
+#divformcomentarios .nota .avatar{margin-top:1rem;width: 5.9rem;height: 5.9rem;}
+#divformcomentarios .nota .avatar img{width:4.5rem;height:4.5rem}
+#divformcomentarios .nota .avatar + strong {float:left;text-align:left;padding: 2.4rem 1rem;}
+#divformcomentarios .nota .avatar ~ a{margin-top: 2.4rem;width:auto;padding:0 1rem;font-weight:700;text-decoration:underline;display: block;}
+aside.boxComm #divformcomentarios .nota .avatar ~ a{float:right;padding-right: 0;}
+
+
+/*autor comnetarios*/
+.lisComm li p {clear:both;padding: 1rem 0;}
+.lisComm li .author {width:80%;float:left;}
+.lisComm .ima{display:table-cell;width:5.9rem;height:5.9rem;vertical-align:middle;}
+.lisComm .name .ima img, #divformcomentarios .avatar.ima img {width:5.9rem;height:5.9rem;border-radius:100%;
+background:-moz-linear-gradient(top, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 100%), url("");
+background:-webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,0.7)), color-stop(100%,rgba(255,255,255,0.7))),  url("");/* opacity: .4; */background-position:10% 0;}
+.lisComm .name .ima.ima_on img, #divformcomentarios .avatar.ima.ima_on img {background:-moz-linear-gradient(top, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 100%);
+background:-webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,0.7)), color-stop(100%,rgba(255,255,255,0.7)))}
+.lisComm em {padding-left:1rem;display:table-cell;vertical-align:middle;}
+.lisComm .author .name {display:table;vertical-align:middle;}
+.lisComm .author + span {width:20%;float:left;text-align:right;padding-top:0.3rem;}
+.lisComm .ico.share img {background-position:11% 40%;}
+.lisComm .socialBox {text-align:right;}
+.cabComms .ico.retrn img {background-image:url("");background-position-y:50%;width:5em;opacity: 0.8;}
+.cabComms .ico.retrn img:hover {opacity:0.7;}
+.cabComms span.ico.close img {background-image:url("icons_40x40_ffffff.png");background-position:40% 20%;}
+
+/*navegacion commentarios nuevos viejos*/
+.boxComm nav li span {display:block;padding-top:0.4rem;cursor: pointer;}
+
+/*posicionamiento********/
+#divformcomentarios #mail + em.komsg {}
+#divformcomentarios fieldset, .flip_h .pf_flipperBox .article, .boxComm .controlBox, #divformcomentarios .form.grid li {position:relative;}
+.boxComm .more_ span, .boxComm .countBox,.boxComm .close {position:absolute;}
+.boxComm .more_ span {left:0;}
+
+/*****ESPECIFICOS FLIP 100%*****/
+/*cabecera comentarios*/
+.cabComms+#divformcomentarios {width:100%;padding:2rem;background: #e7e7e7;padding-bottom: 2rem;float:left;}
+.cabComms .falseH1 span.pretitle{clip:rect(0 0 0 0);position:absolute;}
+
+/*comnetarios 100%*/
+.flip_h .boxComm nav {float:right;padding-right:5rem;}
+.flip_h .boxComm .article {padding-left:0;padding-right:0;width:100%;}
+.flip_h .lisComm {display:inline-block;width:100%;border:6em solid transparent;border-width:2rem 6rem 6rem 6rem;}
+.flip_h .lisComm .socialBox {margin-bottom:0;display: block;}
+.flip_h .lisComm .name .ima img {background-color:#c2c2c2;}
+
+/*formulario*/
+.cabComms+#divformcomentarios .OK {padding:1rem;margin:0 auto;}
+.cabComms+#divformcomentarios .KO, .cabComms+#divformcomentarios .OK {width:118em;}
+
+/*posicionamiento***/
+.cabComms+#divformcomentarios.fixer #commentmsg {clip:rect(0 0 0 0);position:absolute;height:0;display:none;}
+
+/****ESPECIFICOS COMENTARIOS ASIDE*****/
+/*aside boton y contador*/
+.boxComm .more_ {float:right;}
+.boxComm .countBox {text-align:center;}
+.boxComm .countBox,.boxComm .countBox * {display:inline-block;}
+.boxComm .countBox strong {margin:0.6rem 0 -0.6rem 0;display: block;}
+.boxComm .controlBox,.boxComm .controlBox a,.boxComm .more_ span {display:inline-block;width:100%;}
+
+/*comentarios listado*/
+aside.boxComm span.ima img {border-radius:100%;}
+aside.boxComm .pubBox span{display:block;}
+
+/*ajustes comentarios striplayer*/
+.striplayer .cabComms+#divformcomentarios .KO, .striplayer .cabComms+#divformcomentarios .OK, .striplayer .cabComms+#divformcomentarios form {width:100%;}
+.striplayer .flip_h .pf_flipperBox .article.boxComm {background-color:#fff;}
+.fronPage:after {z-index:-1;}
+/*socialbox oculto de momento*/
+.lisComm .socialBox, .pf_flipperBox .lisComm .socialBox, .lisComm .socialBox + a{clip:rect(0 0 0 0);position:absolute;}
+/*.lisComm .socialBox + a{padding-bottom: 1.2rem;display: block;text-align:right;color:#737578;font-size:130%;cursor:pointer;font-weight:500;text-decoration:underline;margin-top:-1.2rem;}
+.lisComm .socialBox + a:hover{color: #494847;}*/
+
+/*paginacion striplayer*/
+
+body[class*="buscado"] .striplayer .paginaBox{float:none;padding:0;}
+
+/*comentarios html*/
+.lisComm li > p, .lisComm li > blockquote, .lisComm li > i, .lisComm li > strong, .lisComm li > a, .lisComm li > em, .lisComm li > .pubBox, .lisComm li > b{font-size: 150%; display:inline-block;}
+.lisComm li p span >*{display:inline-block;}

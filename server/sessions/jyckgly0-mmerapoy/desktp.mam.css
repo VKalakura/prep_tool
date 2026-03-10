@@ -1,0 +1,60 @@
+/** ESTRUCTURA **********************************/
+/************************************************/
+.gridBox .cell .narracion {height:60em;}
+.gridBox .cell .narracion .eventos {height:42.9em;}
+.gridBox .cell .narracion.items_3 {height:auto;}
+.grid[class*=g] .gridBox .cell .narracion.items_3 .eventos {height:auto;}
+.g3.simply.size_33 .cell .narracion {height:60em;}
+.g3.simply.size_33 .cell .narracion .eventos,
+.g3.notory.size_75 .cell .narracion .eventos {height:52.9em;}
+.g3.simply.size_33 .cell .narracion {height:60em;}
+.g1.notory.size100 .cell .narracion {border-left:9em solid transparent;}
+
+
+.cell .narracion > div,
+.cell .narracion .eventos,
+.cell .narracion .minuto_a_minuto {display:inline-block;height:100%;width:100%;}
+.cell .narracion .eventos {overflow-y:auto;overflow-x:hidden;}
+.cell .narracion.items_3  {overflow:visible;}
+
+
+.by .miniatura,
+.by .miniatura img,
+.evento .icono > img,
+.evento .time {width:5rem;height:auto;}
+.by .miniatura {height:5rem;}
+.by .miniatura img,
+.evento .icono > img {max-height:5rem;}
+.by .miniatura img,
+.evento .time {height:auto;}
+
+
+.by .miniatura,
+.evento .time {margin-right:1.2rem;}
+
+/*imagenes narradores*/
+.by {padding:1em 1.2em;}
+.evento .icono > img {float:left;/*margin:2.6em 1.2em 0 -6.2em;*/}
+
+
+/*columnas estrechas*/
+.g3.simply.size_33 .cell .narracion .eventos .evento .texto {display:inline-block;}
+.g3.simply.size_33 .cell .narracion .eventos .evento .texto > p {padding-top:1.2rem;}
+
+/* twitter*/
+.narracion .eventos .evento.twitter .texto {padding:0 3rem 0 6.2rem;}
+
+/*iframe*/
+.texto > iframe[class^='instagram'] {max-width:40rem !important;}
+
+/*positioning*/
+.cell .narracion {position:relative;}
+.cell .narracion > div,.cell .minuto_a_minuto	{position:absolute;}
+
+.cell .narracion > div {left:0;top:0;}
+
+.cell .narracion > div:not(.cabecera_minuto), .cell .minuto_a_minuto {position:relative;}
+
+/*audios de RNE audio*/
+figure.event.audio {max-width:65rem;}
+figure.event.audio figcaption img {margin:0.2rem 1.2rem 0 0;}

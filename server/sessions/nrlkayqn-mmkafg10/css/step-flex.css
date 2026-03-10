@@ -1,0 +1,25 @@
+.step-flex{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+}
+.step-flex img{
+    padding: 0;
+    width: 300px;
+}
+
+@media (max-width: 600px){
+    .step-flex img{
+        width: 200px;
+        height: 250px;
+    }
+    
+}
+@media (max-width: 450px){
+    .step-flex img{
+        width: 150px;
+        height: 200px;
+    }
+    
+}

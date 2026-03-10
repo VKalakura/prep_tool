@@ -1,0 +1,110 @@
+:root {
+  --mainColor: #b10b1f;
+  --text: #fff;
+  --input-color: #000;
+  --valid-input-color: #000;
+}
+
+#form-feedback {
+  border-radius: 20px;
+  max-width: 560px;
+  margin: 0 auto;
+  font-family: Arial;
+  border: 3px solid var(--mainColor);
+  overflow: hidden;
+}
+
+.form-feedback-content {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.form-feedback-title {
+  text-align: center;
+  padding: 30px 15px;
+  font-size: 30px;
+  background: var(--mainColor);
+  color: var(--text) !important;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: 2px;
+}
+
+@media (max-width: 767px) {
+  .form-feedback-title {
+    font-size: 24px;
+  }
+}
+
+#form-feedback input {
+  font-size: 16px;
+  margin-bottom: 16px;
+  width: 100%;
+  padding: 12px 15px;
+  box-sizing: border-box;
+  border: 1px solid var(--mainColor);
+  border-radius: 4px;
+  color: var(--input-color);
+  line-height: 1;
+  background: #f7f7f7;
+  box-shadow: 3px 3px 6px #00000030;
+  font-family: Arial;
+  background: #fff;
+}
+
+#form-feedback input:focus {
+  outline: 1px solid var(--mainColor);
+}
+
+.form-feedback-btn {
+  background: var(--mainColor);
+  color: var(--text);
+  width: 80%;
+  margin: auto;
+  display: flex;
+  padding: 14px;
+  font-weight: 700;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  text-transform: uppercase;
+  border-radius: 4px;
+  font-family: Arial;
+  letter-spacing: 1px;
+  box-shadow: 3px 3px 6px #00000030;
+  text-align: center;
+  justify-content: center;
+}
+
+input.error {
+  margin-bottom: 5px !important;
+  background: #ff000020 !important;
+  position: relative;
+  color: var(--valid-input-color) !important;
+}
+
+input.error::placeholder {
+  color: inherit;
+}
+
+label.error {
+  font-family: Arial;
+  color: red;
+  font-size: 14px;
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.phone + label.error {
+  margin: 5px 0 0 !important;
+}
+
+input.valid {
+  background: #00ef0030 !important;
+  color: var(--valid-input-color) !important;
+}

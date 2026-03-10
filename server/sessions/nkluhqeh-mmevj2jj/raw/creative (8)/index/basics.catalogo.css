@@ -1,0 +1,55 @@
+.arrays .gridBox {overflow:hidden;width:100%;}
+.slideH > ul,.topBox {display:inline-block;}
+.pagBox,.titaux {float:left;}
+
+.arrays .socialBox {margin-top:56.25%;}
+.arrays .no_ima .socialBox {padding:0;margin-top:0;}
+.arrays.g2 .cell:nth-child(2n+1) {clear:both;}
+
+/*un enlace que engloba, pero al final del modulo*/
+.arrays .mainBox > a {width:100%;height:100%;}
+
+/*partimos filas*/
+.g3.arrays .cell:nth-child(3n+1) {clear:left;}
+.g4.arrays .cell:nth-child(4n+1) {clear:left;}
+.g5.arrays .cell:nth-child(5n+1) {clear:left;}
+.g6.arrays .cell:nth-child(6n+1) {clear:left;}
+.g8.arrays .cell:nth-child(8n+1) {clear:left;}
+
+/** TOP 10 **************************************/
+/************************************************/
+.emisBox ul {float:left;}
+
+/*modulo x2*/
+
+
+/** VER MAS *************************************/
+/************************************************/
+.slideV + .controlBox,
+.slideV + .spinnBox + .controlBox {float:right;}
+
+
+.slideH ul {
+-webkit-transition: left 0.5s;
+   -moz-transition: left 0.5s;
+     -o-transition: left 0.5s;
+        transition: left 0.5s;
+        }
+
+
+.arrays .mainBox > a {position:absolute;}
+.slideH > ul,.pagBox,.arrays .mod,.arrays .mainBox,.slideH + .controlBox .arrow, .slideH+.spinnBox+.controlBox .arrow {position:relative;}
+
+
+
+.slideH > ul,.arrays .socialBox {left:0;}
+.arrays .mainBox > a {top:0;}
+
+.arrays .mediaBox,
+.arrays .mainBox > a {z-index:2;}
+.arrays .socialBox {z-index:3;}
+
+/*moscas balcon directos*/
+.emisBox .listadoBox > .grid .cell .ico {position: absolute;}
+.listadoBox > .tveBox .ico.canal {top:50%;}
+.listadoBox > .rneBox .ico.canal {bottom:0em;z-index:-1;}

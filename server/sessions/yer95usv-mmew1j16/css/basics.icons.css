@@ -1,0 +1,220 @@
+@charset 'UTF-8';
+.ico * {display:block;}/*si tuviera que ser inline-block, hay que diferenciar por elementos interiores*/
+.ico,.ico a {text-align:center;}
+.ico a {width:100%;height:100%;}
+
+.ico img {margin:0 auto;background-repeat:no-repeat;vertical-align:middle;display:inline-block;}
+.figure .ico.play,
+.incluBox .mediaBox .play,
+.tab_direc,
+.ico.photo.gallery,
+.rtve .ico.photo,
+.noticias .ico.photo,
+.listas .ico.notic,
+.vjs-panel-display .socialBox .ico:hover,
+.vjs-panel-display input[type='button']:hover,
+.vjs-panel-display .boton strong:hover,
+.audioPlayer .vjs-control-bar.controlBox:before,
+.relcont li > a:before,
+.mod.no_ima .socialBox  .ico a:hover,
+.mediaBox + .socialBox  .ico a:hover,
+.overBox + .socialBox .ico a:hover,
+.bloody.inside .slaves.size_50.g2 .slavesBox .socialBox .ico.share .ico a:hover,
+.bloody.inside .size100.g2 .socialBox .ico.share .ico a:hover,
+.backed.arrays .mediaBox+.socialBox .ico.share .ico a:hover,
+figcaption .socialBox .ico.share .ico a:hover,
+.container:not(.bloody):not(.titles) .slaves.size100.g2 .slavesBox .socialBox .ico.share .ico a:hover,
+.bloody:not(.inside) .slaves.size100.g2 .slavesBox .socialBox .ico.share .ico a:hover,
+.bloody.inside.titles .size100.g2 .gridBox > .cell .socialBox .ico.share .ico a:hover,
+.inside:not(.bloody):not(.titles) .size_50.g3 .cell:nth-child(2) .socialBox .ico.share .ico a:hover,
+.inside:not(.bloody):not(.titles) .size_50.g3 .cell:nth-child(3) .socialBox .ico.share .ico a:hover,
+.inside:not(.bloody):not(.titles) .size_75.g3 .cell:nth-child(2) .socialBox .ico.share .ico a:hover,
+.inside:not(.bloody):not(.titles) .size_75.g3 .cell:nth-child(3) .socialBox .ico.share .ico a:hover,
+.inside:not(.bloody):not(.titles) .size100.g3 .slavesBox .cell .socialBox .ico.share .ico a:hover,
+.container[class*="photo_"] .noticBox .notic,.container[class*="video_"] .noticBox .notic  {
+background: rgb(247,119,7); /* Old browsers */
+background: -moz-linear-gradient(left,  rgba(247,119,7,1) 0%, rgba(240,80,16,1) 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(247,119,7,1)), color-stop(100%,rgba(240,80,16,1))); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(left,  rgba(247,119,7,1) 0%,rgba(240,80,16,1) 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(left,  rgba(247,119,7,1) 0%,rgba(240,80,16,1) 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(left,  rgba(247,119,7,1) 0%,rgba(240,80,16,1) 100%); /* IE10+ */
+background: linear-gradient(to right,  rgba(247,119,7,1) 0%,rgba(240,80,16,1) 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f77707', endColorstr='#f05010',GradientType=1 ); /* IE6-9 */
+/*background:url('/css/rtve.2015/i/iconos/icons_bkgMedia.png') 50% 0 no-repeat;*/
+}
+
+/*borde debajo de los media*/
+.grid:not(.listas) .gridBox .mod:not(.no_ima) .mediaBox > a:after,
+.noticias .mediaBox.photoBox:after,
+.rtve .mediaBox.photoBox:after,
+.totem .ima:after  {content:'';height:0.3em;width:100%;display:inline-block;position:absolute;bottom:0;left:0;
+background: rgb(247,119,7); /* Old browsers */
+background: -moz-linear-gradient(left,  rgba(240,80,16,1) 0%, rgb(247,119,7) 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(240,80,16,1)), color-stop(100%,rgb(247,119,7))); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(left,  rgba(240,80,16,1) 0%,rgb(247,119,7) 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(left,  rgba(240,80,16,1) 0%,rgb(247,119,7) 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(left,  rgba(240,80,16,1) 0%,rgb(247,119,7) 100%); /* IE10+ */
+background: linear-gradient(to right,  rgba(240,80,16,1) 0%,rgb(247,119,7) 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f05010', endColorstr='#f77707',GradientType=1 ); /* IE6-9 */
+z-index:1;}
+.grid.listas .mediaBox > a:after {display:none;}
+.mediaBox > a .ico,.audioPlayer:after {z-index:1;}
+		
+		.video img {background-position:00% 80%;}
+		.audio img {background-position:10% 80%;}
+		    
+		.photo img {background-image:url('../img/icons_40x40_active.png');background-position:20% 80%;}
+		.notic img {background-image:url('../img/icons_40x40_active.png');background-position:30% 80%;}
+		.polls img {background-image:url('../img/icons_40x40_active.png');background-position:40% 80%;}
+		
+		
+
+/*iconos de canales/cadenas*/
+.tveBox .mediaBox .ico.canal img {background-image:url("");background-repeat:no-repeat;background-size:100% auto;}
+	.tveBox .canal img {background-position:-100% -100%;}
+	.tveBox .pagBox[data-idemi='1688877'] .canal img,
+  .tveBox .canal.la1 img {background-position:1em 00.75%;}
+  .tveBox .pagBox[data-idemi='1688885'] .canal img,
+  .tveBox .canal.la2 img {background-position:1em 14.3%;}
+  .tveBox .canal.c24 img,
+  .tveBox .pagBox[data-idemi='1694255'] .canal img {background-position:1em 28.6%;}
+  .tveBox .pagBox[data-idemi='1938028'] .canal img,
+  .tveBox .pagBox[data-idemi='1938030'] .canal img,
+  .tveBox .pagBox[data-idemi='1938069'] .canal img,
+  .tveBox .pagBox[data-idemi='1938070'] .canal img {background-position:1em 85.8%;}
+  .tveBox .canal.tdp img,
+  .tveBox .pagBox[data-idemi='1712295'] .canal img {background-position:1em 42.9%;}
+  /*.tveBox .canal.web img {background-position:1em 99.25%;}*/
+.rneBox .txtBox .ico.canal img {background-image:url("");background-repeat:no-repeat;background-size:100% auto;}
+	.rneBox .canal.rne img {background-position:1.2em 0;}
+	.rneBox .canal.rn3 img {background-position:2em 16.666666666%;}
+  .rneBox .canal.rnc img {background-position:2em 66.666666666%;}
+	.rneBox .canal.rn4 img {background-position:2em 33.333333333%;}
+	.rneBox .canal.rn5 img {background-position:2em 50%;}
+	.rneBox .canal.rnx img {background-position:2em 83.333333333%;}
+/*ocultamos de entrada las leyendas de los iconos*/
+.ico > span {clip:rect(0,0,0,0);overflow:hidden;}
+
+/*iconos 'more'*/
+.slideV + .controlBox,.slideV + .controlBox .more_,
+.slideV + .spinnBox + .controlBox,.slideV + .spinnBox + .controlBox .more_,.boxComm .controlBox .more_ {height:6em;line-height:6em;width:8em;}
+.slideV + .controlBox .more_,
+.slideV + .spinnBox + .controlBox .more_ {cursor:pointer;}
+.slideV + .controlBox .more_ span,
+.slideV + .spinnBox + .controlBox .more_ span {margin:0 0 0 -4.8em;float:left;}
+.slideV + .controlBox .more_ span,.slideV + .spinnBox + .controlBox .more_ span,.boxComm .controlBox .more_ span {clip:auto;overflow:visible;}
+
+/*sprites globales*/
+.artBody + .slideH .socialBox .ico img,
+.artBody + .slideH .socialBox .ico.share>.blind>img {background-image:url('../img/icons_40x40_ffffff.png');opacity:0.95;}
+.socialBox .fbook img,
+.socialBlock .fbook img                      {background-position:00% 60%;}
+.socialBox .twitt img,
+.socialBlock .twitt img                      {background-position:10% 60%;}
+.socialBlock .insta img                      {background-position:70% 60%;}
+.socialBox .bmark img 						 {background-position:20% 40%;}
+.socialBox .repos img,
+.socialBlock .repos img						 {background-position:50% 40%;}
+.socialBox .comms img,
+.socialBlock .comms img 					 {background-position:40% 40%;}
+.socialBox .email img                        {background-position:30% 40%;}
+.socialBox .share > a > img,
+.socialBox .share .blind img,
+.socialBlock .share > a > img		         {background-position:10% 40%;}
+.socialBox .gplus img,
+.socialBlock .gplus img                      {background-position:20% 60%;}
+.socialBox .whats img                        {background-position:30% 60%;}
+.socialBox .menea img                        {background-position:40% 60%;}
+.socialBox .tuent img                        {background-position:50% 60%;}
+.socialBox .linke img                        {background-position:60% 60%;}
+.artBody + .slideH .socialBox .ico.blsky img {background-image:url("");background-position:50%;background-size:3.8rem;}
+
+
+	.auxheader .users img                        {background-position:10% 0;}
+	.auxheader .back_ img,.controlBox .back_ img {background-position:20% 20%;}
+	
+	.controlBox .ongrid img                      {background-position:40% 100%;}
+	.auxheader .above img,
+	.navTag .listag .above img                   {background-position:10% 20%;}
+	.auxheader .next_ img,.controlBox .next_ img,
+	.prograBox .next_ img                        {background-position:30% 20%;}
+	.auxheader .seekr img,.seekrBox .seekr img   {background-position:20% 0;}
+	.rssfd img	                                 {background-position:30% 0;}
+	
+	.controlBox .more_ img,
+	.prograBox .more_ img 											 {background-position:50% 20%;}
+	.paginaBox .begin img												 {background-position:70% 20%;}
+	.paginaBox .goend img												 {background-position:80% 20%;}
+	
+	.striplayer .close img {}
+	.socialBox .share .blind.be_on img,
+	.close img                                   {background-position:40% 20%;}
+	
+/*tooltip*/
+.socialBox .ico.bmark .tooltip.ko img {background-image:url('../img/icons_40x40_active.png');background-position:70% 40%;}
+.socialBox .ico.bmark .tooltip.ok img{background-image:url('../img/icons_40x40_active.png');background-position:80% 40%;}
+
+
+/*spinner general*/
+.spinnBox {background:rgba(255,255,255,0.85);width:100%;height:100%;display:inline-block;position:absolute;left:0;top:0;z-index:4;}
+.spinn {text-align:center;width:8em;height:1.4em;position:absolute;left:50%;top:50%;margin:-0.7em 0 0 -4em;display:inline-block;}
+.spinn span {float:left;margin:0 0.3em;
+  width:1.4em;
+  height:1.4em;
+  border-radius:100%;
+  display: inline-block;
+  -webkit-animation: bouncedelay 2s infinite ease-in-out;
+  animation: bouncedelay 1.8s infinite ease-in-out;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+}
+.spinn .ball01 {
+  -webkit-animation-delay: -0.48s;
+  animation-delay: -0.48s;
+}
+.spinn .ball02 {
+  -webkit-animation-delay: -0.32s;
+  animation-delay: -0.32s;
+}
+.spinn .ball03 {
+  -webkit-animation-delay: -0.16s;
+  animation-delay: -0.16s;
+}
+@-webkit-keyframes bouncedelay {
+  0%, 80%, 100% { -webkit-transform: scale(0.1) }
+  40% { -webkit-transform: scale(1.0) }
+}
+@keyframes bouncedelay {
+  0%, 80%, 100% {
+    transform: scale(0.1);
+    -webkit-transform: scale(0.1);
+  } 40% {
+    transform: scale(1.0);
+    -webkit-transform: scale(1.0);
+  }
+}
+.ball01 {background:#ffa000;}
+.ball02 {background:#f98307;}
+.ball03 {background:#f56a0f;}
+.ball04 {background:#f05014;}
+
+/*.sp2 .bounce1{background:#33ccff;}
+.sp2 .bounce2{background:#2099e8;}
+.sp2 .bounce3{background:#0f6ad3;}
+.sp2 .bounce4{background:#0042c0;}
+
+.sp3 .bounce1{background:#df0000;}
+.sp3 .bounce2{background:#c90c13;}
+.sp3 .bounce3{background:#ad182b;}
+.sp3 .bounce4{background:#97233f;}
+*/
+.socialBox .ico .legend, .auxheader .ico .legend {position:absolute;left:-900%;top:-900%;visibility:hidden;}
+.container > section.grid .spinnBox {position:absolute;z-index:3;}/*hay una regla muy restrictiva en "mothers"*/
+
+/*las imagenes fuera de fotogaleria, no tienen icono*/
+.ico.image img, .mediaBox.photo + .socialBox .ico.bmark {display:none;}
+.mediaBox.noticBox .ico.notic > span {position:absolute;}
+
+.ico.redad {display:none;}
+
+

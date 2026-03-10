@@ -1,0 +1,390 @@
+.mainheader .container {padding:0;}
+.mainheader .grid {margin:0;}
+.mainheader .grid,.maintabs .brows img,.tab_first .logo,.tab_first .logo * {display:block;}
+.maintabs {text-align:right;}
+
+/*logo*/
+.maintabs > .tab_first,.tab_first .logo a {overflow:hidden;}
+.maintabs > .tab_first {padding:0;float:left;}
+.tab_first *,.tab_first .ico img {width:100%;height:auto;}
+
+.maintabs li {width:auto;display:inline-block;}
+.tabH1 {padding:0.1em 0.5em 0 0.5em;}
+
+
+/*boton 'ahora en directo'*/
+.tab_direc {float:right;}
+.tab_direc .ico,
+.tab_direc .ico * {display:inline-block;}
+/*.tab_direc .ico img {background:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAADbSURBVHja7JdBDsFAFIbbxgGsdNNwE8IV7LBwC1bcwxbX0AQnISrBjv34JSO6sDHtNH/k/5Nv2cyXN3nvTUNjTMCcKCCPBCUoQQlK8PdcwbAqwdBh1b0/2IIBOLFecRscwYy1gvkcwBikrE3SBBuwZO/iEbiX2URlXfG3pFb0zDoHuyADE9YK5nMBfbBn3SQNsAMLUP+rVVer6BzqK56C2EXOdwVpx8zDDuxeUTkfgiuQgDVbk9A+Fl5Dew5aPuSKVpD2wXqzTdDxLee6i/VXJ0EJSlCCEvzkKcAAyzk5bf1zDZIAAAAASUVORK5CYII=') no-repeat;
+height:4em;width:4em;float:left;}*/
+.tab_direc .ico span{float:right;}
+
+/** ESTADOS DE LA CABECERA **********************/
+/*comunes*/
+.navBox .maintabs {text-align:center;}
+
+
+/*position maxi
+.mainheader > .navBox {padding-top:2rem;height:8.4rem;background:#fff;}*/
+.navBox .maintabs {}
+.maintabs li,
+.subheader nav li {padding:0 0.6rem;}
+.mainheader .tab_direc {padding:0.3em 1.2em 0.3em 0;}
+.maintabs .tab_first {padding:0;margin-top:-0.6rem;}
+
+.maintabs li > .be_on + .blindBox {height:4.2em;}
+.maintabs > .tab_first,.tab_first .logo a {max-height:5.5em;}
+.tab_first .logo {width:9.8em;}
+
+/*position mini*/
+.minify,.maintabs .blindBox .blindBox {box-shadow:0 0.2em 0.4em rgba(0,0,0,0.25);}
+
+.minify > .navBox,.navBox .maintabs {height:5.2em;}
+.minify > .navBox {padding-top:0;border-bottom-width:0.4rem;border-bottom-style:solid;}
+.minify .maintabs li > .blindBox ul {display:none;}
+.minify .maintabs li {padding-top:0;padding-bottom:0;}
+.minify .maintabs > .tab_first,.minify .tab_first .logo a {max-height:3.9em;margin-top:0.2em;}
+.minify .tab_first .logo {width:6.8rem;}
+
+.minify .brows.ico img {display:none;}
+.minify .active .brows.ico img {display:block;bottom:-0.4em;left:0;}
+.minify .tabH1 {/*line-height:2.5;*/padding:0.3em 0.5em 0.1em 0.5em;}
+
+
+
+
+/*positioning*/
+.tab_direc .ico {top:0;}
+.arrow + .blindBox,.spechead nav .blindBox {
+        transition: height 0.5s;
+-webkit-transition: height 0.5s;
+   -moz-transition: height 0.5s;
+     -o-transition: height 0.5s;
+      }
+.emisBox{
+        transition: margin 1s;
+-webkit-transition: margin 1s;
+   -moz-transition: margin 1s;
+     -o-transition: margin 1s;
+      }
+.tab_direc {
+        transition: opacity 1s;
+-webkit-transition: opacity 1s;
+   -moz-transition: opacity 1s;
+     -o-transition: opacity 1s;
+
+}
+
+
+
+
+
+
+
+
+
+/*segundos niveles*//*visibles siempre en estado maxi*/
+.maintabs li > .blindBox {width:100%;height:0;display:inline-block;text-align:center;}
+	.maintabs li > .blindBox li {visibility:hidden;}
+	.maintabs li > .be_on + .blindBox,.maintabs li > .be_on + .blindBox ul {/*overflow:hidden;*/}
+	.maintabs li > .be_on + .blindBox ul {max-height:4.2em;overflow:hidden;}
+	.maintabs li > .be_on + .blindBox .blindBox ul {max-height:6.2em;}
+
+	.maintabs li > .be_on + .blindBox li,
+	.maintabs .tab_first > .ico + .blindBox .tab_direc {visibility:visible;}
+
+.maintabs li > .blindBox ul,
+.subheader nav ul {width:100%;padding:0.6em 0;}
+.maintabs li > .blindBox * {display:inline-block;}
+.maintabs li > .blindBox .ico {padding:0;}
+.maintabs li > .blindBox .ico a span {padding:0.6rem 1.2rem;}
+.subheader nav .ico {padding:0.6em;}
+
+
+
+
+/*submenus*/
+.maintabs .blindBox .blindBox,
+.subheader nav .blindBox {height:0;overflow:hidden;}
+.maintabs .blindBox .blindBox.be_on,
+.subheader nav .blindBox.be_on,
+.subheader nav {/*height:5.2em;*/}
+.mainbodier {padding-top:4.2em;}
+
+
+
+
+/*en directo*/
+
+/*.maintabs .tab_first > .be_on + .blindBox {width:100%;}
+.maintabs .tab_first > .blindBox .tab_direc,
+.maintabs .tab_first > .blindBox .tab_direc .ico {padding:0;}
+.maintabs .tab_first > .blindBox .tab_direc img {display:none;}*/
+.emisBox.be_on + .navBox .maintabs .tab_direc {opacity:0;visibility:hidden;}
+
+
+/*flechitas*/
+.maintabs .arrow a,
+.subheader nav .arrow a {padding-right:3em;}
+.maintabs > li .blindBox .ico img,.subheader nav li .ico img
+{height:2em;width:2em;display:none;background-position:0 20%;background-repeat:no-repeat;background-size:1100%;}
+.maintabs > li .blindBox .arrow img,.subheader nav li .arrow img {display:block;}
+.maintabs .arrow a img {background-image:url('../img/icons_40x40_ffffff.png');}
+.subheader nav .arrow a img {background-image:url("");}
+
+.maintabs > li .blindBox .be_on img,.subheader nav li .be_on img {background-position:10% 20%;}
+
+/*.maintabs .tab_direc + li .arrow a img {background-image:url('../images/icons_40x40_000000.png');opacity:0.8;} */
+
+
+/*cajones directos*/
+.emisBox {overflow:hidden;}
+.emisBox.be_on {}
+.emisBox .navBox {}
+.emisBox .navBox ul {padding-top:0.8em;}
+.emisBox > .controlBox {padding:0.1em 1.2em;}
+.emisBox .navBox li,.emisBox .navBox li span {display:inline-block;}
+.emisBox .navBox li span {padding:0 0.8em;border-right:0.1em solid #494847;}
+.emisBox .active span {background:#494847;}
+.mainheader .backed {}
+
+.emisBox .prograLis .topBox {width:500%;}
+.emisBox .prograLis .pagBox > ul {width:100%;}/*esto deberia ser generico de catalogo*/
+.emisBox .prograLis .pagBox {width:20%;}
+
+/*logos provisionales*/
+.tveBox .pagBox[data-idemi='1938129'] .canal img,
+.tveBox .pagBox[data-idemi='1938130'] .canal img,
+.tveBox .pagBox[data-idemi='1938153'] .canal img,
+.tveBox .pagBox[data-idemi='1938157'] .canal img {}
+
+
+
+
+
+/*hamburguesa no hay en desktp*/
+.navBox > .container > .blind {display:none;}
+
+/*positioning*/
+
+.mainheader .navBox,.emisBox,
+.maintabs .arrow a,
+.subheader nav .arrow a,
+.maintabs .brows.ico a {position:relative;}
+.maintabs .arrow a img,
+.subheader nav .arrow a img,
+.minify .maintabs .brows.ico img,
+.maintabs li > .blindBox,
+.subheader nav .blindBox,
+.emisBox > .controlBox {position:absolute;}
+
+
+
+
+.maintabs li > .blindBox {left:0;top:0;}
+.maintabs > li > .be_on + .blindBox {/*top:8.4em;*/top:6.2em;}
+.maintabs .blindBox .blindBox,.minify .maintabs > li > .be_on + .blindBox {top:5.2em;top:4.2em;}
+.maintabs .arrow a img,
+.subheader nav .arrow a img,
+.emisBox > .controlBox {right:0;top:0;}
+
+
+
+.maintabs li > .be_on + .blindBox {z-index:-1;}
+.maintabs li > .blindBox {z-index:-2;}
+
+/** MODIFICACIONES CABECERA PRINCIPAL ***********/
+/************************************************/
+.minify .active .brows.ico img,
+.minify .brows img,
+.maintabs .active .brows.ico img,
+.maintabs .brows img {display:none;}
+.maintabs .tab_first > .blindBox {background:rgb(35,36,42);}
+.maintabs .tab_first>.blindBox .ico span {color:#aaa;}
+
+/*ESTRUCTURA*/
+.minify>.navBox,.navBox .maintabs,.mainheader > .navBox {height:auto;}
+.mainheader .tab_direc {padding:0;background:transparent;}
+.navBox .maintabs {text-align:left;}
+.mainheader > .navBox {padding:0 0 1.2rem 0;}
+.mainheader header > .container {padding-top:1.2rem;text-align:center;}
+.mainheader header > .container > nav {display:inline-block;}
+
+.grid .gridBox,.gridBox .cell {padding:1.2rem;padding:0.8rem;}
+
+
+/*COLORES*/
+.mainheader {background:#000;}
+.bodier {background:#fff;}
+.mainheader>.navBox {background:transparent;}
+.minify li:not(.active) .tabH1,
+.maintabs .tabH1 {color:#fff;}
+/*FUENTES*/
+.minify .tabH1,.tabH1,.tab_direc .boton span {font-size:1.8rem;font-weight:500;line-height:2.8rem;display:inline-block;padding:0 1.6rem;}
+.minify .tabH1,.tabH1 {display:block;}
+.tab_direc .boton span {text-transform:lowercase;padding:0 0.8rem 0 0.4rem;font-size:1.6rem;font-weight:700;letter-spacing:0.5pt;}
+.bigTit > .grid > .secBox span:not(.titaux) {font-size:7.6rem;}
+
+
+/*LOGO*/
+.mainheader .logo .tabH1 {clip:rect(0,0,0,0);display:inline-block;position:absolute;overflow:hidden;width:0;}
+.mainheader .logo {display:inline-block;padding:0 0.8rem;border-radius:0.2rem;height:3.6rem;line-height:3.6rem;overflow:hidden;}
+.minify .tab_first .logo,
+.tab_first .logo {width:auto;margin-right:1.2rem;}
+.mainheader .logo img {width:5.8rem;height:auto;}
+.mainheader .logo:hover img,.mainheader .logo:focus img {padding-top:100%;
+background:url("logoRTVE_ffffff.png") no-repeat 0 0;background-size:100% auto;}
+
+/*portada2018*/
+/** MODIFICACIONES CABECERA PRINCIPAL ***********/
+/************************************************/
+.minify .active .brows.ico img,.minify .brows img,.maintabs .active .brows.ico img, .maintabs .brows img {display:none;}
+.maintabs .tab_first > .blindBox {background:rgb(35,36,42);}.maintabs .tab_first>.blindBox .ico span {color:#aaa;}
+
+/*ESTRUCTURA*/
+.minify>.navBox,.navBox .maintabs,.mainheader > .navBox {height:auto;}
+.mainheader .tab_direc {padding:0;background:transparent;}
+.navBox .maintabs {text-align:left;}.mainheader > .navBox {padding:0 0 1.2rem 0;}
+.mainheader header > .container {padding-top:1.2rem;text-align:center;}.mainheader header > .container > nav {display:inline-block;}
+.grid .gridBox,.gridBox .cell {padding:1.2rem;padding:0.8rem;}
+
+/*COLORES*/
+.mainheader {background:#000;}
+.bodier {background:#fff;}.mainheader>.navBox {background:transparent;}
+.minify li:not(.active) .tabH1,.maintabs .tabH1 {color:#fff;}
+
+/*FUENTES*/
+.minify .tabH1,.tabH1,.tab_direc .boton span {font-size:1.8rem;font-weight:500;line-height:2.8rem;display:inline-block;padding:0 1.6rem;}
+.minify .tabH1,.tabH1 {display:block;}
+.tab_direc .boton span {text-transform:lowercase;padding:0 0.8rem 0 0.4rem;font-size:1.6rem;font-weight:700;letter-spacing:0.5pt;}
+.bigTit > .grid > .secBox span:not(.titaux) {font-size:7.6rem;}
+
+/*LOGO*/
+.mainheader .logo .tabH1 {clip:rect(0,0,0,0);display:inline-block;position:absolute;overflow:hidden;width:0;}
+.mainheader .logo {display:inline-block;padding:0 0.8rem;border-radius:0.2rem;height:3.6rem;line-height:3.6rem;overflow:hidden;}
+.minify .tab_first .logo,.tab_first .logo {width:auto;margin-right:1.2rem;}.mainheader .logo img {width:5.8rem;height:auto;}
+
+.mainheader .logo a:hover img,.mainheader .logo a:focus img {padding-top:100%;background:url("logoRTVE_ffffff.png") no-repeat 0 0;background-size:100% auto;}
+.mainheader .logo a:focus img {outline:none;}
+
+/*EN DIRECTO*/
+.tab_direc {position:absolute;left:1.6rem;}
+.tab_direc .tabH1 {text-transform:lowercase;padding:0 0.8rem 0 0.4rem;font-size:1.6rem;font-weight:700;letter-spacing:0.5pt;}
+.tab_direc .ico img {float:left;width:2.8rem;height:2.8rem;background:url("iconoPlay@4x_28px.png") no-repeat 0 0;background-size:100%;margin:0 0 0 0.4rem;}
+
+/*MODULO DIRECTOS live_mod*/
+.wrapper.bodier .container .grid > .gridBox > .cell .live_mod a >  .ico.play {background:rgba(0,0,0,.5);width:11em;height:11em;}
+.wrapper.bodier .grid .live_mod .mediaBox>a>.ico .duration {font-size:180%;font-weight:700;line-height:1.1111;margin:0;}
+.wrapper.bodier .grid > .gridBox > .cell .live_mod a > .play img {width:5rem;height:5rem;background-image:url("");background-color:transparent;width:6em;height:6em;margin:0;}
+
+.wrapper.bodier .grid > .gridBox > .cell .videoBox.live_mod a > .play img  {background-size:1100%;background-position: 0% 80%;}
+.wrapper.bodier .grid > .gridBox > .cell .audioBox.live_mod a > .play img  {background-size:1100%;background-position: 10% 80%;}
+
+.maintabs li,.subheader nav li {padding:0;}
+.maintabs > li {display:inline-block;vertical-align:middle;}
+.minify>.navBox {border-bottom-width:0.1rem;}
+.minify .maintabs > .tab_first,.maintabs > .tab_first {margin:0.2rem 0 -0.2rem 0;}
+.minify .tab_first .logo a {margin:0;}
+/*head portada*/
+.maintabs > li > .ico:not(.logo) > a {display:inline-block;padding:0.4rem 0;border-radius:0.2rem;color:#fff;line-height:3.2rem;height:auto;}
+.maintabs > li > .ico:not(.logo) > a:hover, .maintabs > li > .ico:not(.logo) > a:focus {background-color:rgb(240,80,16);outline:none;}
+
+/*nueva head - pfs*/
+.maintabs > li > a.ico:not(.logo) {display:inline-block;padding:0.4rem 0;border-radius:0.2rem;color:#fff;line-height:3.2rem;height:auto;}
+.maintabs > li > a.ico:not(.logo):hover, .maintabs > li > a.ico:not(.logo):focus {background-color:rgb(240,80,16);outline:none;}
+
+.maintabs > li .blindBox a {border-radius:0.2rem;}
+.maintabs .blindBox.be_on > ul li a:focus {background-color:#fff;outline:none;}
+
+.tab_first > .blindBox.be_on > ul li a:focus span,
+.tab_infor > .blindBox.be_on > ul li a:focus span {color:#494847;}
+.tab_telev > .blindBox.be_on > ul li a:focus span {color:#2196f3;}
+.tab_sport > .blindBox.be_on > ul li a:focus span {color:#0f924c;}
+.tab_radio > .blindBox.be_on > ul li a:focus span {color:#d81a28;}
+
+.maintabs > .active > .ico:not(.logo) > a {background:#fff;}
+.maintabs > .active > .ico:not(.logo) > a .tabH1 {color:#000;}
+
+.blindBox.be_on > ul li a:focus {background-color:#fff;}
+.tab_telev > .blindBox.be_on > ul li a:focus span {color:#2196f3;}
+
+/*SUBCABECERAS*/
+.maintabs>li>.be_on+.blindBox {top:6.2rem;}
+/*.tab_infor>.blindBox.be_on>ul {background:rgb(35,36,42);}*/
+.navBox > .container > .blind {width:0;height:0;}
+
+/*menu 2do nivel desplegable*/
+/* .maintabs .blindBox.be_on > ul li .ico.arrow:hover a > span {color:#0f924c;} */
+.maintabs .blindBox .blindBox.be_on {overflow:visible}
+.maintabs > li > .be_on + .blindBox li> .blindBox.be_on > ul .ico span {color: #fff;}
+.maintabs .blindBox.be_on>ul li .arrow.ico img {top: 50%;margin-top: -1em;margin-right: 1em;}
+/* .maintabs .blindBox.be_on > ul li .ico.arrow > a:hover {background-color: #fff;outline: none;} */
+.maintabs .blindBox.be_on>ul li .arrow a:focus img {background-position: 10% 20%;filter:invert(.4)}
+.maintabs > li > .be_on + .blindBox li> .blindBox.be_on > ul .ico a:hover span {opacity:.8}
+
+/*new buttons directos*/
+.mainheader header>.container>.blind.lefton[style*=none]+nav .maintabs li {display:inline-flex;}
+li.tab_direc[class*='direc'] {position:absolute;float:none;}
+li.tab_direc.playdirec {left:1.2rem;display:flex;align-items: center;flex-direction: row;}
+li.tab_direc.playradiodirec {left:11.2rem;}
+li.tab_direc.playdirec img,li.tab_direc.playradiodirec img{margin:0;width:3.2rem;height:3.2rem;}
+li.tab_direc.playdirec img {background: url('../img/rtve-icon_playVideo_circulo.svg');background-size: contain;}
+li.tab_direc.playradiodirec img {background: url('../img/rtve-icon_playAudio_circulo.svg');background-size: contain;}
+
+.tab_direc.playdirec .boton span{position: absolute;left:-10rem;top:-10rem;color:transparent;}
+.tab_direc.playradiodirec .boton span{position: absolute;left:-100rem;top:-10rem;color:transparent;}
+
+li.tab_direc.playdirec:before {content:"directo:";color:#fff;display:inline-block;font-size:1.1rem;line-height:3.2rem;text-transform:uppercase;
+letter-spacing:.75pt;font-weight:700;margin-right:0.8rem;}
+
+.maintabs>li.tab_direc.playdirec>.ico:not(.logo)>a:focus img, 
+.maintabs>li.tab_direc.playdirec>.ico:not(.logo)>a:hover img, 
+.maintabs>li.tab_direc.playdirec>a.ico:not(.logo):focus img, 
+.maintabs>li.tab_direc.playdirec>a.ico:not(.logo):hover img {background: url("rtve-icon_playVideo_circulo_masa.svg");background-size: contain;}
+
+.maintabs>li.tab_direc.playdirec>.ico:not(.logo)>a:focus, 
+.maintabs>li.tab_direc.playdirec>.ico:not(.logo)>a:hover, 
+.maintabs>li.tab_direc.playdirec>a.ico:not(.logo):focus, 
+.maintabs>li.tab_direc.playdirec>a.ico:not(.logo):hover {background:transparent;}
+
+.maintabs>li.tab_direc.playradiodirec>.ico:not(.logo)>a:focus img,
+.maintabs>li.tab_direc.playradiodirec>.ico:not(.logo)>a:hover img,
+.maintabs>li.tab_direc.playradiodirec>a.ico:not(.logo):focus img,
+.maintabs>li.tab_direc.playradiodirec>a.ico:not(.logo):hover img{background: url("rtve-icon_playAudio_circulo_masa.svg");background-size: contain;}
+.maintabs>li.tab_direc.playradiodirec>.ico:not(.logo)>a:focus, 
+.maintabs>li.tab_direc.playradiodirec>.ico:not(.logo)>a:hover, 
+.maintabs>li.tab_direc.playradiodirec>a.ico:not(.logo):focus,
+.maintabs>li.tab_direc.playradiodirec>a.ico:not(.logo):hover{background:transparent;}
+
+
+.maintabs li>.blindBox .ico a span {font-size:1.6rem;}
+.minify .tabH1, .tabH1, .tab_direc .boton span {font-size: 1.6rem;padding: 0 1.2rem;}
+
+@media only screen and (max-width:1000px) {
+.mainbodier {padding-top:0;}
+/*.wrapper.shortBox {bottom:63rem;}
+.gridBox .cell {padding:0.4rem;}*/
+.bodier > .container:not(.striplayer),header.navBox > .container:not(.striplayer),.bodier > .botFixBox.news24h.striplayer > .grid {width:100%;max-width:100%;min-width:100%;}
+
+/*menu colapsado*/
+.navBox {min-height:6rem;}.navBox > .container > .blind {width:3.6rem;height:3.6rem;line-height:3.6rem;border-radius:0.2rem;position:absolute;left:50%;margin-left:-8rem;}
+.navBox > .container > .blind.lefton {display:inline-block;}
+.navBox > .container > .blind > img {width:2.4rem;height:2.4rem;background-size:1100%;background-image:url('../img/icons_40x40_active.png');}
+.maintabs > .tab_first,.minify .maintabs > .tab_first {position:absolute;left:50%;margin-left:-4rem;}.mainheader .tab_direc {left:0.8rem;}
+.maintabs > .tab_first,.mainheader .tab_direc {top:1.2rem;}
+.navBox > .container > .blind,.maintabs > .tab_first,
+.mainheader .tab_direc {z-index:1;}
+.mainheader header > .container > nav .maintabs li:not(.tab_first):not(.tab_direc) {opacity:0;display:none;}
+.mainheader header > .container > nav {margin:0;}.mainheader header > .container > .blind.lefton[style*='none'] + nav {margin-top:5.6rem;margin-bottom: 3.6rem;}
+.mainheader header > .container > .blind.lefton[style*='none'] + nav .maintabs li {opacity:1;display:inline-block;}.mainheader header > .container > nav,
+.mainheader header > .container > nav .maintabs li {    -webkit-transition:all 0.5s;    -moz-transition:all 0.5s;	transition:all 0.5s;}
+.wrapper.mainheader header > .container > nav .maintabs > .active > .ico:not(.logo) > a {background:#000;}
+.wrapper.mainheader header > .container > .blind.lefton[style*='none'] + nav .maintabs li.active:not(.tab_first):not(.tab_direc)  {opacity:1;display:inline-block;}
+.wrapper.mainheader header > .container > nav .maintabs>li>.be_on+.blindBox {top:6rem;}
+.wrapper.mainheader header > .container > .blind.lefton[style*='none'] + nav .maintabs>li>.be_on+.blindBox {top:11.2rem;-webkit-transition:all 0.5s;-moz-transition:all 0.5s;transition:all 0.5s;clip:auto;}
+.wrapper.mainheader header > .container > .blind.lefton + nav .maintabs>li>.be_on+.blindBox {-webkit-transition:all 0.5s;-moz-transition:all 0.5s;transition:all 0.5s;clip:rect(0,0,0,0);}
+.wrapper.mainheader header > .container > .blind.lefton[style*='none'] + nav .maintabs > .active > .ico:not(.logo) > a {background: #fff;}
+
+}
+

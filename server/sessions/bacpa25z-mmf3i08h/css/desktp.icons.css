@@ -1,0 +1,454 @@
+@charset 'UTF-8';
+/** ICONOGRAFIA GENERAL *************************/
+/************************************************/
+.inside:not(.bloody) .simply.g3 .mediaBox .play span {clip:rect(0,0,0,0);overflow:hidden;}
+
+.bloody.inside:not(.titles) .socialBox .bmark a:hover,
+.bloody.inside:not(.titles) .socialBox .blind:not(.be_on):hover,
+.socialBox .ico .blind:not(.be_on):hover,
+.inside:not(.titles) .notory .gridBox>.cell:first-child .socialBox .blind:hover:not(.be_on),
+.bloody:not(.inside) .slaves.size100.g2 .slavesBox .socialBox .ico.share .ico a:hover {
+background: rgb(247,119,7); /* Old browsers */
+background: -moz-linear-gradient(left,  rgba(247,119,7,1) 0%, rgba(240,80,16,1) 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(247,119,7,1)), color-stop(100%,rgba(240,80,16,1))); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(left,  rgba(247,119,7,1) 0%,rgba(240,80,16,1) 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(left,  rgba(247,119,7,1) 0%,rgba(240,80,16,1) 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(left,  rgba(247,119,7,1) 0%,rgba(240,80,16,1) 100%); /* IE10+ */
+background: linear-gradient(to right,  rgba(247,119,7,1) 0%,rgba(240,80,16,1) 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f77707', endColorstr='#f05010',GradientType=1 ); /* IE6-9 */
+}
+
+.ico.boton button {width:100%;/*height:100%;*/}/*afecta a las botoneras de atlantis*/
+.socialBox .ico > a > img,
+.socialBox .ico > span:not(.tooltip) > img,
+.socialBox .ico.share>.blind>img,
+.socialBlock .ico img,
+.navTag .listag li .ico img,
+.boxComm .close img,
+.auxheader .socialBox .ico img,
+.tag_head .ico img {background-image:url("");opacity:0.65;}
+.paginaBox .ico.back_ img,.paginaBox .ico.next_ img,
+.paginaBox .ico.goend img,.paginaBox .ico.begin img  {background-image:url("");opacity:0.33;}
+.socialBox .ico > a > img,
+.socialBox .ico > span:not(.tooltip) > img,
+.socialBlock .ico img,
+.container:not(.bloody):not(.titles) .slaves.size100.g2 .slavesBox .socialBox .ico.share .ico img,
+.inside:not(.bloody):not(.titles) .size_50.g3 .cell:nth-child(2) .socialBox .share .ico img,
+.inside:not(.bloody):not(.titles) .size_50.g3 .cell:nth-child(3) .socialBox .share .ico img,
+.inside:not(.bloody):not(.titles) .size_75.g3 .cell:nth-child(2) .socialBox .share .ico img,
+.inside:not(.bloody):not(.titles) .size_75.g3 .cell:nth-child(3) .socialBox .share .ico img,
+.inside:not(.bloody):not(.titles) .size100.g3 .slavesBox .cell .socialBox .share .ico img {opacity:0.333;}
+/*.striplayer .socialBox .ico img,*/
+.inside:not(.titles) .socialBox .share .ico img,
+.bloody:not(.inside) .slaves.size100.g2 .slavesBox .socialBox .share .ico img,
+.bloody.inside.titles .slaves.size100.g2 .slavesBox .socialBox .share .ico img,
+.bloody.inside.titles .slaves.size_50.g2 .slavesBox .socialBox .share .ico img {opacity:0.666;}
+.socialBox .ico img,.socialBlock .ico img {background-size:1100%;}
+
+.auxheader .ico img,
+/*.mediaBox .ico img,*/
+.seekrBox .ico img,
+.vjs-panel-display .ico > a > img,
+.vjs-panel-display .ico.close img,
+.prograBox .ico img,
+/*.controlBox + .ico + .img */
+.controlBox .ico img,
+.navTag .listag .above a:hover img,
+.socialBox ul .ico a:hover img,
+.inside .socialBox .share .ico a:hover img,
+.bloody:not(.inside) .slaves.size100.g2 .slavesBox .socialBox .ico.share .ico a:hover img,
+.inside:not(.bloody):not(.titles) .slaves.size100.g2 .slavesBox .socialBox .ico.share .ico a:hover img,
+.bloody.inside.titles .slaves.size100.g2 .slavesBox .socialBox .ico.share .ico a:hover img,
+.bloody.inside.titles .slaves.size_50.g2 .slavesBox .socialBox .share .ico a:hover img/*,
+.inside:not(.bloody) .simply.g3 .mediaBox .play img*/ {background-image:url('../img/icons_40x40_ffffff.png');background-size:1100%;opacity:0.95;}
+
+.show2 .mediaBox .ico img,
+.show4 .mediaBox .ico img,
+/*.controlBox .play img,
+.g1 .mediaBox .play img,
+.bloody .g2 .play img,.g2.notory > .cell .play img,.g2.notory > .gridBox > .cell .play img,.g2.simply .play img,
+.bloody .g3:not(.size100) .play img,.g3.notory > .gridBox > .cell:first-child .play img,.g3.simply .play img,
+.g4.notory > .gridBox > .cell .play img,
+.g5.notory > .gridBox > .cell:first-child .play img,*/
+.article .figure .mediaBox a > .play img,
+.article .mediaBox.audioBox a > .play img {background-image:url("");background-size:1100%;}
+
+.article .figure .videoBox a > .play img {background-position:0% 80%;}
+.article .mediaBox.audioBox a > .play img {background-position:10% 80%;}
+
+.auxheader .arrow .more_ img {background:none;}
+
+/*iconos pequenos :: por defecto*/
+.ico,.inside:not(.bloody) .simply.g3 .mediaBox .play {width:auto;height:auto;}
+.ico img,
+.artBody + .slideH .socialBox .ico img,
+.socialBlock .ico img,
+.auxheader .socialBox .ico img,
+.inside:not(.bloody) .simply.g3 .mediaBox .play img {width:4em;height:4em;}
+
+/*iconos pequenos :: bloque social normal*/
+.socialBox {}
+.socialBox .ico,
+.totemBox .socialBlock .ico,
+.lisComm .socialBlock .ico {width:4em;float:left;}
+.bloody .socialBox .ico {}
+.bloody .socialBox {}
+.socialBox ul .ico {height:4em;}
+.totemBox .socialBlock .ico {height:4.4rem;height:4rem;}
+.socialBox .ico img,
+.totemBox .socialBlock .ico img,
+.pf_flipperBox .lisComm .socialBlock .ico img {width:2.4em;height:2.4em;}
+
+
+/*iconos grandes en players*/
+.show2 .mediaBox .ico,
+.show4 .mediaBox .ico,
+/*.controlBox .ico.play,
+.g1 .mediaBox .play,
+.bloody .g2 .play,.g2.notory > .cell .play,.g2.notory > .gridBox > .cell .play,.g2.simply .play,
+.bloody .g3:not(.size100) .play,.g3.notory > .gridBox > .cell:first-child .play,.g3.simply .play,
+.g4.notory > .gridBox > .cell .play,
+.g5.notory > .gridBox > .cell:first-child .play,*/
+.article .figure .mediaBox span.play {width:8.2em;height:7.2em;}
+.article .figure .mediaBox span.play, .artBody .mediaBox.audioBox span.play {width:12.4rem;}
+.artBody .mediaBox.audioBox .audioPlayer span.play {width:8.2em;}
+.show2 .mediaBox .ico img,
+.show4 .mediaBox .ico img,
+/*.controlBox .play img,
+.g1 .mediaBox .play img,
+.bloody .g2 .play img,.g2.notory > .cell .play img,.g2.notory > .gridBox > .cell .play img,.g2.simply .play img,
+.bloody .g3:not(.size100) .play img,.g3.notory > .gridBox > .cell:first-child .play img,.g3.simply .play img,
+.g4.notory > .gridBox > .cell .play img,
+.g5.notory > .gridBox > .cell:first-child .play img,*/
+.article .figure .mediaBox span.play img {width:6em;height:6em;}
+
+.ico.play > span {width:100%;}
+
+.show2 .mediaBox .ico > span,
+.show4 .mediaBox .ico > span,
+.controlBox .play > span,
+.g1 .mediaBox .play > span,
+.bloody .g2 .play span,.g2.notory > .cell .play > span,.g2.notory > .gridBox > .cell .play > span,.g2.simply .play > span,
+.bloody .g3:not(.size100) .play span,.g3.notory > .gridBox > .cell:first-child .play > span,.g3.simply .play > span,
+.g4.notory > .gridBox > .cell .play > span,
+.g5.notory > .gridBox > .cell:first-child .play > span,
+.article .figure .mediaBox .play > span,
+.article .artBody .audioBox .play > span {color:#fff;clip:auto;font-size:140%;letter-spacing:0.5pt;}
+
+
+/*iconos verticales :: por defecto*/
+.auxheader .ico,.controlBox span.ico,
+.artBody + .slideH .socialBox .ico {width:5.9rem;}
+
+/*iconos verticales :: navegaci�n auxiliar :: sociales en PF's*/
+.auxheader .ico,.arrays .controlBox .arrow {height:8rem;line-height:8em;}
+.controlBox .ico,.prograBox .ico {/*height:7.4rem;line-height:7.4em;height:7.2em;line-height:7.2em;*/}
+.controlBox .ico.play {line-height:1;}
+.artBody + .slideH .socialBox .ico,.prograBox .ico {height:7.2em;}
+.artBody + .slideH .socialBox .ico img {margin-top:0.4em;}
+
+.controlBox .paginaBox .ico {height:5.9em;line-height:5.9em;}
+
+
+/*cajon de directos*/
+.emisBox > .controlBox .ico {width:4em;height:4em;line-height:4em;}
+
+.emisBox .ico.canal img {width:100%;height:100%;}
+.emisBox .ico.canal {display:inline-block;right:0;left:auto;}
+.emisBox .tveBox .ico.canal {width:8.6em;height:6em;margin-top:-3em;}
+.emisBox .rneBox .ico.canal {width:8.2em;height:6.4em;margin-bottom:2em;}
+
+/*ocultamos las hamburguesas en desktop*/
+.navBox > .blind {display:none;}
+
+
+/*mostramos algunas leyendas*/
+.arrow:hover > .more_,.boxComm .more_ {clip:auto;overflow:visible;}
+
+
+/*SALIMOS CON LOS TRES ICONOS DE PRINCIPALES REDES*/
+.mod.no_ima .socialBox .ico.share .ico,
+.mediaBox + .socialBox  .ico,
+.overBox + .socialBox .ico,
+figcaption .socialBox .ico.share .ico {line-height:3.6em;}
+
+.mod.no_ima .socialBox .ico,
+.mediaBox + .socialBox .ico,
+.overBox + .socialBox  .ico,
+.container:not(.bloody) .slaves.size100.g2 .socialBox .ico.share .ico {padding:0;}
+.bloody .mediaBox + .socialBox .ico.share .ico,
+.bloody .overBox + .socialBox .ico.share .ico,
+.inside .socialBox .ico.share .ico,
+.inside:not(.bloody):not(.titles) .slaves.size100.g2 .gridBox > .cell .socialBox .ico.share .ico {padding:0;}
+
+.mod.no_ima .socialBox  .ico a,
+.mediaBox + .socialBox  .ico a,
+.overBox + .socialBox  .ico a,
+.mod .share .blind:not(.be_on),
+figcaption .socialBox .ico.share .ico a,
+.container:not(.bloody):not(.titles) .slaves.size100.g2 .slavesBox .socialBox .ico.share .ico a,
+.bloody.inside.titles .size100.g2 .gridBox > .cell .socialBox .ico.share .ico a,
+.inside:not(.bloody):not(.titles) .size_50.g3 .cell:nth-child(2) .socialBox .ico.share .ico a,
+.inside:not(.bloody):not(.titles) .size_50.g3 .cell:nth-child(3) .socialBox .ico.share .ico a,
+.inside:not(.bloody):not(.titles) .size_75.g3 .cell:nth-child(2) .socialBox .ico.share .ico a,
+.inside:not(.bloody):not(.titles) .size_75.g3 .cell:nth-child(3) .socialBox .ico.share .ico a,
+.inside:not(.bloody):not(.titles) .size100.g3 .slavesBox .cell .socialBox .ico.share .ico a {display:inline-block;background:rgba(0,0,0,0.1);}
+
+/*en negativo*/
+.bloody.inside .slaves.size_50.g2 .slavesBox .socialBox .ico.share .ico a,
+.bloody.inside .size100.g2 .socialBox .ico.share .ico a,
+.bloody.inside:not(.titles) .socialBox .bmark a,
+.bloody.inside:not(.titles) .socialBox .blind:not(.be_on),
+.backed.arrays .socialBox .ico a,
+.backed.arrays .socialBox .blind:not(.be_on),
+.striplayer .mod .socialBox .blind:not(.be_on),
+.striplayer .mod .socialBox .bmark a,
+/*.backed.arrays .mediaBox+.socialBox .ico.share .ico a,*/
+.inside:not(.titles) .notory .gridBox>.cell:first-child .socialBox .blind:not(.be_on),
+.bloody:not(.inside) .slaves.size100.g2 .slavesBox .socialBox .ico.share .ico a {background:rgba(255,255,255,0.66);}
+
+.inside.bloody:not(.titles) .grid:not(.g1) .socialBox >.ico {clear:both;}
+
+/*.striplayer .socialBox .ico a,
+.striplayer .socialBox .blind {background:rgba(255,255,255,0.33);}
+
+.backed .mod.no_ima .socialBox .ico.share .ico a,
+.backed .mediaBox + .socialBox  .ico a,
+.backed .overBox + .socialBox  .ico a,*/
+.backed .cell .ico.share .blindBox.beoff.be_on {background:rgba(255,255,255,0.5);}
+
+
+
+/*iconos sociales pagina*/
+.auxheader .socialBox .ico {height:5em;width:5em;line-height:5;background:transparent;opacity:0.85;border-radius:100%;}
+.auxheader .socialBox .ico img {}
+.auxheader .socialBox .ico .datnum {color:#737578;font-weight:500;display:none;}
+.auxheader .socialBox .ico:hover {background-color:rgba(0,0,0,0.25);}
+
+
+/** ICONOGRAFIA GENERAL *************************/
+/** END *****************************************/
+
+
+/*subcabecera de servicios*//*ESTO NO DEBERIA ESTAR AQUI*/
+.auxheader,.auxheader > .container {height:0;}
+.auxheader > .container {background:transparent;padding:0;}
+
+
+
+.auxheader .ico {background-color:#494847;}
+.auxheader .active .users {
+background: rgb(247,119,7); /* Old browsers */
+background: -moz-linear-gradient(left,  rgba(247,119,7,1) 0%, rgba(240,80,16,1) 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(247,119,7,1)), color-stop(100%,rgba(240,80,16,1))); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(left,  rgba(247,119,7,1) 0%,rgba(240,80,16,1) 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(left,  rgba(247,119,7,1) 0%,rgba(240,80,16,1) 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(left,  rgba(247,119,7,1) 0%,rgba(240,80,16,1) 100%); /* IE10+ */
+background: linear-gradient(to right,  rgba(247,119,7,1) 0%,rgba(240,80,16,1) 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f77707', endColorstr='#f05010',GradientType=1 ); /* IE6-9 */
+}
+
+.auxheader .ico:hover {background-color:#000;}
+
+.controlBox .fullsc:hover,
+.controlBox .ongrid:hover,
+.controlBox .arrow:hover {cursor:pointer;}
+
+/*.controlBox .fullsc:hover img,*/
+.controlBox .ongrid:hover img, .controlBox .paginaBox img  {background-image:url("");}
+.vjs-control-bar.controlBox .vjs-play-control ~ div[role=button]:hover img,
+.vjs-panel-display .close:hover img,
+.controlBox .paginaBox li:not(.beoff) a:hover img, .controlBox .paginaBox li:not(.beoff) a:hover img,
+.tag_head .rssfd a:hover img {background-image:url('../img/icons_40x40_active.png');}
+
+.tag_head .rssfd a:hover img,.controlBox .paginaBox li:not(.beoff) a:hover img,
+.controlBox .paginaBox li:not(.beoff) a:hover img {opacity:1;}
+
+/*.seekrBox .seekr img {background-image:url('../images/icons_40x40_000000.png');opacity:0.65;}*/
+
+
+
+/*paginados*/
+.slideP + .controlBox {border:4em solid #fff;}
+.slideP + .controlBox .more_ {display:none;}
+.paginaBox ol li * {display:inline-block;}
+.paginaBox {width:auto;display:table;margin:0 auto;}
+.paginaBox,.paginaBox ol li {text-align:center;}
+.paginaBox li {width:auto;float:left;margin:0 0.1rem;}
+.paginaBox li:first-child,.paginaBox li:last-child {background:none;}
+.paginaBox ol li span {font-size:300%;line-height:5.9rem;width:5.9rem;}
+
+.paginaBox .beoff .ico {opacity:0.25;}
+
+/** ICONOS AHORA EN DIRECTO *********************/
+/** *********************************************/
+.grid .live_mod .mediaBox > a > .ico {width:11em;height:11em;border:0.2rem solid #fff;background:rgba(0,0,0,0.5);left:2em;bottom:2em;}
+
+
+.grid .live_mod .mediaBox > a > .ico .duration {text-align:left;line-height:1.1111;font-size:180%;font-weight:700;padding:0.7222em 0 0 0.7222em;}
+.grid .live_mod .mediaBox > a > .ico .duration:before {content:'Ahora en directo';}
+.grid .live_mod .mediaBox > a > .ico:before {content:'';display:inline-block;width:75%;height:5.6em;
+background-image:url("");
+background-repeat:no-repeat;background-size:120% auto;background-position:0 97%;}
+
+.cell[data-aoi='1688877'] .live_mod .mediaBox > a > .ico:before {background-position:0 1.5%;}
+.cell[data-aoi='1688885'] .live_mod .mediaBox > a > .ico:before {background-position:0 14.75%;}
+.cell[data-aoi='1694255'] .live_mod .mediaBox > a > .ico:before {background-position:0 28.5%;}
+.cell[data-aoi='1712295'] .live_mod .mediaBox > a > .ico:before {background-position:0 43%;}
+.cell[data-aoi='1938028'] .live_mod .mediaBox > a > .ico:before {background-position:0 83.5%;}
+.cell[data-aoi='1938030'] .live_mod .mediaBox > a > .ico:before {background-position:0 83.5%;}
+.cell[data-aoi='1938069'] .live_mod .mediaBox > a > .ico:before {background-position:0 83.5%;}
+.cell[data-aoi='1938070'] .live_mod .mediaBox > a > .ico:before {background-position:0 83.5%;}
+/*videos de rne*/
+.cell[data-aoi='1938076'] .live_mod .mediaBox > a > .ico:before {background-image:url("");background-position:20% 1.5%;}
+
+.grid .live_mod .mediaBox > a > .ico img,.grid .live_mod .mediaBox > a > .ico:before {position:absolute;}
+.grid .live_mod .mediaBox > a > .ico:before {right:0;bottom:0;}
+.grid .live_mod .mediaBox > a > .ico img {left:-0.4rem;bottom:-0.4rem;}
+.grid .live_mod .mediaBox > a > .ico .duration {bottom:auto;top:0;}
+
+
+
+/** ICONOS AHORA EN DIRECTO *********************/
+/** END *****************************************/
+
+/** ICONOS FALSOS FOTOGALERIAS ******************/
+/** *********************************************/
+.container[class*="photo_"] .g2.simply .noticBox .notic,
+.container[class*="photo_"] .g3.simply .noticBox .notic,
+.container[class*="photo_"] .g4.simply .noticBox .notic {bottom:0;z-index:2;}
+.container[class*="photo_"] .g2.simply .noticBox .notic img,
+.container[class*="photo_"] .g3.simply .noticBox .notic img,
+.container[class*="photo_"] .g4.simply .noticBox .notic img,
+.container[class*="photo_"] .g4.simply .noticBox .notic img  {width:3.6rem;height:3.6rem;background-color:#fff;background-image:url('../img/icons_40x40_active.png');opacity:1;}
+.container[class*="photo_"] .noticBox .notic img {background-position:20% 80%;}
+.container.photo_1 .simply .cell:nth-child(1) .noticBox .notic,
+.container.photo_1 .notory:not(.slaves) .cell:nth-child(1) .noticBox .notic,
+.container.photo_1 .slaves .slavesBox .cell:nth-child(1) .noticBox .notic,
+.container.photo_2 .simply .cell:nth-child(2) .noticBox .notic,
+.container.photo_2 .notory:not(.slaves) .cell:nth-child(2) .noticBox .notic,
+.container.photo_2 .slaves .slavesBox .cell:nth-child(2) .noticBox .notic,
+.container.photo_3 .simply .cell:nth-child(3) .noticBox .notic,
+.container.photo_3 .notory:not(.slaves) .cell:nth-child(3) .noticBox .notic,
+.container.photo_4 .simply .cell:nth-child(4) .noticBox .notic,
+.container.photo_4 .notory:not(.slaves) .cell:nth-child(4) .noticBox .notic,
+.container.photo_5 .simply .cell:nth-child(5) .noticBox .notic,
+.container.photo_5 .notory:not(.slaves) .cell:nth-child(5) .noticBox .notic {display:inline-block;}
+/*ico video*/
+.container[class*="video_"] .g2.simply .noticBox .notic,
+.container[class*="video_"] .g3.simply .noticBox .notic {width:8.2em;height:7.2em;}
+.container[class*="video_"] .g2.simply .noticBox .notic img,
+.container[class*="video_"] .g3.simply .noticBox .notic img {width:6em;height:6em;background-image:url("");}
+.container[class*="video_"] .noticBox .notic img {background-position:00% 80%;}
+.container.video_1 .simply .cell:nth-child(1) .noticBox .notic,
+.container.video_1 .notory:not(.slaves) .cell:nth-child(1) .noticBox .notic,
+.container.video_1 .slaves .slavesBox .cell:nth-child(1) .noticBox .notic,
+.container.video_2 .simply .cell:nth-child(2) .noticBox .notic,
+.container.video_2 .notory:not(.slaves) .cell:nth-child(2) .noticBox .notic,
+.container.video_2 .slaves .slavesBox .cell:nth-child(2) .noticBox .notic,
+.container.video_3 .simply .cell:nth-child(3) .noticBox .notic,
+.container.video_3 .notory:not(.slaves) .cell:nth-child(3) .noticBox .notic,
+.container.video_4 .simply .cell:nth-child(4) .noticBox .notic,
+.container.video_4 .notory:not(.slaves) .cell:nth-child(4) .noticBox .notic,
+.container.video_5 .simply .cell:nth-child(5) .noticBox .notic,
+.container.video_5 .notory:not(.slaves) .cell:nth-child(5) .noticBox .notic {display:inline-block;}
+
+.container[class*=video_] .noticBox .notic img,
+.container[class*=photo_] .noticBox .notic img {background-color:#fff;opacity:1;background-image:url('../img/icons_40x40_active.png');margin-bottom:-0.3rem;}
+
+/** ICONOS FALSOS FOTOGALERIAS ******************/
+/** END *****************************************/
+
+
+
+/** ICONOS SOCIALES NUEVOS **********************/
+/** *********************************************/
+.ico.share .blind {cursor:pointer;}
+.cell .socialBox .ico {width:3.6rem;height:3.6rem;border:0.2rem solid transparent;line-height:3.6rem;}
+.cell .socialBox .blindBox .ico {border:0 none;}
+.cell .socialBox .blindBox * {margin-right:0;}
+	/**margin-right:0 por gallery **/
+/*.cell .socialBox .share .blind:not(.be_on) {width:100%;height:100%;}*/.cell .socialBox .ico.share .blind{width:100%;height:100%;}
+	.cell .socialBox .ico .legend,.cell .socialBox .ico .datnum {display:none;}
+/*white*/
+.cell .socialBox .ico a:hover img,
+.container:not([data-tipo='mod_include']):not(.striplayer):not(.inside) .grid:not(.backed) .cell .socialBox .blindBox .ico img,
+.container.inside.titles:not(.striplayer) .cell .socialBox .blindBox .ico img,
+.container .cell .socialBox .ico.share .blind:hover img {background-image:url('../img/icons_40x40_ffffff.png');}
+
+.cell .ico.share .blindBox .ico img {opacity:0.66;}
+.cell .ico.share .blindBox .ico a:hover img,
+.cell .socialBox .ico a:hover img,
+.cell .socialBox .share:hover img {opacity:1;}
+
+
+.cell .ico.share .blindBox {left:0;top:0;height:3.6rem;overflow:hidden;}
+
+.cell .ico.share .blindBox.beoff {width:0;padding-left:3.8rem;}
+.wrapper.bodier .grid .cell .ico.share .blindBox.beoff.be_on {width:15.8rem;}
+
+.cell .ico.share .blindBox.beoff.be_on {background:rgba(0,0,0,0.75);}
+.inside:not(.titles) .grid.notory .gridBox > .cell:first-child .ico.share .blindBox.beoff.be_on,
+.inside:not(.titles) .grid:not(.notory) .cell .ico.share .blindBox.beoff.be_on,
+.striplayer .cell .ico.share .blindBox.beoff.be_on {background:rgba(255,255,255,0.66);}
+
+
+/*tooltips*/
+.ico.bmark .tooltip {opacity:0;clip:rect(0,0,0,0);height:0;width:0;overflow:hidden;text-align:left;}
+.ico.bmark .tooltip strong {font-size:1.4rem;line-height:2.1rem;font-weight:400;}
+.ico.bmark .tooltip img {height:4.2rem;width:4.2rem;float:left;margin:0 0.8rem 0 -0.8rem;}
+.ico.bmark .tooltip.be_on {opacity:1;clip:auto;width:21rem;height:auto;min-height:4.2rem;background:#fff;padding:1.2rem;}
+
+.ico.bmark .tooltip.ok strong {color:#f56b0d;}
+.ico.bmark .tooltip.ko strong {color:#000;}
+.ico.bmark .tooltip img {opacity:.95;}
+
+/*comento mod para que llegue a todos sitios*/
+.ico.share .blindBox.beoff.be_on, .socialBox .ico.bmark .tooltip.be_on {box-shadow:0.1rem 0.2rem 0.6rem rgba(0,0,0,0.5);}
+.ico.share .blindBox {
+-webkit-transition: all 0.5s;
+	 -moz-transition: all 0.5s;
+		 -o-transition: all 0.5s;
+				transition: all 0.5s;
+				}
+.ico.bmark .tooltip {
+-webkit-transition: opacity 1s;
+	 -moz-transition: opacity 1s;
+		 -o-transition: opacity 1s;
+				transition: opacity 1s;
+				}
+
+.ico.share .blindBox,.cell .ico.bmark .tooltip {position:absolute !important;}
+.ico.bmark,.mod .ico.share,.cell .ico.share .blind {position:relative;}
+
+.ico.bmark .tooltip {top:0;left:0;}
+.ico.share .blind,.ico.bmark .tooltip {z-index:2;}
+.mainBox .socialBox .ico.bmark {z-index:3;}
+
+.article [class*="vis"] .share .blind, .article [class*="vis"] .socialBox .ico.bmark {z-index:0;}
+
+.article .slideH > .socialBox .ico.share .blindBox.beoff.be_on {z-index:4;}
+.article .slideH > .socialBox .ico.share .blindBox.beoff {z-index:-1;}
+
+
+/** ICONOS SOCIALES NUEVOS **********************/
+/** END *****************************************/
+
+/* de momento hasta plegar/desplegar redes sociales auxheade */
+.auxheader .socialBox .ico.share .blind {clip:rect(0,0,0,0);position:absolute;}
+.auxheader .socialBox.beoff {clip:auto;}
+.auxheader .socialBox .share .beoff {overflow:visible;}
+.auxheader .socialBox .share .beoff ul {opacity:1;}
+.auxheader .socialBox .ico.share .ico a:hover img {background-image: url("");}
+.auxheader .socialBox .ico:hover {background-color: rgba(0,0,0,.25);}
+.auxheader .socialBox .ico.share:hover {background-color:transparent;}
+
+.socialBox .ico a:focus {background:#ff7700 !important;}
+
+/*blanco de iconos portadas ico.play .ico.photo*/
+.mainBox .mediaBox span.ico img {background-color: #fff;}
+
+/*ajustes player */
+.videoBox .ico.video img, 
+.audioBox .ico.audio img {background-image: url('../img/player_iconos@4x.png');background-size: 2100%;}
+.videoBox > a .play img {background-color:#fff;}
