@@ -5,6 +5,10 @@ const prettier = require('prettier');
  * Returns { html, success } — on failure returns original html with success=false.
  */
 async function formatHtml(html) {
+  // Prettier's html parser mangles <?php ?> tags — skip formatting for PHP files
+  if (html.includes('<?php') || html.includes('<?=')) {
+    return { html, success: false };
+  }
   try {
     const formatted = await prettier.format(html, {
       parser: 'html',

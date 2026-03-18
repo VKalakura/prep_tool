@@ -38,6 +38,22 @@ export function getInsertionPoints(sessionId) {
   return axios.get(`${BASE}/process/${sessionId}/insertion-points`);
 }
 
+// iFrames
+export function getIframes(sessionId) {
+  return axios.get(`${BASE}/process/${sessionId}/iframes`);
+}
+export function cleanIframes(sessionId, indicesToRemove) {
+  return axios.post(`${BASE}/process/${sessionId}/clean-iframes`, { indicesToRemove });
+}
+
+// Unused files
+export function getUnusedFiles(sessionId) {
+  return axios.get(`${BASE}/process/${sessionId}/unused-files`);
+}
+export function cleanUnusedFiles(sessionId, filePaths) {
+  return axios.post(`${BASE}/process/${sessionId}/clean-unused`, { filePaths });
+}
+
 export function getWidgets() {
   return axios.get(`${BASE}/widgets`);
 }
@@ -70,4 +86,48 @@ export function getFileTree(sessionId) {
 
 export function buildOffer(sessionId) {
   return axios.post(`${BASE}/build/${sessionId}`, {}, { responseType: 'blob' });
+}
+
+// Content Editor — Text
+export function getEditableElements(sessionId) {
+  return axios.get(`${BASE}/content/${sessionId}/editable-elements`);
+}
+export function saveText(sessionId, idx, text) {
+  return axios.post(`${BASE}/content/${sessionId}/save-text`, { idx, text });
+}
+export function bulkReplace(sessionId, replacements) {
+  return axios.post(`${BASE}/content/${sessionId}/bulk-replace`, { replacements });
+}
+
+// Content Editor — Images
+export function getImages(sessionId) {
+  return axios.get(`${BASE}/content/${sessionId}/images`);
+}
+export function replaceImage(sessionId, name, file) {
+  const form = new FormData();
+  form.append('name', name);
+  form.append('file', file);
+  return axios.post(`${BASE}/content/${sessionId}/replace-image`, form);
+}
+export function compressImage(sessionId, name, quality, format) {
+  return axios.post(`${BASE}/content/${sessionId}/compress-image`, { name, quality, format });
+}
+export function compressAll(sessionId, quality, format) {
+  return axios.post(`${BASE}/content/${sessionId}/compress-all`, { quality, format });
+}
+
+// Session stats
+export function getSessionStats(sessionId) {
+  return axios.get(`${BASE}/process/${sessionId}/stats`);
+}
+
+// Dev Access
+export function getDevState(sessionId) {
+  return axios.get(`${BASE}/dev/${sessionId}/state`);
+}
+export function getDevFile(sessionId, filePath) {
+  return axios.get(`${BASE}/dev/${sessionId}/file`, { params: { path: filePath } });
+}
+export function saveDevFile(sessionId, filePath, content) {
+  return axios.put(`${BASE}/dev/${sessionId}/file`, { path: filePath, content });
 }

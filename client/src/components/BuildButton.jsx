@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { buildOffer, getFileTree } from '../api.js';
+import { buildOffer, getFileTree, getSessionStats } from '../api.js';
 
 function FileTree({ nodes, depth = 0 }) {
   if (!nodes?.length) return null;
@@ -21,11 +21,17 @@ export default function BuildButton({ sessionId, uploadInfo, onError }) {
   const [building, setBuilding] = useState(false);
   const [built, setBuilt] = useState(false);
   const [fileTree, setFileTree] = useState(null);
+  const [stats, setStats] = useState(null);
 
   const refreshTree = () =>
     getFileTree(sessionId).then((r) => setFileTree(r.data.tree)).catch(() => {});
 
-  useEffect(() => { if (sessionId) refreshTree(); }, [sessionId]);
+  const refreshStats = () =>
+    getSessionStats(sessionId).then((r) => setStats(r.data)).catch(() => {});
+
+  useEffect(() => {
+    if (sessionId) { refreshTree(); refreshStats(); }
+  }, [sessionId]);
 
   const handleBuild = async () => {
     setBuilding(true);
@@ -41,6 +47,7 @@ export default function BuildButton({ sessionId, uploadInfo, onError }) {
       window.URL.revokeObjectURL(url);
       setBuilt(true);
       refreshTree();
+      refreshStats();
     } catch (err) {
       onError(err.response?.data?.error || 'Build failed');
     } finally {
@@ -69,15 +76,45 @@ export default function BuildButton({ sessionId, uploadInfo, onError }) {
                 <span>Original HTML size</span>
                 <strong>{uploadInfo.indexSizeKb} KB</strong>
               </div>
-              <div className="build-summary__row">
-                <span>Moved to normalized dirs</span>
-                <strong>{uploadInfo.normalization?.moved ?? '—'}</strong>
+            </>
+          )}
+          {stats ? (
+            <>
+              <div className="build-summary__row build-summary__row--divider">
+                <span>Scripts removed</span>
+                <strong className={stats.scriptsRemoved > 0 ? 'text-success' : ''}>{stats.scriptsRemoved}</strong>
               </div>
               <div className="build-summary__row">
-                <span>Unused files removed</span>
-                <strong>{uploadInfo.normalization?.removed ?? '—'}</strong>
+                <span>iFrames removed</span>
+                <strong className={stats.iframesRemoved > 0 ? 'text-success' : ''}>{stats.iframesRemoved}</strong>
+              </div>
+              <div className="build-summary__row">
+                <span>JS files deleted</span>
+                <strong className={stats.jsFilesDeleted > 0 ? 'text-success' : ''}>{stats.jsFilesDeleted}</strong>
+              </div>
+              <div className="build-summary__row">
+                <span>Unused files deleted</span>
+                <strong className={stats.unusedDeleted > 0 ? 'text-success' : ''}>{stats.unusedDeleted}</strong>
+              </div>
+              {stats.imagesCompressed > 0 && (
+                <div className="build-summary__row">
+                  <span>Images compressed</span>
+                  <strong className="text-success">{stats.imagesCompressed}</strong>
+                </div>
+              )}
+              {stats.textSaved > 0 && (
+                <div className="build-summary__row">
+                  <span>Text edits saved</span>
+                  <strong className="text-success">{stats.textSaved}</strong>
+                </div>
+              )}
+              <div className="build-summary__row build-summary__row--divider">
+                <span>Final file count</span>
+                <strong>{stats.totalFiles} files · {stats.totalSizeKb} KB</strong>
               </div>
             </>
+          ) : (
+            <div className="loading-state" style={{ padding: '12px 0' }}><div className="spinner" /></div>
           )}
         </div>
 
@@ -86,10 +123,7 @@ export default function BuildButton({ sessionId, uploadInfo, onError }) {
           <ul>
             <li>✅ index.php (with all PHP includes injected)</li>
             <li>✅ send.php (Keitaro format, auto-generated)</li>
-            <li>✅ js/ — all JavaScript files</li>
-            <li>✅ css/ — all stylesheets (paths updated)</li>
-            <li>✅ fonts/ — all font files</li>
-            <li>✅ img/ — all images</li>
+            {stats?.totalFiles > 0 && <li>✅ {stats.totalFiles} files · {stats.totalSizeKb} KB total</li>}
           </ul>
         </div>
 

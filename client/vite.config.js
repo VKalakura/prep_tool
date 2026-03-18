@@ -12,6 +12,10 @@ export default defineConfig({
         timeout: 120000,
         proxyTimeout: 120000,
       },
+      '/session-files': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
     },
   },
 });

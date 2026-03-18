@@ -2,7 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(ls:*)",
+      "Bash(curl:*)",
+      "Bash(SESSION_ID=\"test-full-1773671090\" __NEW_LINE_b88cc2b9b5f674a9__ echo \"=== EDITABLE ELEMENTS ===\" curl -s http://localhost:3001/api/content/$SESSION_ID/editable-elements)",
+      "Bash(python3 -m json.tool)",
+      "Bash(python3 -m json.tool __NEW_LINE_3a62fcd7e6a78069__ echo \"\" echo \"=== DEV STATE ===\" curl -s http://localhost:3001/api/dev/$SESSION_ID/state)",
+      "Bash(python3 -m json.tool __NEW_LINE_3a62fcd7e6a78069__ echo \"\" echo \"=== Перші рядки index.php \\(PHP теги мають бути нормальними\\) ===\" head -5 /Users/vk/Desktop/awesome-mvp/server/sessions/$SESSION_ID/index.php)",
+      "Bash(cd:*)",
+      "Bash(source:*)",
+      "Bash(SID=\"q85cy38y-mmtasf2s\"\ncurl -s http://localhost:3001/api/process/$SID/scripts | python3 -m json.tool | grep -E '\"src\"|\"suggestion\"|\"index\"' | head -30)",
+      "Bash(npm run:*)"
     ]
   }
 }
