@@ -12,7 +12,11 @@
       "Bash(cd:*)",
       "Bash(source:*)",
       "Bash(SID=\"q85cy38y-mmtasf2s\"\ncurl -s http://localhost:3001/api/process/$SID/scripts | python3 -m json.tool | grep -E '\"src\"|\"suggestion\"|\"index\"' | head -30)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(sed -i '' 's/  width: 600px;/  width: 780px;/' /Users/vk/Desktop/awesome-mvp/client/src/App.css)",
+      "Bash(sed -i '' 's/  max-width: 95vw;/  max-width: 96vw;/' /Users/vk/Desktop/awesome-mvp/client/src/App.css)",
+      "Bash(sed -i '' 's/  max-height: 70vh;/  height: 72vh;/' /Users/vk/Desktop/awesome-mvp/client/src/App.css)",
+      "Bash(npx vite:*)"
     ]
   }
 }

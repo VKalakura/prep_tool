@@ -10,11 +10,41 @@ const router = express.Router();
 
 const SESSIONS_DIR = path.join(__dirname, '../sessions');
 
-// Use memoryStorage — we write files manually to preserve folder structure.
-// multer v2 sanitises originalname (strips slashes) in all storage modes,
-// so we send paths in a separate JSON field (req.body.filePaths) and use those instead.
+// Text-only extensions backed up to _originals/ (binary files are not touched by auto-clean)
+const TEXT_EXTS = new Set(['.html', '.htm', '.php', '.css', '.js', '.json', '.txt', '.xml', '.svg', '.md']);
+
+function copyDirRecursive(src, dest, skip, textOnly) {
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    if (skip.includes(entry.name)) continue;
+    const s = path.join(src, entry.name);
+    const d = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      fs.mkdirSync(d, { recursive: true });
+      copyDirRecursive(s, d, skip, textOnly);
+    } else {
+      if (textOnly && !TEXT_EXTS.has(path.extname(entry.name).toLowerCase())) continue;
+      fs.copyFileSync(s, d);
+    }
+  }
+}
+
+// Use diskStorage to avoid holding large files (videos etc.) in RAM.
+// multer v2 sanitises originalname (strips slashes) — we still use the separate
+// filePaths JSON field for path mapping; temp files are named by sequential index.
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const tmpDir = path.join(SESSIONS_DIR, req.headers['x-session-id'] || '_unknown', '_tmp');
+      fs.mkdirSync(tmpDir, { recursive: true });
+      cb(null, tmpDir);
+    },
+    filename: (req, file, cb) => {
+      // Sequential index so req.files[i] maps to paths[i]
+      const idx = (req._uploadIdx = (req._uploadIdx || 0));
+      req._uploadIdx++;
+      cb(null, `__f${idx}__${path.extname(file.originalname) || '.bin'}`);
+    },
+  }),
   limits: { fileSize: 100 * 1024 * 1024, files: 2000 },
 });
 
@@ -71,14 +101,16 @@ router.post('/', runMulter, async (req, res) => {
     const rawDir = path.join(SESSIONS_DIR, sessionId, 'raw');
     const sessionDir = path.join(SESSIONS_DIR, sessionId);
 
-    // Write each file preserving the folder structure from paths[]
+    // Move temp files to raw/ preserving folder structure from paths[]
     for (let i = 0; i < filesField.length; i++) {
       const rel = safePath(paths[i] || filesField[i].originalname);
-      if (!rel) continue;
+      if (!rel) { try { fs.unlinkSync(filesField[i].path); } catch {} continue; }
       const dest = path.join(rawDir, rel);
       fs.mkdirSync(path.dirname(dest), { recursive: true });
-      fs.writeFileSync(dest, filesField[i].buffer);
+      fs.renameSync(filesField[i].path, dest);
     }
+    // Clean up _tmp dir if any temp files remain (edge case)
+    try { fs.rmSync(path.join(SESSIONS_DIR, sessionId, '_tmp'), { recursive: true, force: true }); } catch {}
 
     // Find index.html anywhere in the raw tree
     const indexPath = folderScanner.findIndexHtml(rawDir);
@@ -102,6 +134,16 @@ router.post('/', runMulter, async (req, res) => {
     const rawHtml = fs.readFileSync(newIndex, 'utf-8');
     const fmt = await formatHtml(rawHtml);
     if (fmt.success) fs.writeFileSync(newIndex, fmt.html, 'utf-8');
+
+    // Save originals backup only for standard-mode uploads.
+    // Only TEXT files — videos/images are never modified by auto-clean,
+    // so no need to duplicate them (saves disk for 50MB+ offers with video).
+    const uploadMode = req.headers['x-mode'] || 'dev';
+    if (uploadMode === 'standard') {
+      const originalsDir = path.join(sessionDir, '_originals');
+      fs.mkdirSync(originalsDir, { recursive: true });
+      copyDirRecursive(sessionDir, originalsDir, ['_originals', 'raw'], true);
+    }
 
     const stats = fs.statSync(newIndex);
 

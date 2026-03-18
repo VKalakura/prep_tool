@@ -24,7 +24,8 @@ const PHP_SNIPPETS = (langCode, offerName) => [
   },
 ];
 
-export default function PhpIntegration({ sessionId, onDone, onError }) {
+export default function PhpIntegration({ sessionId, mode, onDone, onError }) {
+  const isDev = mode === 'dev';
   const [offerName, setOfferName] = useState('Quantum AI');
   const [countryCode, setCountryCode] = useState('DE');
   const [langCode, setLangCode] = useState('de');
@@ -88,11 +89,13 @@ export default function PhpIntegration({ sessionId, onDone, onError }) {
           the HTML and generate <code>send.php</code>. The file will be saved as{' '}
           <code>index.php</code>.
         </p>
-        <div className="tab-bar" style={{ marginTop: 12 }}>
-          <button className={`tab-bar__btn ${tab === 'config' ? 'active' : ''}`} onClick={() => handleTabChange('config')}>Configuration</button>
-          <button className={`tab-bar__btn ${tab === 'snippets' ? 'active' : ''}`} onClick={() => handleTabChange('snippets')}>PHP Snippets</button>
-          <button className={`tab-bar__btn ${tab === 'sendphp' ? 'active' : ''}`} onClick={() => handleTabChange('sendphp')}>send.php Preview</button>
-        </div>
+        {isDev && (
+          <div className="tab-bar" style={{ marginTop: 12 }}>
+            <button className={`tab-bar__btn ${tab === 'config' ? 'active' : ''}`} onClick={() => handleTabChange('config')}>Configuration</button>
+            <button className={`tab-bar__btn ${tab === 'snippets' ? 'active' : ''}`} onClick={() => handleTabChange('snippets')}>PHP Snippets</button>
+            <button className={`tab-bar__btn ${tab === 'sendphp' ? 'active' : ''}`} onClick={() => handleTabChange('sendphp')}>send.php Preview</button>
+          </div>
+        )}
       </div>
 
       {tab === 'config' && (
@@ -154,7 +157,7 @@ export default function PhpIntegration({ sessionId, onDone, onError }) {
         </div>
       )}
 
-      {tab === 'snippets' && (
+      {isDev && tab === 'snippets' && (
         <div className="snippets-list">
           {snippets.map((s, i) => (
             <div key={i} className="snippet-item">
@@ -165,7 +168,7 @@ export default function PhpIntegration({ sessionId, onDone, onError }) {
         </div>
       )}
 
-      {tab === 'sendphp' && (
+      {isDev && tab === 'sendphp' && (
         <pre className="code-preview code-preview--lg">
           {sendPhpPreview || 'Loading preview…'}
         </pre>

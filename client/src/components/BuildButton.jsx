@@ -1,36 +1,17 @@
 import { useState, useEffect } from 'react';
-import { buildOffer, getFileTree, getSessionStats } from '../api.js';
-
-function FileTree({ nodes, depth = 0 }) {
-  if (!nodes?.length) return null;
-  return (
-    <ul className={`file-tree ${depth === 0 ? 'file-tree--root' : ''}`}>
-      {nodes.map((n) => (
-        <li key={n.path} className={`file-tree__item file-tree__item--${n.type}`}>
-          <span className="file-tree__icon">{n.type === 'dir' ? '📁' : '📄'}</span>
-          <span className="file-tree__name">{n.name}</span>
-          {n.size != null && <span className="file-tree__size">{Math.round(n.size / 1024)} KB</span>}
-          {n.children && <FileTree nodes={n.children} depth={depth + 1} />}
-        </li>
-      ))}
-    </ul>
-  );
-}
+import { buildOffer, getSessionStats } from '../api.js';
+import axios from 'axios';
 
 export default function BuildButton({ sessionId, uploadInfo, onError }) {
   const [building, setBuilding] = useState(false);
   const [built, setBuilt] = useState(false);
-  const [fileTree, setFileTree] = useState(null);
   const [stats, setStats] = useState(null);
-
-  const refreshTree = () =>
-    getFileTree(sessionId).then((r) => setFileTree(r.data.tree)).catch(() => {});
 
   const refreshStats = () =>
     getSessionStats(sessionId).then((r) => setStats(r.data)).catch(() => {});
 
   useEffect(() => {
-    if (sessionId) { refreshTree(); refreshStats(); }
+    if (sessionId) refreshStats();
   }, [sessionId]);
 
   const handleBuild = async () => {
@@ -46,8 +27,8 @@ export default function BuildButton({ sessionId, uploadInfo, onError }) {
       a.remove();
       window.URL.revokeObjectURL(url);
       setBuilt(true);
-      refreshTree();
-      refreshStats();
+      // Clean up session from disk after download — no longer needed
+      axios.delete(`/api/upload/${sessionId}`).catch(() => {});
     } catch (err) {
       onError(err.response?.data?.error || 'Build failed');
     } finally {
@@ -55,84 +36,33 @@ export default function BuildButton({ sessionId, uploadInfo, onError }) {
     }
   };
 
-  return (
-    <div className="two-col">
-      <div className="panel">
-        <div className="panel__header">
-          <h2>Build Offer</h2>
-          <p className="panel__desc">
-            Package all files into a ready-to-deploy ZIP archive.
-          </p>
-        </div>
+  const previewUrl = `/api/content/${sessionId}/preview-iframe`;
 
-        <div className="build-summary">
+  return (
+    <div className="build-page">
+      <div className="build-topbar">
+        <div className="build-stats">
           {uploadInfo && (
             <>
-              <div className="build-summary__row">
-                <span>Files uploaded</span>
-                <strong>{uploadInfo.filesUploaded}</strong>
-              </div>
-              <div className="build-summary__row">
-                <span>Original HTML size</span>
-                <strong>{uploadInfo.indexSizeKb} KB</strong>
-              </div>
+              <span className="badge">{uploadInfo.filesUploaded} uploaded</span>
+              <span className="badge">{uploadInfo.indexSizeKb} KB HTML</span>
             </>
           )}
           {stats ? (
             <>
-              <div className="build-summary__row build-summary__row--divider">
-                <span>Scripts removed</span>
-                <strong className={stats.scriptsRemoved > 0 ? 'text-success' : ''}>{stats.scriptsRemoved}</strong>
-              </div>
-              <div className="build-summary__row">
-                <span>iFrames removed</span>
-                <strong className={stats.iframesRemoved > 0 ? 'text-success' : ''}>{stats.iframesRemoved}</strong>
-              </div>
-              <div className="build-summary__row">
-                <span>JS files deleted</span>
-                <strong className={stats.jsFilesDeleted > 0 ? 'text-success' : ''}>{stats.jsFilesDeleted}</strong>
-              </div>
-              <div className="build-summary__row">
-                <span>Unused files deleted</span>
-                <strong className={stats.unusedDeleted > 0 ? 'text-success' : ''}>{stats.unusedDeleted}</strong>
-              </div>
-              {stats.imagesCompressed > 0 && (
-                <div className="build-summary__row">
-                  <span>Images compressed</span>
-                  <strong className="text-success">{stats.imagesCompressed}</strong>
-                </div>
-              )}
-              {stats.textSaved > 0 && (
-                <div className="build-summary__row">
-                  <span>Text edits saved</span>
-                  <strong className="text-success">{stats.textSaved}</strong>
-                </div>
-              )}
-              <div className="build-summary__row build-summary__row--divider">
-                <span>Final file count</span>
-                <strong>{stats.totalFiles} files · {stats.totalSizeKb} KB</strong>
-              </div>
+              {stats.scriptsRemoved > 0 && <span className="badge badge--green">{stats.scriptsRemoved} scripts removed</span>}
+              {stats.iframesRemoved > 0 && <span className="badge badge--green">{stats.iframesRemoved} iframes removed</span>}
+              {stats.unusedDeleted > 0 && <span className="badge badge--green">{stats.unusedDeleted} unused deleted</span>}
+              {stats.imagesCompressed > 0 && <span className="badge badge--green">{stats.imagesCompressed} images compressed</span>}
+              {stats.textSaved > 0 && <span className="badge badge--green">{stats.textSaved} edits saved</span>}
+              <span className="badge">{stats.totalFiles} files · {stats.totalSizeKb} KB</span>
             </>
           ) : (
-            <div className="loading-state" style={{ padding: '12px 0' }}><div className="spinner" /></div>
+            <span className="build-stats__loading"><span className="spinner spinner--sm" /></span>
           )}
         </div>
-
-        <div className="build-checklist">
-          <h3>ZIP contents:</h3>
-          <ul>
-            <li>✅ index.php (with all PHP includes injected)</li>
-            <li>✅ send.php (Keitaro format, auto-generated)</li>
-            {stats?.totalFiles > 0 && <li>✅ {stats.totalFiles} files · {stats.totalSizeKb} KB total</li>}
-          </ul>
-        </div>
-
-        <div className="panel__footer" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
-          {built && (
-            <div className="success-banner">
-              ZIP downloaded. Your offer is ready to deploy.
-            </div>
-          )}
+        <div className="build-topbar__actions">
+          {built && <span className="badge badge--green">ZIP downloaded ✓</span>}
           <button
             className="btn btn--primary btn--xl"
             onClick={handleBuild}
@@ -143,18 +73,25 @@ export default function BuildButton({ sessionId, uploadInfo, onError }) {
         </div>
       </div>
 
-      <div className="panel">
-        <div className="panel__header">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2>File Tree</h2>
-            <button className="btn btn--sm" onClick={refreshTree}>Refresh</button>
-          </div>
-          <p className="panel__desc">Current normalized structure in this session.</p>
+      <div className="build-previews">
+        <div className="build-preview build-preview--desktop">
+          <div className="build-preview__label">Desktop</div>
+          <iframe
+            src={previewUrl}
+            className="build-preview__iframe build-preview__iframe--desktop"
+            title="Desktop Preview"
+          />
         </div>
-        {fileTree
-          ? <FileTree nodes={fileTree} />
-          : <div className="loading-state"><div className="spinner" /> Loading…</div>
-        }
+        <div className="build-preview build-preview--mobile">
+          <div className="build-preview__label">Mobile · 375px</div>
+          <div className="build-preview__mobile-wrap">
+            <iframe
+              src={previewUrl}
+              className="build-preview__iframe build-preview__iframe--mobile"
+              title="Mobile Preview"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

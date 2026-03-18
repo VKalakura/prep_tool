@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getDevState, getDevFile, saveDevFile, buildOffer } from '../api.js';
+import MonacoEditor from '@monaco-editor/react';
+import { getDevState, getDevFile, saveDevFile, buildOffer, cloneOriginals } from '../api.js';
 
 function FileTree({ nodes, onSelect, selectedPath }) {
   if (!nodes?.length) return null;
@@ -42,6 +43,8 @@ export default function DevPanel({ sessionId }) {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
   const [tab, setTab] = useState('files');
+  const [cloning, setCloning] = useState(false);
+  const [cloneError, setCloneError] = useState('');
 
   useEffect(() => {
     setLoading(true);
@@ -77,6 +80,19 @@ export default function DevPanel({ sessionId }) {
       setSaveMsg('Error: ' + (err.response?.data?.error || 'Failed'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleStartPipeline = async () => {
+    setCloning(true);
+    setCloneError('');
+    try {
+      const res = await cloneOriginals(sessionId);
+      const newSid = res.data.sessionId;
+      window.location.href = `/dev?clone=${newSid}&buyer=${sessionId}`;
+    } catch (err) {
+      setCloneError(err.response?.data?.error || 'Failed to clone originals');
+      setCloning(false);
     }
   };
 
@@ -130,7 +146,15 @@ export default function DevPanel({ sessionId }) {
             {state.config?.countryCode && <span>Country: <strong>{state.config.countryCode}</strong></span>}
           </div>
         </div>
-        <button className="btn btn--primary" onClick={handleDownload}>⬇ Download ZIP</button>
+        <div style={{ display: 'flex', gap: 8, flexDirection: 'column', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn--primary" onClick={handleStartPipeline} disabled={cloning} title="Start full dev pipeline from the original uploaded files (before any cleaning)">
+              {cloning ? 'Cloning…' : '▶ Start full pipeline'}
+            </button>
+            <button className="btn" onClick={handleDownload}>⬇ Download ZIP</button>
+          </div>
+          {cloneError && <span style={{ fontSize: 12, color: 'var(--danger)' }}>{cloneError}</span>}
+        </div>
       </div>
 
       <div className="clean-tabs" style={{ borderTop: '1px solid var(--border)' }}>
@@ -159,11 +183,23 @@ export default function DevPanel({ sessionId }) {
                 {fileLoading ? (
                   <div className="loading-state"><div className="spinner" /></div>
                 ) : (
-                  <textarea
-                    className="code-editor code-editor--lg"
+                  <MonacoEditor
+                    height="100%"
+                    language={(() => {
+                      const ext = selectedFile.path.split('.').pop().toLowerCase();
+                      return { html: 'html', css: 'css', js: 'javascript', php: 'php', json: 'json' }[ext] || 'plaintext';
+                    })()}
                     value={fileContent}
-                    onChange={e => setFileContent(e.target.value)}
-                    spellCheck={false}
+                    onChange={val => setFileContent(val || '')}
+                    theme="vs-dark"
+                    options={{
+                      fontSize: 13,
+                      minimap: { enabled: false },
+                      wordWrap: 'off',
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                      tabSize: 2,
+                    }}
                   />
                 )}
               </>

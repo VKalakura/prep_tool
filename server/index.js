@@ -14,7 +14,7 @@ const devRoutes = require('./routes/dev');
 const app = express();
 const PORT = process.env.PORT || 3001;
 const SESSIONS_DIR = path.join(__dirname, 'sessions');
-const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const SESSION_TTL_MS = 4 * 60 * 60 * 1000; // 4h fallback (completed sessions deleted immediately after download)
 
 app.use(cors({
   origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
