@@ -9,7 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "axios": "^1.13.6",
+    "emmet-monaco-es": "^5.7.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },

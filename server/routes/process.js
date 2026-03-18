@@ -328,6 +328,58 @@ router.get('/:sessionId/stats', (req, res) => {
   });
 });
 
+// ─── POST /:id/auto-clean — silent full clean for Standard mode ───────────────
+router.post('/:sessionId/auto-clean', (req, res) => {
+  const sid = req.params.sessionId;
+  const sessionDir = getSessionDir(sid);
+  const indexPath = getIndexPath(sid);
+  if (!indexPath) return res.status(404).json({ error: 'index.html not found' });
+
+  let scriptsRemoved = 0, iframesRemoved = 0, unusedDeleted = 0;
+
+  // 1. Remove all tracking scripts
+  let currentHtml = fs.readFileSync(indexPath, 'utf-8');
+  const scripts = htmlProcessor.extractScripts(currentHtml);
+  const allIndices = scripts.map(s => s.index);
+  if (allIndices.length) {
+    const result = htmlProcessor.removeScripts(currentHtml, allIndices);
+    currentHtml = result.html;
+    scriptsRemoved = allIndices.length;
+    for (const script of result.removed) {
+      if (!script.src) continue;
+      const src = script.src.replace(/^\.\//, '');
+      if (!src.startsWith('js/') && !src.match(/^[^/]+\.js$/)) continue;
+      const localName = src.startsWith('js/') ? src : `js/${src}`;
+      const filePath = path.join(sessionDir, localName);
+      if (!filePath.startsWith(path.join(sessionDir, 'js') + path.sep)) continue;
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
+  }
+
+  // 2. Remove all iframes
+  const $ = cheerio.load(currentHtml, { decodeEntities: false });
+  $('iframe').each((i, el) => { $(el).remove(); iframesRemoved++; });
+  currentHtml = $.html();
+  fs.writeFileSync(indexPath, currentHtml, 'utf-8');
+
+  // 3. Delete unused files
+  const refs = collectAllRefs(sessionDir);
+  for (const folder of ['js', 'css', 'img', 'fonts']) {
+    const dir = path.join(sessionDir, folder);
+    if (!fs.existsSync(dir)) continue;
+    for (const f of fs.readdirSync(dir)) {
+      const full = path.join(dir, f);
+      if (!fs.statSync(full).isFile()) continue;
+      const rel = `${folder}/${f}`;
+      if (!refs.has(rel)) { fs.unlinkSync(full); unusedDeleted++; }
+    }
+  }
+  removeEmptyDirs(sessionDir, ['js', 'css', 'img', 'fonts']);
+
+  logActivity(sid, 'auto-clean', { scriptsRemoved, iframesRemoved, unusedDeleted });
+  res.json({ ok: true, scriptsRemoved, iframesRemoved, unusedDeleted });
+});
+
 // ─── Helper: remove empty asset subdirs ───────────────────────────────────────
 function removeEmptyDirs(sessionDir, folders) {
   for (const folder of folders) {

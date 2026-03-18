@@ -1,11 +1,30 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { logActivity } = require('../services/activityLogger');
 
 const router = express.Router();
 const SESSIONS_DIR = path.join(__dirname, '../sessions');
 
 function getSessionDir(sid) { return path.join(SESSIONS_DIR, sid); }
+
+function generateId() {
+  return Math.random().toString(36).slice(2, 10) + '-' + Date.now().toString(36);
+}
+
+function copyDirRecursive(src, dest, skip) {
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    if (skip.includes(entry.name)) continue;
+    const s = path.join(src, entry.name);
+    const d = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      fs.mkdirSync(d, { recursive: true });
+      copyDirRecursive(s, d, skip);
+    } else {
+      fs.copyFileSync(s, d);
+    }
+  }
+}
 
 function safePath(rel) {
   return (rel || '')
@@ -31,7 +50,75 @@ function buildTree(dir, root) {
     });
 }
 
-// GET /:sessionId/state — full session overview for dev
+function countFilesInDir(dir) {
+  let count = 0;
+  try {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (e.name.startsWith('_')) continue;
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) count += countFilesInDir(full);
+      else count++;
+    }
+  } catch {}
+  return count;
+}
+
+// ─── GET /sessions — list all active sessions (must be before /:sessionId routes)
+router.get('/sessions', (req, res) => {
+  if (!fs.existsSync(SESSIONS_DIR)) return res.json({ sessions: [] });
+
+  const sessions = [];
+  for (const e of fs.readdirSync(SESSIONS_DIR, { withFileTypes: true })) {
+    if (!e.isDirectory()) continue;
+    const sid = e.name;
+    const sessionDir = getSessionDir(sid);
+
+    let config = {};
+    try {
+      const p = path.join(sessionDir, '_offer_config.json');
+      if (fs.existsSync(p)) config = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    } catch {}
+
+    let meta = {};
+    try {
+      const p = path.join(sessionDir, '_session_meta.json');
+      if (fs.existsSync(p)) meta = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    } catch {}
+
+    const stat = fs.statSync(sessionDir);
+    sessions.push({
+      sessionId: sid,
+      offerName: config.offerName || null,
+      countryCode: config.countryCode || null,
+      createdAt: stat.birthtime,
+      lastActivity: meta.lastActivity || stat.mtime,
+      fileCount: countFilesInDir(sessionDir),
+    });
+  }
+
+  sessions.sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity));
+  res.json({ sessions });
+});
+
+// ─── GET /:sessionId/ping — poll for dev-made changes only
+router.get('/:sessionId/ping', (req, res) => {
+  const sid = req.params.sessionId;
+  const sessionDir = getSessionDir(sid);
+  if (!fs.existsSync(sessionDir)) return res.status(404).json({ error: 'not found' });
+
+  let lastDevActivity = null;
+  try {
+    const p = path.join(sessionDir, '_session_meta.json');
+    if (fs.existsSync(p)) {
+      const meta = JSON.parse(fs.readFileSync(p, 'utf-8'));
+      if (meta.lastDevActivity) lastDevActivity = meta.lastDevActivity;
+    }
+  } catch {}
+
+  res.json({ lastDevActivity });
+});
+
+// ─── GET /:sessionId/state — full session overview for dev
 router.get('/:sessionId/state', (req, res) => {
   const sid = req.params.sessionId;
   const sessionDir = getSessionDir(sid);
@@ -56,7 +143,6 @@ router.get('/:sessionId/state', (req, res) => {
   }
 
   const stat = fs.statSync(sessionDir);
-
   res.json({
     sessionId: sid,
     config,
@@ -67,7 +153,7 @@ router.get('/:sessionId/state', (req, res) => {
   });
 });
 
-// GET /:sessionId/file?path=css/style.css
+// ─── GET /:sessionId/file?path=css/style.css
 router.get('/:sessionId/file', (req, res) => {
   const filePath = req.query.path;
   if (!filePath) return res.status(400).json({ error: 'path query param required' });
@@ -89,7 +175,7 @@ router.get('/:sessionId/file', (req, res) => {
   }
 });
 
-// PUT /:sessionId/file — save edited file
+// ─── PUT /:sessionId/file — save edited file
 router.put('/:sessionId/file', (req, res) => {
   const { path: filePath, content } = req.body;
   if (!filePath || content === undefined) {
@@ -106,6 +192,62 @@ router.put('/:sessionId/file', (req, res) => {
 
   fs.mkdirSync(path.dirname(full), { recursive: true });
   fs.writeFileSync(full, content, 'utf-8');
+  logActivity(sid, 'dev-save', { path: filePath });
+
+  // Write lastDevActivity separately so standard client can detect dev changes
+  const metaPath = path.join(sessionDir, '_session_meta.json');
+  let meta = {};
+  try { if (fs.existsSync(metaPath)) meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8')); } catch {}
+  meta.lastDevActivity = new Date().toISOString();
+  fs.writeFileSync(metaPath, JSON.stringify(meta));
+
+  res.json({ ok: true });
+});
+
+// ─── POST /:sessionId/clone-originals — create new dev session from pre-clean snapshot
+// _originals/ contains only text files (html/css/js etc.) — binary files (videos, images)
+// are never modified by auto-clean, so we copy them from the current session to save disk.
+router.post('/:sessionId/clone-originals', (req, res) => {
+  const sid = req.params.sessionId;
+  const sessionDir = getSessionDir(sid);
+  const originalsDir = path.join(SESSIONS_DIR, sid, '_originals');
+  if (!fs.existsSync(originalsDir)) {
+    return res.status(404).json({ error: 'No originals backup found. Session was uploaded before this feature was added — please re-upload.' });
+  }
+
+  const newSid = generateId();
+  const newSessionDir = path.join(SESSIONS_DIR, newSid);
+  fs.mkdirSync(newSessionDir, { recursive: true });
+
+  // 1. Copy binary files from current session (unmodified by auto-clean)
+  copyDirRecursive(sessionDir, newSessionDir, ['_originals', '_tmp', '_activity_log.json', '_session_meta.json', '_offer_config.json']);
+  // 2. Overwrite with originals (text files — restores pre-clean HTML/CSS/JS)
+  copyDirRecursive(originalsDir, newSessionDir, []);
+
+  logActivity(newSid, 'clone-from', { source: sid });
+  res.json({ sessionId: newSid });
+});
+
+// ─── POST /:sessionId/push-to/:targetSid — copy current files to buyer session
+router.post('/:sessionId/push-to/:targetSid', (req, res) => {
+  const sid = req.params.sessionId;
+  const targetSid = req.params.targetSid;
+  const srcDir = path.join(SESSIONS_DIR, sid);
+  const targetDir = path.join(SESSIONS_DIR, targetSid);
+
+  if (!fs.existsSync(targetDir)) return res.status(404).json({ error: 'Target session not found' });
+
+  const SKIP = ['_originals', '_activity_log.json', '_session_meta.json', '_offer_config.json'];
+  copyDirRecursive(srcDir, targetDir, SKIP);
+
+  // Update lastDevActivity in target so buyer gets notified
+  const metaPath = path.join(targetDir, '_session_meta.json');
+  let meta = {};
+  try { if (fs.existsSync(metaPath)) meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8')); } catch {}
+  meta.lastDevActivity = new Date().toISOString();
+  fs.writeFileSync(metaPath, JSON.stringify(meta));
+
+  logActivity(sid, 'push-to', { target: targetSid });
   res.json({ ok: true });
 });
 

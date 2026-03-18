@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const BASE = '/api';
 
-export function uploadFolder(files, sessionId, onProgress) {
+export function uploadFolder(files, sessionId, onProgress, mode) {
   const form = new FormData();
 
   // Send relative paths as a separate JSON field — multer v2 strips slashes
@@ -17,7 +17,7 @@ export function uploadFolder(files, sessionId, onProgress) {
   // Do NOT set Content-Type manually — axios/browser must set it automatically
   // with the correct multipart boundary. Setting it without boundary breaks multer.
   return axios.post(`${BASE}/upload`, form, {
-    headers: { 'X-Session-Id': sessionId },
+    headers: { 'X-Session-Id': sessionId, 'X-Mode': mode || 'dev' },
     onUploadProgress: (e) => onProgress && onProgress(Math.round((e.loaded * 100) / e.total)),
   });
 }
@@ -109,6 +109,29 @@ export function replaceImage(sessionId, name, file) {
   form.append('file', file);
   return axios.post(`${BASE}/content/${sessionId}/replace-image`, form);
 }
+export function formatSnippet(sessionId, html) {
+  return axios.post(`${BASE}/content/${sessionId}/format-snippet`, { html });
+}
+
+export function replaceVideo(sessionId, src, file, posterBlob) {
+  const form = new FormData();
+  form.append('name', src.split('/').pop().split('?')[0]);
+  form.append('src', src);
+  form.append('file', file);
+  if (posterBlob) form.append('poster', posterBlob, 'poster.webp');
+  return axios.post(`${BASE}/content/${sessionId}/replace-video`, form);
+}
+
+export function insertAfter(sessionId, afterIdx, templateIdx) {
+  return axios.post(`${BASE}/content/${sessionId}/insert-after`, { afterIdx, templateIdx });
+}
+export function insertWidget(sessionId, afterIdx, widgetId) {
+  return axios.post(`${BASE}/content/${sessionId}/insert-widget`, { afterIdx, widgetId });
+}
+export function deleteElement(sessionId, idx) {
+  return axios.post(`${BASE}/content/${sessionId}/delete-element`, { idx });
+}
+
 export function compressImage(sessionId, name, quality, format) {
   return axios.post(`${BASE}/content/${sessionId}/compress-image`, { name, quality, format });
 }
@@ -121,6 +144,19 @@ export function getSessionStats(sessionId) {
   return axios.get(`${BASE}/process/${sessionId}/stats`);
 }
 
+// Auto-clean (Standard mode)
+export function autoClean(sessionId) {
+  return axios.post(`${BASE}/process/${sessionId}/auto-clean`);
+}
+
+// Dev sessions list & ping
+export function getDevSessions() {
+  return axios.get(`${BASE}/dev/sessions`);
+}
+export function pingSession(sessionId) {
+  return axios.get(`${BASE}/dev/${sessionId}/ping`);
+}
+
 // Dev Access
 export function getDevState(sessionId) {
   return axios.get(`${BASE}/dev/${sessionId}/state`);
@@ -130,4 +166,10 @@ export function getDevFile(sessionId, filePath) {
 }
 export function saveDevFile(sessionId, filePath, content) {
   return axios.put(`${BASE}/dev/${sessionId}/file`, { path: filePath, content });
+}
+export function cloneOriginals(sessionId) {
+  return axios.post(`${BASE}/dev/${sessionId}/clone-originals`);
+}
+export function pushToSession(sessionId, targetSid) {
+  return axios.post(`${BASE}/dev/${sessionId}/push-to/${targetSid}`);
 }

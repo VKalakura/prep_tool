@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { uploadFolder } from '../api.js';
 
-export default function FolderUpload({ sessionId, onComplete, onError }) {
+export default function FolderUpload({ sessionId, mode, onComplete, onError, loading, loadingText }) {
   const [isDragging, setIsDragging] = useState(false);
   const [progress, setProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
@@ -15,7 +15,7 @@ export default function FolderUpload({ sessionId, onComplete, onError }) {
     setUploading(true);
     setProgress(0);
     try {
-      const res = await uploadFolder(arr, sessionId, setProgress);
+      const res = await uploadFolder(arr, sessionId, setProgress, mode);
       onComplete(res.data);
     } catch (err) {
       onError(err.response?.data?.error || 'Upload failed');
@@ -53,7 +53,12 @@ export default function FolderUpload({ sessionId, onComplete, onError }) {
           onChange={(e) => handleFiles(e.target.files)}
         />
 
-        {uploading ? (
+        {loading ? (
+          <div className="drop-zone__content">
+            <div className="spinner" />
+            <p>{loadingText || 'Processing…'}</p>
+          </div>
+        ) : uploading ? (
           <div className="drop-zone__content">
             <div className="spinner" />
             <p>Uploading {fileCount} files and normalizing structure…</p>
