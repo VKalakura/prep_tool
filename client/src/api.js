@@ -122,14 +122,20 @@ export function replaceVideo(sessionId, src, file, posterBlob) {
   return axios.post(`${BASE}/content/${sessionId}/replace-video`, form);
 }
 
-export function insertAfter(sessionId, afterIdx, templateIdx) {
-  return axios.post(`${BASE}/content/${sessionId}/insert-after`, { afterIdx, templateIdx });
+export function insertAfter(sessionId, afterIdx, templateIdx, afterSelector) {
+  return axios.post(`${BASE}/content/${sessionId}/insert-after`, { afterIdx, templateIdx, afterSelector });
 }
-export function insertWidget(sessionId, afterIdx, widgetId) {
-  return axios.post(`${BASE}/content/${sessionId}/insert-widget`, { afterIdx, widgetId });
+export function insertWidget(sessionId, afterIdx, widgetId, afterSelector) {
+  return axios.post(`${BASE}/content/${sessionId}/insert-widget`, { afterIdx, widgetId, afterSelector });
 }
 export function deleteElement(sessionId, idx) {
   return axios.post(`${BASE}/content/${sessionId}/delete-element`, { idx });
+}
+export function deleteBySelector(sessionId, selector) {
+  return axios.post(`${BASE}/content/${sessionId}/delete-by-selector`, { selector });
+}
+export function undoDelete(sessionId) {
+  return axios.post(`${BASE}/content/${sessionId}/undo`);
 }
 
 export function compressImage(sessionId, name, quality, format) {
@@ -173,3 +179,18 @@ export function cloneOriginals(sessionId) {
 export function pushToSession(sessionId, targetSid) {
   return axios.post(`${BASE}/dev/${sessionId}/push-to/${targetSid}`);
 }
+
+export function getRemovedScripts(sessionId) {
+  return axios.get(`${BASE}/dev/${sessionId}/removed-scripts`);
+}
+export function restoreScript(sessionId, scriptId) {
+  return axios.post(`${BASE}/dev/${sessionId}/restore-script`, { scriptId });
+}
+
+export function getHeadItems(sessionId) {
+  return axios.get(`${BASE}/process/${sessionId}/head-items`);
+}
+export function cleanHeadItemsApi(sessionId, indicesToRemove) {
+  return axios.post(`${BASE}/process/${sessionId}/clean-head`, { indicesToRemove });
+}
+

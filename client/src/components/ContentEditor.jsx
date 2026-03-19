@@ -4,7 +4,7 @@ import { emmetHTML, emmetCSS, emmetJSX } from 'emmet-monaco-es';
 import {
   getEditableElements, saveText, bulkReplace,
   getImages, replaceImage, compressImage, compressAll, replaceVideo, formatSnippet,
-  insertAfter, deleteElement, insertWidget, getWidgets,
+  insertAfter, deleteElement, deleteBySelector, undoDelete, insertWidget, getWidgets,
   getDevFile, saveDevFile, getDevState,
 } from '../api.js';
 
@@ -93,6 +93,17 @@ function TextEditorTab({ sessionId, onError }) {
   const [inserting, setInserting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [imgDeleteConfirm, setImgDeleteConfirm] = useState(false);
+  const [videoDeleteConfirm, setVideoDeleteConfirm] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const [previewMode, setPreviewMode] = useState('desktop'); // 'responsive' | 'desktop' | 'mobile'
+  const [previewSize, setPreviewSize] = useState({ w: 0, h: 0 });
+  const iframeWrapRef = useRef(null);
+  const DESKTOP_W = 1280;
+  const MOBILE_W = 375;
+  const [deletePickMode, setDeletePickMode] = useState(false);
+  const deletePickModeRef = useRef(false);
+  const [pendingDelete, setPendingDelete] = useState(null); // { selector, preview }
   const pendingSelectRef = useRef(null); // { idx, tag, text } — select after iframe reload
 
   // Listen for messages from iframe
@@ -111,12 +122,15 @@ function TextEditorTab({ sessionId, onError }) {
         setShowPicker(false);
       }
       if (e.data.type === 'ept-img-select') {
-        setSelected({ _img: true, name: e.data.name, src: e.data.src, width: e.data.width, height: e.data.height });
+        setSelected({ _img: true, name: e.data.name, src: e.data.src, width: e.data.width, height: e.data.height, selectorPath: e.data.selectorPath });
         setEditText('');
       }
       if (e.data.type === 'ept-video-select') {
-        setSelected({ _video: true, name: e.data.name, src: e.data.src, poster: e.data.poster });
+        setSelected({ _video: true, name: e.data.name, src: e.data.src, poster: e.data.poster, selectorPath: e.data.selectorPath });
         setEditText('');
+      }
+      if (e.data.type === 'ept-pick-delete') {
+        setPendingDelete({ selector: e.data.selector, label: e.data.label, preview: e.data.preview, ancestors: e.data.ancestors || [] });
       }
     };
     window.addEventListener('message', handler);
@@ -152,16 +166,92 @@ function TextEditorTab({ sessionId, onError }) {
     setSelected(null);
     setEditText('');
     setShowPicker(false);
+    setImgDeleteConfirm(false);
+    setVideoDeleteConfirm(false);
     sendToIframe({ type: 'ept-deselect' });
   };
 
-  const handleReload = () => {
-    setSelected(null);
-    setEditText('');
-    setIframeKey(k => k + 1);
+  const togglePickMode = (on) => {
+    const next = on !== undefined ? on : !deletePickMode;
+    setDeletePickMode(next);
+    deletePickModeRef.current = next;
+    setPendingDelete(null);
+    if (!next) {
+      // also clear normal selection when exiting pick mode
+    }
+    sendToIframe({ type: 'ept-pick-mode', active: next });
   };
 
+  const handleDeleteBySelector = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    try {
+      await deleteBySelector(sessionId, pendingDelete.selector);
+      setCanUndo(true);
+      setPendingDelete(null);
+      togglePickMode(false);
+      setSelected(null);
+      setEditText('');
+      setIframeKey(k => k + 1);
+    } catch (err) {
+      onError(err.response?.data?.error || 'Delete failed');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleReload = useCallback(() => {
+    setSelected(null);
+    setEditText('');
+    setDeletePickMode(false);
+    deletePickModeRef.current = false;
+    setPendingDelete(null);
+    setImgDeleteConfirm(false);
+    setVideoDeleteConfirm(false);
+    setCanUndo(false);
+    setIframeKey(k => k + 1);
+  }, []);
+
+  const handleUndo = async () => {
+    try {
+      await undoDelete(sessionId);
+      setCanUndo(false);
+      setPendingDelete(null);
+      setSelected(null);
+      setEditText('');
+      setIframeKey(k => k + 1);
+    } catch (err) {
+      onError(err.response?.data?.error || 'Undo failed');
+    }
+  };
+
+  // Listen for external reload requests (e.g. from standard-mode notification)
+  useEffect(() => {
+    let ch;
+    try {
+      ch = new BroadcastChannel('ept-content-reload-' + sessionId);
+      ch.onmessage = () => handleReload();
+    } catch {}
+    return () => ch?.close();
+  }, [sessionId, handleReload]);
+
+  // Track iframe wrapper size for desktop scaling
+  useEffect(() => {
+    const el = iframeWrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setPreviewSize({ w: entry.contentRect.width, h: entry.contentRect.height });
+    });
+    ro.observe(el);
+    setPreviewSize({ w: el.clientWidth, h: el.clientHeight });
+    return () => ro.disconnect();
+  }, []);
+
   const handleIframeLoad = () => {
+    // Re-activate pick mode if it was on before reload
+    if (deletePickModeRef.current) {
+      setTimeout(() => sendToIframe({ type: 'ept-pick-mode', active: true }), 120);
+    }
     if (!pendingSelectRef.current) return;
     const { idx, tag, text } = pendingSelectRef.current;
     pendingSelectRef.current = null;
@@ -177,15 +267,20 @@ function TextEditorTab({ sessionId, onError }) {
   };
 
   const handleInsertAfter = async (templateIdx) => {
-    if (!selected || selected._img || selected._video) return;
+    if (!selected) return;
     setInserting(true);
     setShowPicker(false);
     try {
-      const res = await insertAfter(sessionId, selected.idx, templateIdx);
+      const isMedia = selected._img || selected._video;
+      const afterSelector = isMedia ? selected.selectorPath : undefined;
+      const afterIdx = isMedia ? undefined : selected.idx;
+      const res = await insertAfter(sessionId, afterIdx, templateIdx, afterSelector);
       const { newIdx, tag, isImgLink } = res.data;
-      pendingSelectRef.current = isImgLink
-        ? { idx: newIdx, tag, text: null }  // highlight only — user clicks img to open image picker
-        : { idx: newIdx, tag, text: 'Новий текст' };
+      if (!isMedia) {
+        pendingSelectRef.current = isImgLink
+          ? { idx: newIdx, tag, text: null }
+          : { idx: newIdx, tag, text: 'Новий текст' };
+      }
       setSavedCount(c => c + 1);
       setSelected(null);
       setEditText('');
@@ -212,11 +307,14 @@ function TextEditorTab({ sessionId, onError }) {
   };
 
   const handleInsertWidget = async (widgetId) => {
-    if (!selected || selected._img || selected._video) return;
+    if (!selected) return;
     setInserting(true);
     setShowPicker(false);
     try {
-      await insertWidget(sessionId, selected.idx, widgetId);
+      const isMedia = selected._img || selected._video;
+      const afterSelector = isMedia ? selected.selectorPath : undefined;
+      const afterIdx = isMedia ? undefined : selected.idx;
+      await insertWidget(sessionId, afterIdx, widgetId, afterSelector);
       setIframeKey(k => k + 1);
       setSelected(null);
       setEditText('');
@@ -232,9 +330,29 @@ function TextEditorTab({ sessionId, onError }) {
     setDeleting(true);
     try {
       await deleteElement(sessionId, selected.idx);
+      setCanUndo(true);
       setSelected(null);
       setEditText('');
       setConfirmDelete(false);
+      setIframeKey(k => k + 1);
+    } catch (err) {
+      onError(err.response?.data?.error || 'Delete failed');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    const sp = selected?.selectorPath;
+    if (!sp) return;
+    setDeleting(true);
+    try {
+      await deleteBySelector(sessionId, sp);
+      setCanUndo(true);
+      setSelected(null);
+      setEditText('');
+      setImgDeleteConfirm(false);
+      setVideoDeleteConfirm(false);
       setIframeKey(k => k + 1);
     } catch (err) {
       onError(err.response?.data?.error || 'Delete failed');
@@ -299,18 +417,60 @@ function TextEditorTab({ sessionId, onError }) {
       {/* Left: iframe preview */}
       <div className="text-editor-preview">
         <div className="text-editor-preview__bar">
-          <span className="text-editor-preview__hint">Click text to edit · Click image or video to replace</span>
-          <button className="btn btn--sm" onClick={handleReload}>↺ Reload</button>
+          {deletePickMode
+            ? <span className="text-editor-preview__hint" style={{ color: '#ef4444' }}>🗑 Click → selects block · Dbl-click → exact element · Hidden shown in orange</span>
+            : <span className="text-editor-preview__hint">Click text to edit · Click image or video to replace</span>
+          }
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+            {canUndo && (
+              <button className="btn btn--sm" onClick={handleUndo} title="Undo last delete">↩ Undo</button>
+            )}
+            <button
+              className={`btn btn--sm${deletePickMode ? ' btn--danger' : ''}`}
+              onClick={() => togglePickMode()}
+            >{deletePickMode ? '✕ Cancel' : '🗑 Delete'}</button>
+            <span style={{ width: 1, height: 18, background: 'var(--border)', display: 'inline-block', margin: '0 2px' }} />
+            <button
+              className={`btn btn--sm${previewMode === 'mobile' ? ' btn--primary' : ''}`}
+              onClick={() => setPreviewMode(m => m === 'mobile' ? 'responsive' : 'mobile')}
+            >📱 Mobile</button>
+            <button
+              className={`btn btn--sm${previewMode === 'desktop' ? ' btn--primary' : ''}`}
+              onClick={() => setPreviewMode(m => m === 'desktop' ? 'responsive' : 'desktop')}
+            >🖥 Desktop</button>
+            <span style={{ width: 1, height: 18, background: 'var(--border)', display: 'inline-block', margin: '0 2px' }} />
+            <button className="btn btn--sm" onClick={handleReload}>↺ Reload</button>
+          </div>
         </div>
-        <iframe
-          key={iframeKey}
-          ref={iframeRef}
-          src={`/api/content/${sessionId}/preview-iframe`}
-          className="text-editor-iframe"
-          title="Offer Preview"
-          sandbox="allow-scripts allow-same-origin"
-          onLoad={handleIframeLoad}
-        />
+        <div ref={iframeWrapRef} style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0 }}>
+          <iframe
+            key={iframeKey}
+            ref={iframeRef}
+            src={`/api/content/${sessionId}/preview-iframe`}
+            className="text-editor-iframe"
+            title="Offer Preview"
+            sandbox="allow-scripts allow-same-origin"
+            onLoad={handleIframeLoad}
+            style={{
+              ...(previewMode === 'desktop' && previewSize.w > 0 ? {
+                position: 'absolute', top: 0, left: 0,
+                width: `${DESKTOP_W}px`,
+                height: `${Math.ceil(previewSize.h / (previewSize.w / DESKTOP_W))}px`,
+                transformOrigin: 'top left',
+                transform: `scale(${previewSize.w / DESKTOP_W})`,
+                border: 'none',
+              } : previewMode === 'mobile' ? {
+                width: `${MOBILE_W}px`,
+                height: '100%',
+                margin: '0 auto',
+                display: 'block',
+                border: 'none',
+                boxShadow: '0 0 0 1px var(--border)',
+              } : { width: '100%', height: '100%' }),
+              ...(deletePickMode ? { outline: '2px solid #ef4444', outlineOffset: '-2px' } : {}),
+            }}
+          />
+        </div>
       </div>
 
       {/* Right: edit panel */}
@@ -320,13 +480,69 @@ function TextEditorTab({ sessionId, onError }) {
           {savedCount > 0 && <span className="badge badge--green">✓ {savedCount} saved</span>}
         </div>
 
-        {!selected ? (
-          <div className="text-editor-empty">
-            <div className="text-editor-empty__icon">👆</div>
-            <p>Click on any text or image in the preview.</p>
-            <p style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>
-              Headings, paragraphs, buttons, links are editable. Images can be replaced.
+        {pendingDelete ? (
+          <div className="text-editor-form">
+            <div className="text-editor-tag">
+              <span className="badge badge--red">Delete</span>
+              <code style={{ fontSize: 11, color: 'var(--text-muted)' }}>{pendingDelete.label}</code>
+              <button className="btn btn--sm" style={{ marginLeft: 'auto' }} onClick={() => { setPendingDelete(null); }}>✕</button>
+            </div>
+            {pendingDelete.ancestors && pendingDelete.ancestors.length > 0 && (
+              <div style={{ margin: '8px 0 4px' }}>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 5px' }}>Select parent to delete instead:</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {pendingDelete.ancestors.map((a, i) => (
+                    <button
+                      key={i}
+                      className="btn btn--sm"
+                      style={{ fontSize: 11, padding: '2px 8px', opacity: pendingDelete.selector === a.selector ? 1 : 0.65 }}
+                      onClick={() => {
+                        setPendingDelete(pd => ({ ...pd, selector: a.selector, label: a.label, preview: a.preview || pd.preview }));
+                        sendToIframe({ type: 'ept-pick-highlight', selector: a.selector });
+                      }}
+                    >
+                      {a.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <pre style={{
+              fontSize: 11, background: '#0d0f18', color: '#f87171', padding: '8px 10px',
+              borderRadius: 6, overflowX: 'auto', maxHeight: 130, whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all', border: '1px solid rgba(239,68,68,0.25)', margin: '8px 0 12px',
+            }}>{pendingDelete.preview}{pendingDelete.preview?.length >= 400 ? '…' : ''}</pre>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn--danger btn--lg" onClick={handleDeleteBySelector} disabled={deleting} style={{ flex: 1 }}>
+                {deleting ? 'Deleting…' : '🗑 Delete'}
+              </button>
+              <button className="btn btn--lg" onClick={() => setPendingDelete(null)} style={{ flex: 1 }}>
+                Cancel
+              </button>
+            </div>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+              Click another element in the preview to change selection.
             </p>
+          </div>
+        ) : !selected ? (
+          <div className="text-editor-empty">
+            {deletePickMode ? (
+              <>
+                <div className="text-editor-empty__icon">🗑</div>
+                <p style={{ color: '#ef4444' }}>Hover over any element and click to delete it.</p>
+                <p style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>
+                  Works on any DOM element — sections, divs, images, buttons…
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="text-editor-empty__icon">👆</div>
+                <p>Click on any text or image in the preview.</p>
+                <p style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>
+                  Headings, paragraphs, buttons, links are editable. Images can be replaced.
+                </p>
+              </>
+            )}
           </div>
         ) : selected._img ? (
           <div className="text-editor-form">
@@ -349,6 +565,27 @@ function TextEditorTab({ sessionId, onError }) {
             <button className="btn btn--primary btn--lg" onClick={() => imgReplaceRef.current?.click()} disabled={imgReplacing}>
               {imgReplacing ? 'Replacing…' : '↑ Replace Image'}
             </button>
+            <div className="text-editor-actions" style={{ marginTop: 8 }}>
+              <button className="btn btn--sm btn--clone" onClick={() => openPicker('elements')} disabled={inserting} title="Insert a new element after this image">
+                {inserting ? '…' : '⊕ Add element'}
+              </button>
+              <button className="btn btn--sm btn--clone" onClick={() => openPicker('widgets')} disabled={inserting} title="Insert a widget after this image">
+                ⊞ Add widget
+              </button>
+              {!imgDeleteConfirm ? (
+                <button className="btn btn--sm btn--danger" onClick={() => setImgDeleteConfirm(true)} title="Remove this image from the page">
+                  ✕ Delete
+                </button>
+              ) : (
+                <span className="text-editor-confirm-delete">
+                  <span style={{ fontSize: 12, color: 'var(--danger)' }}>Sure?</span>
+                  <button className="btn btn--sm btn--danger" onClick={handleDeleteSelected} disabled={deleting}>
+                    {deleting ? '…' : 'Yes, delete'}
+                  </button>
+                  <button className="btn btn--sm" onClick={() => setImgDeleteConfirm(false)}>Cancel</button>
+                </span>
+              )}
+            </div>
           </div>
         ) : selected._video ? (
           <div className="text-editor-form">
@@ -378,6 +615,27 @@ function TextEditorTab({ sessionId, onError }) {
             <button className="btn btn--primary btn--lg" onClick={() => videoReplaceRef.current?.click()} disabled={videoReplacing}>
               {videoReplacing ? 'Generating poster…' : '↑ Replace Video'}
             </button>
+            <div className="text-editor-actions" style={{ marginTop: 8 }}>
+              <button className="btn btn--sm btn--clone" onClick={() => openPicker('elements')} disabled={inserting} title="Insert a new element after this video">
+                {inserting ? '…' : '⊕ Add element'}
+              </button>
+              <button className="btn btn--sm btn--clone" onClick={() => openPicker('widgets')} disabled={inserting} title="Insert a widget after this video">
+                ⊞ Add widget
+              </button>
+              {!videoDeleteConfirm ? (
+                <button className="btn btn--sm btn--danger" onClick={() => setVideoDeleteConfirm(true)} title="Remove this video from the page">
+                  ✕ Delete
+                </button>
+              ) : (
+                <span className="text-editor-confirm-delete">
+                  <span style={{ fontSize: 12, color: 'var(--danger)' }}>Sure?</span>
+                  <button className="btn btn--sm btn--danger" onClick={handleDeleteSelected} disabled={deleting}>
+                    {deleting ? '…' : 'Yes, delete'}
+                  </button>
+                  <button className="btn btn--sm" onClick={() => setVideoDeleteConfirm(false)}>Cancel</button>
+                </span>
+              )}
+            </div>
           </div>
         ) : (
           <div className="text-editor-form">
@@ -459,7 +717,7 @@ function TextEditorTab({ sessionId, onError }) {
       <div className="picker-overlay" onClick={() => setShowPicker(false)}>
         <div className="picker-modal" onClick={e => e.stopPropagation()}>
           <div className="picker-modal__header">
-            <span>Insert after <code>&lt;{selected?.tag}&gt;</code></span>
+            <span>Insert after <code>{selected?._img ? '<img>' : selected?._video ? '<video>' : `<${selected?.tag}>`}</code></span>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <div className="picker-modal__tabs">
                 <button className={`picker-modal__tab ${pickerTab === 'elements' ? 'active' : ''}`} onClick={() => setPickerTab('elements')}>Elements</button>

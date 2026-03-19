@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const cheerio = require('cheerio');
 const { logActivity } = require('../services/activityLogger');
 
 const router = express.Router();
@@ -202,6 +203,82 @@ router.put('/:sessionId/file', (req, res) => {
   fs.writeFileSync(metaPath, JSON.stringify(meta));
 
   res.json({ ok: true });
+});
+
+// ─── GET /:sessionId/removed-scripts — list all scripts saved during cleaning ─
+router.get('/:sessionId/removed-scripts', (req, res) => {
+  const sid = req.params.sessionId;
+  const sessionDir = getSessionDir(sid);
+  const filePath = path.join(sessionDir, '_removed_scripts.json');
+
+  if (!fs.existsSync(filePath)) return res.json({ scripts: [] });
+
+  try {
+    const scripts = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    res.json({ scripts });
+  } catch {
+    res.json({ scripts: [] });
+  }
+});
+
+// ─── POST /:sessionId/restore-script — restore a previously removed script ───
+router.post('/:sessionId/restore-script', (req, res) => {
+  const { scriptId } = req.body;
+  if (!scriptId) return res.status(400).json({ error: 'scriptId required' });
+
+  const sid = req.params.sessionId;
+  const sessionDir = getSessionDir(sid);
+  const removedPath = path.join(sessionDir, '_removed_scripts.json');
+
+  if (!fs.existsSync(removedPath)) return res.status(404).json({ error: 'No removed scripts found' });
+
+  let removed;
+  try { removed = JSON.parse(fs.readFileSync(removedPath, 'utf-8')); }
+  catch { return res.status(500).json({ error: 'Cannot read removed scripts' }); }
+
+  const script = removed.find(s => s.id === scriptId);
+  if (!script) return res.status(404).json({ error: 'Script not found' });
+
+  // 1. Restore the JS file from _originals/ if it was deleted
+  let fileRestored = false;
+  if (script.deletedFile) {
+    const originalsDir = path.join(sessionDir, '_originals');
+    const origFile = path.join(originalsDir, script.deletedFile);
+    const destFile = path.join(sessionDir, script.deletedFile);
+    if (fs.existsSync(origFile) && !fs.existsSync(destFile)) {
+      try {
+        fs.mkdirSync(path.dirname(destFile), { recursive: true });
+        fs.copyFileSync(origFile, destFile);
+        fileRestored = true;
+      } catch {}
+    }
+  }
+
+  // 2. Inject the script tag back into the HTML
+  let indexPath = null;
+  for (const name of ['index.html', 'index.php']) {
+    const p = path.join(sessionDir, name);
+    if (fs.existsSync(p)) { indexPath = p; break; }
+  }
+  if (!indexPath) return res.status(404).json({ error: 'index.html not found' });
+
+  const html = fs.readFileSync(indexPath, 'utf-8');
+  const $ = cheerio.load(html, { decodeEntities: false });
+
+  if (script.position === 'head') {
+    $('head').append(script.outerHtml);
+  } else {
+    $('body').append(script.outerHtml);
+  }
+
+  fs.writeFileSync(indexPath, $.html(), 'utf-8');
+
+  // 3. Remove from _removed_scripts.json
+  const updated = removed.filter(s => s.id !== scriptId);
+  fs.writeFileSync(removedPath, JSON.stringify(updated, null, 2));
+
+  logActivity(sid, 'restore-script', { src: script.src || '(inline)', id: scriptId, fileRestored });
+  res.json({ ok: true, fileRestored });
 });
 
 // ─── POST /:sessionId/clone-originals — create new dev session from pre-clean snapshot

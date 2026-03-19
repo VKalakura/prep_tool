@@ -16,7 +16,12 @@
       "Bash(sed -i '' 's/  width: 600px;/  width: 780px;/' /Users/vk/Desktop/awesome-mvp/client/src/App.css)",
       "Bash(sed -i '' 's/  max-width: 95vw;/  max-width: 96vw;/' /Users/vk/Desktop/awesome-mvp/client/src/App.css)",
       "Bash(sed -i '' 's/  max-height: 70vh;/  height: 72vh;/' /Users/vk/Desktop/awesome-mvp/client/src/App.css)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//Users/vk/Desktop/awesome-mvp/server/sessions/hrhrcy5r-mmxhio1w/js/**)",
+      "Bash(done)",
+      "Bash(node --input-type=module --eval \"import\\(''''./src/components/ContentEditor.jsx''''\\)\")"
     ]
   }
 }

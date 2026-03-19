@@ -100,13 +100,26 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
   const [step, setStep] = useState(() => startStep || 'upload');
   // When starting from a clone, files are already in place
   const [uploadInfo, setUploadInfo] = useState(() => initialSession ? { filesUploaded: '…', indexSizeKb: '…', _cloned: true } : null);
-  const [notification, setNotification] = useState(null);
+  const [notifications, setNotifications] = useState([]);
   const [autoCleaning, setAutoCleaning] = useState(false);
+  const notifIdRef    = useRef(0);
+  const notifTimers   = useRef({});
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const lastActivityRef = useRef(null);
 
-  const notify = useCallback((msg, type = 'success') => {
-    setNotification({ msg, type });
+  const dismissNotif = useCallback((id) => {
+    clearTimeout(notifTimers.current[id]);
+    delete notifTimers.current[id];
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, exiting: true } : n));
+    setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 340);
   }, []);
+
+  const notify = useCallback((msg, type = 'success', action = null) => {
+    const id = ++notifIdRef.current;
+    setNotifications(prev => [{ id, msg, type, action, exiting: false }, ...prev]);
+    notifTimers.current[id] = setTimeout(() => dismissNotif(id), 10000);
+    return id;
+  }, [dismissNotif]);
 
   const goTo = useCallback((s) => setStep(s), []);
 
@@ -119,13 +132,31 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
         const ts = res.data.lastDevActivity; // null until dev actually saves something
         if (!ts) return; // dev hasn't touched this session yet
         if (lastActivityRef.current && ts !== lastActivityRef.current) {
-          notify('Developer updated the session ↺', 'info');
+          const nid = notify('Developer updated the session ↺', 'info', {
+            label: '↺ Reload Preview',
+            onClick: () => {
+              try {
+                const ch = new BroadcastChannel('ept-content-reload-' + sessionId);
+                ch.postMessage({ reload: true });
+                ch.close();
+              } catch {}
+              dismissNotif(nid);
+            },
+          });
         }
         lastActivityRef.current = ts;
       } catch {}
     }, 3000);
     return () => clearInterval(interval);
   }, [mode, uploadInfo, sessionId, notify]);
+
+  // Protect against accidental page refresh / tab close after upload
+  useEffect(() => {
+    if (!uploadInfo) return;
+    const handler = (e) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [uploadInfo]);
 
   const handleUploadComplete = async (info) => {
     setUploadInfo(info);
@@ -141,9 +172,11 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
       setAutoCleaning(true);
       try {
         const res = await autoClean(sessionId);
-        const { scriptsRemoved, iframesRemoved, unusedDeleted } = res.data;
+        const { scriptsRemoved, scriptsPreserved, iframesRemoved, unusedDeleted, headCleaned } = res.data;
         const parts = [];
-        if (scriptsRemoved) parts.push(`${scriptsRemoved} tracking script${scriptsRemoved !== 1 ? 's' : ''}`);
+        if (headCleaned) parts.push(`${headCleaned} head item${headCleaned !== 1 ? 's' : ''} cleaned`);
+        if (scriptsRemoved) parts.push(`${scriptsRemoved} script${scriptsRemoved !== 1 ? 's' : ''} removed`);
+        if (scriptsPreserved) parts.push(`${scriptsPreserved} interactive script${scriptsPreserved !== 1 ? 's' : ''} kept`);
         if (iframesRemoved) parts.push(`${iframesRemoved} iframe${iframesRemoved !== 1 ? 's' : ''}`);
         if (unusedDeleted) parts.push(`${unusedDeleted} unused file${unusedDeleted !== 1 ? 's' : ''}`);
         if (parts.length) notify(`Auto-cleaned: ${parts.join(', ')}`);
@@ -179,7 +212,16 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
       <header className="app-header">
         <div className="app-header__inner">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <a href="/" className="btn btn--sm btn--back">← Mode Select</a>
+            <button
+              className="btn btn--sm btn--back"
+              onClick={() => {
+                if (uploadInfo) {
+                  setShowExitConfirm(true);
+                } else {
+                  window.location.href = '/';
+                }
+              }}
+            >← Mode Select</button>
             <span className="header-sep" />
             <span className="app-header__title">🛠 Offer Prep Tool</span>
             <span className={`badge ${mode === 'dev' ? 'badge--purple' : 'badge--blue'}`}>
@@ -227,10 +269,19 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
         ))}
       </nav>
 
-      {notification && (
-        <div className={`notification notification--${notification.type}`}>
-          <span>{notification.msg}</span>
-          <button className="notification__close" onClick={() => setNotification(null)}>×</button>
+      {notifications.length > 0 && (
+        <div className="notifications-container">
+          {notifications.map(n => (
+            <div key={n.id} className={`notification notification--${n.type}${n.exiting ? ' notification--exiting' : ''}`}>
+              <span>{n.msg}</span>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+                {n.action && (
+                  <button className="btn btn--sm" onClick={n.action.onClick}>{n.action.label}</button>
+                )}
+                <button className="notification__close" onClick={() => dismissNotif(n.id)}>×</button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -274,6 +325,19 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
           <BuildButton sessionId={sessionId} uploadInfo={uploadInfo} onError={e => notify(e, 'error')} />
         )}
       </main>
+
+      {showExitConfirm && (
+        <div className="exit-confirm-overlay" onClick={() => setShowExitConfirm(false)}>
+          <div className="exit-confirm-modal" onClick={e => e.stopPropagation()}>
+            <h3>Leave this session?</h3>
+            <p>All unsaved progress will be lost.</p>
+            <div className="exit-confirm-actions">
+              <button className="btn" onClick={() => setShowExitConfirm(false)}>Stay</button>
+              <button className="btn btn--danger" onClick={() => { window.location.href = '/'; }}>Leave anyway</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

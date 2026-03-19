@@ -30,10 +30,11 @@ router.get('/:sessionId/html', (req, res) => {
 });
 
 router.get('/:sessionId/scripts', (req, res) => {
-  const indexPath = getIndexPath(req.params.sessionId);
+  const sid = req.params.sessionId;
+  const indexPath = getIndexPath(sid);
   if (!indexPath) return res.status(404).json({ error: 'index.html not found' });
   const content = fs.readFileSync(indexPath, 'utf-8');
-  res.json({ scripts: htmlProcessor.extractScripts(content) });
+  res.json({ scripts: htmlProcessor.extractScripts(content, getSessionDir(sid)) });
 });
 
 router.post('/:sessionId/clean', (req, res) => {
@@ -46,32 +47,65 @@ router.post('/:sessionId/clean', (req, res) => {
   const indexPath = getIndexPath(sid);
   if (!indexPath) return res.status(404).json({ error: 'index.html not found' });
 
+  // Parse string IDs like 'script-3' and 'noscript-0'
+  const scriptIndices = scriptsToRemove
+    .filter(id => String(id).startsWith('script-'))
+    .map(id => parseInt(String(id).replace('script-', ''), 10))
+    .filter(n => !isNaN(n));
+  const noscriptIndices = new Set(
+    scriptsToRemove
+      .filter(id => String(id).startsWith('noscript-'))
+      .map(id => parseInt(String(id).replace('noscript-', ''), 10))
+      .filter(n => !isNaN(n))
+  );
+
   const content = fs.readFileSync(indexPath, 'utf-8');
-  const { html, removed } = htmlProcessor.removeScripts(content, scriptsToRemove);
+
+  // Get interactivity info before removing (so we can save it to removed-scripts log)
+  const allScripts = htmlProcessor.extractScripts(content, sessionDir);
+  const interactiveByIndex = new Map(allScripts.filter(s => !s.isNoscript).map(s => [s.index, s.isInteractive]));
+
+  let { html, removed } = htmlProcessor.removeScripts(content, scriptIndices);
+
+  // Remove selected noscript tags
+  if (noscriptIndices.size > 0) {
+    const $n = cheerio.load(html, { decodeEntities: false });
+    $n('noscript').each((i, el) => { if (noscriptIndices.has(i)) $n(el).remove(); });
+    html = $n.html();
+  }
+
   fs.writeFileSync(indexPath, html, 'utf-8');
 
-  // Auto-delete local JS files that were removed from HTML
-  const deletedFiles = [];
+  // Delete local JS files and track which file was deleted per script
+  const removedWithMeta = [];
   for (const script of removed) {
-    if (!script.src) continue; // inline script — nothing to delete
-    // Only delete files inside js/ directory
-    const src = script.src.replace(/^\.\//, '');
-    if (!src.startsWith('js/') && !src.match(/^[^/]+\.js$/)) continue;
-    const localName = src.startsWith('js/') ? src : `js/${src}`;
-    const filePath = path.join(sessionDir, localName);
-    // Guard: must be inside sessionDir/js/
-    if (!filePath.startsWith(path.join(sessionDir, 'js') + path.sep)) continue;
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      deletedFiles.push(localName);
+    let deletedFile = null;
+    if (script.src) {
+      const src = script.src.replace(/^\.\//, '');
+      if (src.startsWith('js/') || src.match(/^[^/]+\.js$/)) {
+        const localName = src.startsWith('js/') ? src : `js/${src}`;
+        const filePath = path.join(sessionDir, localName);
+        if (filePath.startsWith(path.join(sessionDir, 'js') + path.sep) && fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          deletedFile = localName;
+        }
+      }
     }
+    removedWithMeta.push({
+      ...script,
+      isInteractive: interactiveByIndex.get(script.index) || false,
+      deletedFile,
+    });
   }
 
   // Remove empty asset directories
   removeEmptyDirs(sessionDir, ['js', 'css', 'img', 'fonts']);
 
-  logActivity(sid, 'clean-scripts', { removed: removed.length, deletedFiles: deletedFiles.length });
-  res.json({ ok: true, removed, deletedFiles, newSize: html.length });
+  // Save removed scripts for potential restore
+  appendRemovedScripts(sessionDir, removedWithMeta);
+
+  logActivity(sid, 'clean-scripts', { removed: removed.length, deletedFiles: removedWithMeta.filter(r => r.deletedFile).length });
+  res.json({ ok: true, removed, deletedFiles: removedWithMeta.filter(r => r.deletedFile).map(r => r.deletedFile), newSize: html.length });
 });
 
 router.post('/:sessionId/inject', (req, res) => {
@@ -100,6 +134,30 @@ router.post('/:sessionId/save-html', (req, res) => {
   if (!indexPath) return res.status(404).json({ error: 'index.html not found' });
   fs.writeFileSync(indexPath, content, 'utf-8');
   res.json({ ok: true });
+});
+
+// ─── Head items routes ────────────────────────────────────────────────────────
+
+router.get('/:sessionId/head-items', (req, res) => {
+  const indexPath = getIndexPath(req.params.sessionId);
+  if (!indexPath) return res.status(404).json({ error: 'index.html not found' });
+  const html = fs.readFileSync(indexPath, 'utf-8');
+  res.json({ items: htmlProcessor.extractHeadItems(html) });
+});
+
+router.post('/:sessionId/clean-head', (req, res) => {
+  const { indicesToRemove } = req.body;
+  if (!Array.isArray(indicesToRemove)) return res.status(400).json({ error: 'indicesToRemove required' });
+  const sid = req.params.sessionId;
+  const indexPath = getIndexPath(sid);
+  if (!indexPath) return res.status(404).json({ error: 'index.html not found' });
+
+  const html = fs.readFileSync(indexPath, 'utf-8');
+  const { html: newHtml, stats } = htmlProcessor.cleanHeadItems(html, indicesToRemove);
+  fs.writeFileSync(indexPath, newHtml, 'utf-8');
+  const total = stats.jsonld + stats.externalLinks + stats.meta;
+  logActivity(sid, 'clean-head', { ...stats, total });
+  res.json({ ok: true, stats, total });
 });
 
 // ─── iFrame routes ────────────────────────────────────────────────────────────
@@ -328,32 +386,53 @@ router.get('/:sessionId/stats', (req, res) => {
   });
 });
 
-// ─── POST /:id/auto-clean — silent full clean for Standard mode ───────────────
+// ─── POST /:id/auto-clean — silent smart clean for Standard mode ──────────────
 router.post('/:sessionId/auto-clean', (req, res) => {
   const sid = req.params.sessionId;
   const sessionDir = getSessionDir(sid);
   const indexPath = getIndexPath(sid);
   if (!indexPath) return res.status(404).json({ error: 'index.html not found' });
 
-  let scriptsRemoved = 0, iframesRemoved = 0, unusedDeleted = 0;
+  let scriptsRemoved = 0, scriptsPreserved = 0, iframesRemoved = 0, unusedDeleted = 0, headCleaned = 0;
 
-  // 1. Remove all tracking scripts
   let currentHtml = fs.readFileSync(indexPath, 'utf-8');
-  const scripts = htmlProcessor.extractScripts(currentHtml);
-  const allIndices = scripts.map(s => s.index);
-  if (allIndices.length) {
-    const result = htmlProcessor.removeScripts(currentHtml, allIndices);
+
+  // 0. Head cleanup: schema.org, external scripts/links, meta (except charset + viewport)
+  const headResult = htmlProcessor.cleanHead(currentHtml);
+  currentHtml = headResult.html;
+  headCleaned = headResult.total;
+
+  // 1. Smart script removal: keep interactive scripts (they control page elements)
+  const scripts = htmlProcessor.extractScripts(currentHtml, sessionDir);
+
+  // Keep only scripts with suggestion 'keep' (interactive UI + critical libs that are actually used)
+  // Everything else: tracking, form handlers, unknown, orphaned dependencies → remove
+  const toRemoveIndices = scripts.filter(s => s.suggestion !== 'keep').map(s => s.index);
+  const toKeep = scripts.filter(s => s.suggestion === 'keep');
+  scriptsPreserved = toKeep.length;
+
+  if (toRemoveIndices.length) {
+    const result = htmlProcessor.removeScripts(currentHtml, toRemoveIndices);
     currentHtml = result.html;
-    scriptsRemoved = allIndices.length;
+    scriptsRemoved = toRemoveIndices.length;
+
+    const removedWithMeta = [];
     for (const script of result.removed) {
-      if (!script.src) continue;
-      const src = script.src.replace(/^\.\//, '');
-      if (!src.startsWith('js/') && !src.match(/^[^/]+\.js$/)) continue;
-      const localName = src.startsWith('js/') ? src : `js/${src}`;
-      const filePath = path.join(sessionDir, localName);
-      if (!filePath.startsWith(path.join(sessionDir, 'js') + path.sep)) continue;
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      let deletedFile = null;
+      if (script.src) {
+        const src = script.src.replace(/^\.\//, '');
+        if (src.startsWith('js/') || src.match(/^[^/]+\.js$/)) {
+          const localName = src.startsWith('js/') ? src : `js/${src}`;
+          const filePath = path.join(sessionDir, localName);
+          if (filePath.startsWith(path.join(sessionDir, 'js') + path.sep) && fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            deletedFile = localName;
+          }
+        }
+      }
+      removedWithMeta.push({ ...script, isInteractive: false, deletedFile });
     }
+    appendRemovedScripts(sessionDir, removedWithMeta);
   }
 
   // 2. Remove all iframes
@@ -376,9 +455,33 @@ router.post('/:sessionId/auto-clean', (req, res) => {
   }
   removeEmptyDirs(sessionDir, ['js', 'css', 'img', 'fonts']);
 
-  logActivity(sid, 'auto-clean', { scriptsRemoved, iframesRemoved, unusedDeleted });
-  res.json({ ok: true, scriptsRemoved, iframesRemoved, unusedDeleted });
+  logActivity(sid, 'auto-clean', { scriptsRemoved, scriptsPreserved, iframesRemoved, unusedDeleted, headCleaned });
+  res.json({ ok: true, scriptsRemoved, scriptsPreserved, iframesRemoved, unusedDeleted, headCleaned });
 });
+
+// ─── Helper: append removed scripts to _removed_scripts.json ─────────────────
+function appendRemovedScripts(sessionDir, removedList) {
+  const filePath = path.join(sessionDir, '_removed_scripts.json');
+  let existing = [];
+  try {
+    if (fs.existsSync(filePath)) existing = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  } catch {}
+
+  const now = new Date().toISOString();
+  const toAppend = removedList.map(r => ({
+    id: `script-${Date.now()}-${r.index}`,
+    index: r.index,
+    src: r.src || null,
+    outerHtml: r.outerHtml,
+    inlineContent: r.inlineContent || null,
+    isInteractive: r.isInteractive || false,
+    position: r.position || 'body',
+    deletedFile: r.deletedFile || null,
+    removedAt: now,
+  }));
+
+  fs.writeFileSync(filePath, JSON.stringify([...existing, ...toAppend], null, 2));
+}
 
 // ─── Helper: remove empty asset subdirs ───────────────────────────────────────
 function removeEmptyDirs(sessionDir, folders) {
