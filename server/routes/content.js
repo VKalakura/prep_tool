@@ -41,6 +41,28 @@ function buildEditorScript(sid) {
     });
   }
 
+  // Build a stable CSS path from root → el (used for selector-based delete / insert-after)
+  function buildEptPath(el){
+    var parts=[];
+    var cur=el;
+    while(cur&&cur.tagName&&cur!==document.documentElement){
+      var tag=cur.tagName.toLowerCase();
+      var parent=cur.parentNode;
+      if(parent&&parent.children){
+        var idx=Array.from(parent.children).indexOf(cur)+1;
+        parts.unshift(tag+':nth-child('+idx+')');
+      } else { parts.unshift(tag); }
+      cur=parent;
+    }
+    return parts.join('>');
+  }
+
+  // Build short label for an element: tag + first 2 classes
+  function eptLabel(el){
+    var cls=(el.className||'').trim().split(/\s+/).filter(Boolean).slice(0,2).join('.');
+    return el.tagName.toLowerCase()+(cls?'.'+cls:'');
+  }
+
   function resolveImg(e,el){
     // Direct click on img
     if(e.target.tagName==='IMG') return e.target;
@@ -62,6 +84,7 @@ function buildEditorScript(sid) {
   els.forEach(function(el,idx){
     el.dataset.eptIdx=idx;
     el.addEventListener('click',function(e){
+      if(pickActive)return; // pick-delete mode takes over
       e.preventDefault();e.stopPropagation();
       var vidEl=resolveVideo(e,el);
       if(vidEl){
@@ -72,7 +95,7 @@ function buildEditorScript(sid) {
         var vSourceEl=vidEl.querySelector('source');
         if(!vsrc&&vSourceEl)vsrc=vSourceEl.getAttribute('src')||'';
         var vname=vsrc.split('/').pop().split('?')[0];
-        window.parent.postMessage({type:'ept-video-select',src:vsrc,name:vname,poster:vidEl.getAttribute('poster')||''},'*');
+        window.parent.postMessage({type:'ept-video-select',src:vsrc,name:vname,poster:vidEl.getAttribute('poster')||'',selectorPath:buildEptPath(vidEl)},'*');
         return;
       }
       var imgEl=resolveImg(e,el);
@@ -81,7 +104,7 @@ function buildEditorScript(sid) {
         imgEl.setAttribute('data-ept-img-selected','1');
         var src=imgEl.getAttribute('src')||'';
         var name=src.split('/').pop().split('?')[0];
-        window.parent.postMessage({type:'ept-img-select',src:src,name:name,width:imgEl.naturalWidth,height:imgEl.naturalHeight},'*');
+        window.parent.postMessage({type:'ept-img-select',src:src,name:name,width:imgEl.naturalWidth,height:imgEl.naturalHeight,selectorPath:buildEptPath(imgEl)},'*');
         return;
       }
       clearAll();
@@ -94,12 +117,13 @@ function buildEditorScript(sid) {
   document.querySelectorAll('img').forEach(function(img){
     img.dataset.eptImg='1';
     img.addEventListener('click',function(e){
+      if(pickActive)return;
       e.preventDefault();e.stopPropagation();
       clearAll();
       img.setAttribute('data-ept-img-selected','1');
       var src=img.getAttribute('src')||'';
       var name=src.split('/').pop().split('?')[0];
-      window.parent.postMessage({type:'ept-img-select',src:src,name:name,width:img.naturalWidth,height:img.naturalHeight},'*');
+      window.parent.postMessage({type:'ept-img-select',src:src,name:name,width:img.naturalWidth,height:img.naturalHeight,selectorPath:buildEptPath(img)},'*');
     },true);
   });
 
@@ -115,7 +139,7 @@ function buildEditorScript(sid) {
       var sourceEl=vid.querySelector('source');
       if(!src&&sourceEl)src=sourceEl.getAttribute('src')||'';
       var name=src.split('/').pop().split('?')[0];
-      window.parent.postMessage({type:'ept-video-select',src:src,name:name,poster:vid.getAttribute('poster')||''},'*');
+      window.parent.postMessage({type:'ept-video-select',src:src,name:name,poster:vid.getAttribute('poster')||'',selectorPath:buildEptPath(vid)},'*');
     }
     // Wrap video in a positioned container and place a transparent overlay div on top.
     // This prevents Safari (and all browsers) from receiving any pointer events on the video itself.
@@ -141,7 +165,7 @@ function buildEditorScript(sid) {
     var overlay=document.createElement('div');
     overlay.style.cssText='position:absolute;inset:0;z-index:9999;cursor:pointer;';
     wrapper.appendChild(overlay);
-    overlay.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openVideoPanel();},true);
+    overlay.addEventListener('click',function(e){if(pickActive)return;e.preventDefault();e.stopPropagation();openVideoPanel();},true);
   });
 
   // Broadcast catalog of unique element signatures - only elements inside <main>
@@ -194,6 +218,100 @@ function buildEditorScript(sid) {
     window.parent.postMessage({type:'ept-catalog',items:catalog,cssLinks:cssLinks,inlineStyles:inlineStyles},'*');
   })()}catch(catalogErr){console.warn('ept catalog error',catalogErr);}
 
+  // ─── Pick-to-delete mode ──────────────────────────────────────────────────────
+  var pickActive=false;
+  var pickStyleEl=document.createElement('style');
+  pickStyleEl.textContent='[data-ept-ph]{outline:2px dashed #ef4444!important;outline-offset:2px!important;background:rgba(239,68,68,0.07)!important;cursor:crosshair!important}'+
+    '[data-ept-hidden]{display:block!important;visibility:visible!important;opacity:0.4!important;'+
+    'outline:2px dashed #f97316!important;outline-offset:2px!important;min-height:24px!important;pointer-events:all!important}';
+
+  // Walk up from el to first semantic or class-bearing element (best "block" for single-click)
+  function findMeaningfulBlock(el){
+    var SEMANTIC=/^(aside|section|article|nav|header|footer|figure|main|form|fieldset|dialog)$/i;
+    var t=el;var withClass=null;
+    while(t&&t.tagName&&t!==document.body&&t!==document.documentElement){
+      if(SEMANTIC.test(t.tagName))return t;
+      if(!withClass&&(typeof t.className==='string'&&t.className.trim()||t.id))withClass=t;
+      t=t.parentNode;
+    }
+    return withClass||el;
+  }
+
+  function sendPickMessage(t){
+    document.querySelectorAll('[data-ept-ph]').forEach(function(x){x.removeAttribute('data-ept-ph');});
+    t.setAttribute('data-ept-ph','1');
+    var ancestors=[];
+    var ac=t.parentNode;
+    while(ac&&ac.tagName&&ac!==document.body&&ac!==document.documentElement){
+      ancestors.push({selector:buildEptPath(ac),label:eptLabel(ac),preview:ac.outerHTML.slice(0,300)});
+      ac=ac.parentNode;
+    }
+    window.parent.postMessage({
+      type:'ept-pick-delete',
+      selector:buildEptPath(t),label:eptLabel(t),
+      preview:t.outerHTML.slice(0,300),
+      ancestors:ancestors
+    },'*');
+  }
+
+  function pickOver(e){
+    if(!pickActive)return;
+    var t=e.target;
+    if(!t||!t.tagName||t===document.body||t===document.documentElement)return;
+    document.querySelectorAll('[data-ept-ph]').forEach(function(x){x.removeAttribute('data-ept-ph');});
+    t.setAttribute('data-ept-ph','1');
+  }
+  function pickOut(e){if(e.target)e.target.removeAttribute('data-ept-ph');}
+
+  // Single click → auto-navigate to nearest meaningful block (aside, section, .class, #id)
+  function pickClick(e){
+    if(!pickActive)return;
+    e.preventDefault();e.stopPropagation();
+    var t=e.target;
+    if(!t||!t.tagName||t===document.body||t===document.documentElement)return;
+    sendPickMessage(findMeaningfulBlock(t));
+  }
+  // Double click → select the exact element clicked (drill to innermost)
+  function pickDblClick(e){
+    if(!pickActive)return;
+    e.preventDefault();e.stopPropagation();
+    var t=e.target;
+    if(!t||!t.tagName||t===document.body||t===document.documentElement)return;
+    sendPickMessage(t);
+  }
+
+  function setPickMode(on){
+    pickActive=on;
+    if(on){
+      // Temporarily reveal hidden elements so they can be picked
+      document.querySelectorAll('*').forEach(function(el){
+        if(el.tagName==='SCRIPT'||el.tagName==='STYLE'||el.tagName==='HEAD')return;
+        try{
+          var cs=window.getComputedStyle(el);
+          if(cs.display==='none'){
+            var par=el.parentNode;
+            if(par&&par.nodeType===1&&window.getComputedStyle(par).display!=='none'){
+              el.setAttribute('data-ept-hidden','1');
+            }
+          }
+        }catch(err){}
+      });
+      document.head.appendChild(pickStyleEl);
+      document.addEventListener('mouseover',pickOver,true);
+      document.addEventListener('mouseout',pickOut,true);
+      document.addEventListener('click',pickClick,true);
+      document.addEventListener('dblclick',pickDblClick,true);
+    } else {
+      document.querySelectorAll('[data-ept-hidden]').forEach(function(el){el.removeAttribute('data-ept-hidden');});
+      pickStyleEl.remove();
+      document.querySelectorAll('[data-ept-ph]').forEach(function(x){x.removeAttribute('data-ept-ph');});
+      document.removeEventListener('mouseover',pickOver,true);
+      document.removeEventListener('mouseout',pickOut,true);
+      document.removeEventListener('click',pickClick,true);
+      document.removeEventListener('dblclick',pickDblClick,true);
+    }
+  }
+
   window.addEventListener('message',function(e){
     if(!e.data)return;
     if(e.data.type==='ept-update'){
@@ -219,6 +337,14 @@ function buildEditorScript(sid) {
         var name=src.split('/').pop().split('?')[0];
         if(name===e.data.name){var base=src.split('?')[0];vid.src=base+'?t='+Date.now();vid.load();}
       });
+    }
+    if(e.data.type==='ept-pick-mode'){setPickMode(!!e.data.active);}
+    if(e.data.type==='ept-pick-highlight'){
+      try{
+        document.querySelectorAll('[data-ept-ph]').forEach(function(x){x.removeAttribute('data-ept-ph');});
+        var hl=document.querySelector(e.data.selector);
+        if(hl){hl.setAttribute('data-ept-ph','1');hl.scrollIntoView({behavior:'smooth',block:'center'});}
+      }catch(err){}
     }
   });
   document.querySelectorAll('form').forEach(function(f){f.addEventListener('submit',function(e){e.preventDefault();});});
@@ -607,7 +733,7 @@ function updateFileRefs(sessionDir, oldRef, newRef) {
 // ─── POST :id/insert-widget ───────────────────────────────────────────────────
 router.post('/:sessionId/insert-widget', (req, res) => {
   const sid = req.params.sessionId;
-  const { afterIdx, widgetId } = req.body;
+  const { afterIdx, afterSelector, widgetId } = req.body;
   const indexPath = getIndexPath(sid);
   if (!indexPath) return res.status(404).json({ error: 'Not found' });
 
@@ -643,31 +769,44 @@ router.post('/:sessionId/insert-widget', (req, res) => {
   if (jsFile) snippet += `\n<script src="${relPath}/${jsFile}"></script>`;
 
   // Insert after target element; fall back to appending to <body>
-  if (afterIdx >= 0 && afterIdx < els.length) {
-    $(els[afterIdx]).after('\n' + snippet + '\n');
+  let insertTarget = null;
+  if (afterSelector) {
+    try { insertTarget = $(afterSelector).first(); } catch {}
+    if (!insertTarget?.length) insertTarget = null;
+  }
+  if (!insertTarget && afterIdx >= 0 && afterIdx < els.length) insertTarget = $(els[afterIdx]);
+  if (insertTarget?.length) {
+    insertTarget.after('\n' + snippet + '\n');
   } else {
     $('body').append('\n' + snippet + '\n');
   }
 
   fs.writeFileSync(indexPath, $.html());
-  logActivity(sid, 'insert-widget', { afterIdx, widgetId });
+  logActivity(sid, 'insert-widget', { afterIdx, afterSelector, widgetId });
   res.json({ ok: true });
 });
 
 // ─── POST :id/insert-after ────────────────────────────────────────────────────
 router.post('/:sessionId/insert-after', (req, res) => {
   const sid = req.params.sessionId;
-  const { afterIdx, templateIdx } = req.body;
+  const { afterIdx, afterSelector, templateIdx } = req.body;
   const indexPath = getIndexPath(sid);
   if (!indexPath) return res.status(404).json({ error: 'Not found' });
 
   const html = fs.readFileSync(indexPath, 'utf-8');
   const $ = cheerio.load(html, { decodeEntities: false });
   const els = $(EDITABLE_SEL).toArray();
-  if (afterIdx < 0 || afterIdx >= els.length) return res.status(400).json({ error: 'Invalid afterIdx' });
   if (templateIdx < 0 || templateIdx >= els.length) return res.status(400).json({ error: 'Invalid templateIdx' });
 
-  const afterEl = $(els[afterIdx]);
+  // Resolve the anchor element — by selector (for images/videos) or by editable index
+  let afterEl;
+  if (afterSelector) {
+    try { afterEl = $(afterSelector).first(); } catch {}
+    if (!afterEl?.length) return res.status(404).json({ error: 'Anchor element not found' });
+  } else {
+    if (afterIdx < 0 || afterIdx >= els.length) return res.status(400).json({ error: 'Invalid afterIdx' });
+    afterEl = $(els[afterIdx]);
+  }
   const templateEl = $(els[templateIdx]);
   const tag = templateEl.get(0).tagName.toLowerCase();
 
@@ -700,6 +839,31 @@ router.post('/:sessionId/insert-after', (req, res) => {
   res.json({ ok: true, newIdx, tag, isImgLink });
 });
 
+// ─── POST /:id/delete-by-selector ────────────────────────────────────────────
+router.post('/:sessionId/delete-by-selector', (req, res) => {
+  const { selector } = req.body;
+  if (!selector || typeof selector !== 'string') return res.status(400).json({ error: 'selector required' });
+
+  const sid = req.params.sessionId;
+  const indexPath = getIndexPath(sid);
+  if (!indexPath) return res.status(404).json({ error: 'Not found' });
+
+  const current = fs.readFileSync(indexPath, 'utf-8');
+  const $ = cheerio.load(current, { decodeEntities: false });
+  try {
+    const el = $(selector).first();
+    if (!el.length) return res.status(404).json({ error: 'Element not found' });
+    el.remove();
+  } catch (e) {
+    return res.status(400).json({ error: 'Invalid selector' });
+  }
+
+  fs.writeFileSync(indexPath + '.undo', current, 'utf-8');
+  fs.writeFileSync(indexPath, $.html(), 'utf-8');
+  logActivity(sid, 'delete-by-selector', { selector: selector.slice(0, 120) });
+  res.json({ ok: true });
+});
+
 // ─── POST :id/delete-element ──────────────────────────────────────────────────
 router.post('/:sessionId/delete-element', (req, res) => {
   const sid = req.params.sessionId;
@@ -713,8 +877,22 @@ router.post('/:sessionId/delete-element', (req, res) => {
   if (idx < 0 || idx >= els.length) return res.status(400).json({ error: 'Invalid index' });
 
   $(els[idx]).remove();
+  fs.writeFileSync(indexPath + '.undo', html, 'utf-8');
   fs.writeFileSync(indexPath, $.html());
   logActivity(sid, 'delete-element', { idx });
+  res.json({ ok: true });
+});
+
+// ─── POST /:id/undo ───────────────────────────────────────────────────────────
+router.post('/:sessionId/undo', (req, res) => {
+  const sid = req.params.sessionId;
+  const indexPath = getIndexPath(sid);
+  if (!indexPath) return res.status(404).json({ error: 'Not found' });
+  const undoPath = indexPath + '.undo';
+  if (!fs.existsSync(undoPath)) return res.status(404).json({ error: 'Nothing to undo' });
+  fs.copyFileSync(undoPath, indexPath);
+  fs.unlinkSync(undoPath);
+  logActivity(sid, 'undo-delete', {});
   res.json({ ok: true });
 });
 
