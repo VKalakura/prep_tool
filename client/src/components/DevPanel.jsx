@@ -291,12 +291,13 @@ export default function DevPanel({ sessionId }) {
                   <div className="loading-state"><div className="spinner" /></div>
                 ) : (
                   <MonacoEditor
+                    key={selectedFile.path}
                     height="100%"
                     language={(() => {
                       const ext = selectedFile.path.split('.').pop().toLowerCase();
                       return { html: 'html', css: 'css', js: 'javascript', php: 'php', json: 'json' }[ext] || 'plaintext';
                     })()}
-                    value={fileContent}
+                    defaultValue={fileContent}
                     onChange={val => setFileContent(val || '')}
                     theme="vs-dark"
                     options={{
@@ -315,10 +316,14 @@ export default function DevPanel({ sessionId }) {
         </div>
       )}
 
-      {tab === 'removed' && <RemovedScriptsTab sessionId={sessionId} />}
+      {tab === 'removed' && (
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+          <RemovedScriptsTab sessionId={sessionId} />
+        </div>
+      )}
 
       {tab === 'log' && (
-        <div style={{ padding: 20 }}>
+        <div style={{ padding: 20, flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {!state.log?.length ? (
             <div className="empty-state">No activity recorded yet.</div>
           ) : (
@@ -341,7 +346,7 @@ export default function DevPanel({ sessionId }) {
       )}
 
       {tab === 'config' && (
-        <div style={{ padding: 20 }}>
+        <div style={{ padding: 20, flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {!state.config || !Object.keys(state.config).length ? (
             <div className="empty-state">No config saved yet (PHP step not completed).</div>
           ) : (

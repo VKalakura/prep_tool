@@ -247,6 +247,14 @@ function collectAllRefs(sessionDir) {
     while ((m = re.exec(style)) !== null) addRef(m[1]);
   });
 
+  // Scan <style> tags for url() — catches @font-face declarations inline in HTML
+  $('style').each((_, el) => {
+    const css = $(el).text() || '';
+    const re = /url\(\s*['"]?([^'"\)\n]+?)['"]?\s*\)/g;
+    let m;
+    while ((m = re.exec(css)) !== null) addRef(m[1]);
+  });
+
   // Include widgets/ files (they ARE referenced via injected tags, count as used)
   const widgetsDir = path.join(sessionDir, 'widgets');
   if (fs.existsSync(widgetsDir)) {
@@ -260,20 +268,24 @@ function collectAllRefs(sessionDir) {
     collect(widgetsDir);
   }
 
-  // Scan CSS files for url() and @import
+  // Scan CSS files for url() and @import — recursive to handle subdirectories like css/vendor/
   const cssDir = path.join(sessionDir, 'css');
-  if (fs.existsSync(cssDir)) {
-    for (const f of fs.readdirSync(cssDir)) {
-      if (!f.endsWith('.css')) continue;
-      const cssContent = fs.readFileSync(path.join(cssDir, f), 'utf-8');
+  const scanCssDir = (dir, relBase) => {
+    if (!fs.existsSync(dir)) return;
+    for (const f of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, f.name);
+      if (f.isDirectory()) { scanCssDir(full, `${relBase}/${f.name}`); continue; }
+      if (!f.name.endsWith('.css')) continue;
+      const cssContent = fs.readFileSync(full, 'utf-8');
 
       const urlRe = /url\(\s*['"]?([^'"\)\n]+?)['"]?\s*\)/g;
       let m;
       while ((m = urlRe.exec(cssContent)) !== null) {
-        const ref = m[1].trim();
-        if (!isExternalUrl(ref)) {
-          // CSS files are in css/, so ../img/file.png → img/file.png
-          const resolved = path.normalize(path.join('css', ref)).replace(/\\/g, '/');
+        // Strip query strings (?v=4.7.0) and fragments (#iefix) — common in icon font CSS
+        const ref = m[1].trim().split('?')[0].split('#')[0];
+        if (ref && !isExternalUrl(ref)) {
+          // Resolve relative to this CSS file's location
+          const resolved = path.normalize(path.join(relBase, ref)).replace(/\\/g, '/');
           refs.add(resolved);
         }
       }
@@ -281,10 +293,14 @@ function collectAllRefs(sessionDir) {
       const importRe = /@import\s+(?:url\(\s*['"]?([^'"\)\n]+?)['"]?\s*\)|['"]([^'"]+)['"])/g;
       while ((m = importRe.exec(cssContent)) !== null) {
         const ref = (m[1] || m[2] || '').trim();
-        if (ref && !isExternalUrl(ref)) refs.add(`css/${ref}`);
+        if (ref && !isExternalUrl(ref)) {
+          const resolved = path.normalize(path.join(relBase, ref)).replace(/\\/g, '/');
+          refs.add(resolved);
+        }
       }
     }
-  }
+  };
+  scanCssDir(cssDir, 'css');
 
   return refs;
 }

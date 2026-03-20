@@ -206,6 +206,25 @@ function normalize(rawDir, indexPath, destDir) {
     $(el).attr('style', updated);
   });
 
+  // <style> block url() — catches @font-face and background-image in inline CSS blocks
+  $('style').each((_, el) => {
+    const css = $(el).text();
+    if (!css || !css.includes('url(')) return;
+    const updated = css.replace(/url\(\s*['"]?([^'"\)\n]+?)['"]?\s*\)/g, (m, ref) => {
+      const clean = ref.trim().split('?')[0].split('#')[0];
+      if (!clean || isExternal(clean)) return m;
+      const abs = resolveRef(indexDir, rawDir, clean);
+      if (!abs || !fs.existsSync(abs)) return m;
+      const ext = path.extname(abs).toLowerCase();
+      const folder = IMG_EXTS.has(ext) ? 'img' : FONT_EXTS.has(ext) ? 'fonts' : null;
+      if (!folder) return m;
+      const newRel = registerFile(abs, folder);
+      // Path from HTML root (style tag is in index.html, same dir as fonts/)
+      return newRel ? `url('${newRel}')` : m;
+    });
+    $(el).text(updated);
+  });
+
   // --- Follow @import in CSS files to discover transitively referenced CSS ---
   // Do this BEFORE the url() pass so all CSS files are registered in fileMap first.
   {

@@ -2,10 +2,15 @@ import { useState, useEffect } from 'react';
 import { buildOffer, getSessionStats } from '../api.js';
 import axios from 'axios';
 
-export default function BuildButton({ sessionId, uploadInfo, onError }) {
+export default function BuildButton({ sessionId, uploadInfo, onError, externalReloadKey }) {
   const [building, setBuilding] = useState(false);
   const [built, setBuilt] = useState(false);
   const [stats, setStats] = useState(null);
+  const [iframeKey, setIframeKey] = useState(0);
+
+  useEffect(() => {
+    if (externalReloadKey > 0) setIframeKey(k => k + 1);
+  }, [externalReloadKey]);
 
   const refreshStats = () =>
     getSessionStats(sessionId).then((r) => setStats(r.data)).catch(() => {});
@@ -36,7 +41,7 @@ export default function BuildButton({ sessionId, uploadInfo, onError }) {
     }
   };
 
-  const previewUrl = `/api/content/${sessionId}/preview-iframe`;
+  const previewUrl = `/api/content/${sessionId}/preview-iframe?v=${iframeKey}`;
 
   return (
     <div className="build-page">

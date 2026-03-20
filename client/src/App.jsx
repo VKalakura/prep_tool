@@ -105,7 +105,9 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
   const notifIdRef    = useRef(0);
   const notifTimers   = useRef({});
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const lastActivityRef = useRef(null);
+  const lastActivityRef = useRef(undefined); // undefined = not yet initialized (sentinel)
+  const [devUpdated, setDevUpdated] = useState(false);
+  const [contentReloadKey, setContentReloadKey] = useState(0);
 
   const dismissNotif = useCallback((id) => {
     clearTimeout(notifTimers.current[id]);
@@ -123,32 +125,31 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
 
   const goTo = useCallback((s) => setStep(s), []);
 
-  // Polling for Standard mode — notify only when a dev makes changes
+  const handleDevReload = useCallback(() => {
+    setDevUpdated(false);
+    setContentReloadKey(k => k + 1);
+  }, []);
+
+  // Polling for Standard mode — show persistent banner when dev saves
   useEffect(() => {
     if (mode !== 'standard' || !uploadInfo) return;
     const interval = setInterval(async () => {
       try {
         const res = await pingSession(sessionId);
-        const ts = res.data.lastDevActivity; // null until dev actually saves something
-        if (!ts) return; // dev hasn't touched this session yet
-        if (lastActivityRef.current && ts !== lastActivityRef.current) {
-          const nid = notify('Developer updated the session ↺', 'info', {
-            label: '↺ Reload Preview',
-            onClick: () => {
-              try {
-                const ch = new BroadcastChannel('ept-content-reload-' + sessionId);
-                ch.postMessage({ reload: true });
-                ch.close();
-              } catch {}
-              dismissNotif(nid);
-            },
-          });
+        const ts = res.data.lastDevActivity ?? null;
+        if (lastActivityRef.current === undefined) {
+          // First successful poll — record baseline silently, don't notify
+          lastActivityRef.current = ts;
+          return;
         }
-        lastActivityRef.current = ts;
+        if (ts && ts !== lastActivityRef.current) {
+          lastActivityRef.current = ts;
+          setDevUpdated(true);
+        }
       } catch {}
     }, 3000);
     return () => clearInterval(interval);
-  }, [mode, uploadInfo, sessionId, notify]);
+  }, [mode, uploadInfo, sessionId]);
 
   // Protect against accidental page refresh / tab close after upload
   useEffect(() => {
@@ -168,22 +169,27 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
     );
 
     if (mode === 'standard') {
-      // Auto-clean silently before entering content step
-      setAutoCleaning(true);
-      try {
-        const res = await autoClean(sessionId);
-        const { scriptsRemoved, scriptsPreserved, iframesRemoved, unusedDeleted, headCleaned } = res.data;
-        const parts = [];
-        if (headCleaned) parts.push(`${headCleaned} head item${headCleaned !== 1 ? 's' : ''} cleaned`);
-        if (scriptsRemoved) parts.push(`${scriptsRemoved} script${scriptsRemoved !== 1 ? 's' : ''} removed`);
-        if (scriptsPreserved) parts.push(`${scriptsPreserved} interactive script${scriptsPreserved !== 1 ? 's' : ''} kept`);
-        if (iframesRemoved) parts.push(`${iframesRemoved} iframe${iframesRemoved !== 1 ? 's' : ''}`);
-        if (unusedDeleted) parts.push(`${unusedDeleted} unused file${unusedDeleted !== 1 ? 's' : ''}`);
-        if (parts.length) notify(`Auto-cleaned: ${parts.join(', ')}`);
-      } catch {
-        notify('Auto-clean skipped', 'info');
-      } finally {
-        setAutoCleaning(false);
+      if (info.hasPhpIncludes) {
+        // Archive already has our PHP includes — it's pre-processed, skip auto-clean
+        notify('Pre-processed offer detected — cleaning skipped ✓', 'info');
+      } else {
+        // Auto-clean silently before entering content step
+        setAutoCleaning(true);
+        try {
+          const res = await autoClean(sessionId);
+          const { scriptsRemoved, scriptsPreserved, iframesRemoved, unusedDeleted, headCleaned } = res.data;
+          const parts = [];
+          if (headCleaned) parts.push(`${headCleaned} head item${headCleaned !== 1 ? 's' : ''} cleaned`);
+          if (scriptsRemoved) parts.push(`${scriptsRemoved} script${scriptsRemoved !== 1 ? 's' : ''} removed`);
+          if (scriptsPreserved) parts.push(`${scriptsPreserved} interactive script${scriptsPreserved !== 1 ? 's' : ''} kept`);
+          if (iframesRemoved) parts.push(`${iframesRemoved} iframe${iframesRemoved !== 1 ? 's' : ''}`);
+          if (unusedDeleted) parts.push(`${unusedDeleted} unused file${unusedDeleted !== 1 ? 's' : ''}`);
+          if (parts.length) notify(`Auto-cleaned: ${parts.join(', ')}`);
+        } catch {
+          notify('Auto-clean skipped', 'info');
+        } finally {
+          setAutoCleaning(false);
+        }
       }
       setStep('content');
     } else {
@@ -285,6 +291,13 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
         </div>
       )}
 
+      {devUpdated && (
+        <div className="dev-update-banner">
+          <span>⚠ Developer updated the session — reload to see changes</span>
+          <button className="btn btn--sm" onClick={handleDevReload}>↺ Reload Preview</button>
+        </div>
+      )}
+
       <main className="app-main">
         {step === 'upload' && (
           <FolderUpload
@@ -311,6 +324,7 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
             onDone={() => { notify('Content saved'); goTo('php'); }}
             onSkip={() => goTo('php')}
             onError={e => notify(e, 'error')}
+            externalReloadKey={contentReloadKey}
           />
         )}
         {step === 'php' && (
@@ -322,7 +336,7 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
           />
         )}
         {step === 'build' && (
-          <BuildButton sessionId={sessionId} uploadInfo={uploadInfo} onError={e => notify(e, 'error')} />
+          <BuildButton sessionId={sessionId} uploadInfo={uploadInfo} onError={e => notify(e, 'error')} externalReloadKey={contentReloadKey} />
         )}
       </main>
 

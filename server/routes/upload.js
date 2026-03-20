@@ -147,6 +147,13 @@ router.post('/', runMulter, async (req, res) => {
 
     const stats = fs.statSync(newIndex);
 
+    // Check if the offer already has our 3 core PHP includes (indicates pre-processed archive)
+    const htmlForCheck = fmt.success ? fmt.html : rawHtml;
+    const hasPhpIncludes =
+      htmlForCheck.includes('global_new.php') &&
+      htmlForCheck.includes('google_event.php') &&
+      htmlForCheck.includes('offer_footer_script.php');
+
     res.json({
       sessionId,
       filesUploaded: filesField.length,
@@ -154,6 +161,7 @@ router.post('/', runMulter, async (req, res) => {
       indexSize: stats.size,
       indexSizeKb: Math.round(stats.size / 1024),
       formatted: fmt.success,
+      hasPhpIncludes,
       normalization: {
         moved: norm.moved,
         removed: norm.removed,

@@ -109,6 +109,20 @@ body {
 .step-nav__btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 .step-nav__btn.disabled { opacity: 0.35; cursor: not-allowed; }
 
+/* ── Dev Update Banner ────────────────────────────────────────────────────── */
+.dev-update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 20px;
+  background: #431407;
+  color: #fdba74;
+  border-bottom: 2px solid #f97316;
+  font-size: 13px;
+  font-weight: 500;
+}
+
 /* ── Notification ─────────────────────────────────────────────────────────── */
 /* ── Notifications (fixed, right side, stackable) ────────────────────────── */
 .notifications-container {
@@ -1113,7 +1127,8 @@ code {
 
 /* ── Dev Panel ────────────────────────────────────────────────────────────── */
 .dev-panel {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: var(--bg);
   display: flex;
   flex-direction: column;
@@ -1149,8 +1164,8 @@ code {
   display: grid;
   grid-template-columns: 260px 1fr;
   flex: 1;
-  height: calc(100vh - 240px);
-  min-height: 500px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .dev-panel__tree {

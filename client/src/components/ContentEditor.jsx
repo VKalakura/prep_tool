@@ -70,7 +70,7 @@ function ElementCard({ item, sessionId, cssLinks, inlineStyles, onClick }) {
 }
 
 // ─── Live Text Editor ─────────────────────────────────────────────────────────
-function TextEditorTab({ sessionId, onError }) {
+function TextEditorTab({ sessionId, onError, externalReloadKey }) {
   const iframeRef = useRef(null);
   const [selected, setSelected] = useState(null); // { idx, tag, text } | { _img: true, ... } | { _video: true, ... }
   const [editText, setEditText] = useState('');
@@ -234,6 +234,11 @@ function TextEditorTab({ sessionId, onError }) {
     } catch {}
     return () => ch?.close();
   }, [sessionId, handleReload]);
+
+  // Reload when parent signals an external reload (e.g. dev updated, user may be on another step)
+  useEffect(() => {
+    if (externalReloadKey > 0) handleReload();
+  }, [externalReloadKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Track iframe wrapper size for desktop scaling
   useEffect(() => {
@@ -446,7 +451,7 @@ function TextEditorTab({ sessionId, onError }) {
           <iframe
             key={iframeKey}
             ref={iframeRef}
-            src={`/api/content/${sessionId}/preview-iframe`}
+            src={`/api/content/${sessionId}/preview-iframe?v=${iframeKey}`}
             className="text-editor-iframe"
             title="Offer Preview"
             sandbox="allow-scripts allow-same-origin"
@@ -1235,7 +1240,7 @@ function CodeEditorTab({ sessionId, onError }) {
 }
 
 // ─── Main ContentEditor ───────────────────────────────────────────────────────
-export default function ContentEditor({ sessionId, mode, onDone, onSkip, onError }) {
+export default function ContentEditor({ sessionId, mode, onDone, onSkip, onError, externalReloadKey }) {
   const [tab, setTab] = useState('text');
 
   const tabs = [
@@ -1266,7 +1271,7 @@ export default function ContentEditor({ sessionId, mode, onDone, onSkip, onError
         ))}
       </div>
 
-      {tab === 'text'   && <TextEditorTab sessionId={sessionId} onError={onError} />}
+      {tab === 'text'   && <TextEditorTab sessionId={sessionId} onError={onError} externalReloadKey={externalReloadKey} />}
       {tab === 'bulk'   && <BulkReplaceTab sessionId={sessionId} onError={onError} />}
       {tab === 'images' && <ImageManagerTab sessionId={sessionId} onError={onError} />}
       {tab === 'code'   && <CodeEditorTab sessionId={sessionId} onError={onError} />}

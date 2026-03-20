@@ -21,7 +21,10 @@
       "Bash(do echo:*)",
       "Read(//Users/vk/Desktop/awesome-mvp/server/sessions/hrhrcy5r-mmxhio1w/js/**)",
       "Bash(done)",
-      "Bash(node --input-type=module --eval \"import\\(''''./src/components/ContentEditor.jsx''''\\)\")"
+      "Bash(node --input-type=module --eval \"import\\(''''./src/components/ContentEditor.jsx''''\\)\")",
+      "Bash(grep -v \"^[[:space:]]*$\")",
+      "Bash(grep -v \"\\\\.css$\")",
+      "Bash(find /Users/vk/Desktop/awesome-mvp/server/sessions/8l1k6t9m-mmz42a87/_originals/ -name *.bin -o -name *.woff* -o -name *.ttf -o -name *.eot)"
     ]
   }
 }
