@@ -103,10 +103,12 @@ export function bulkReplace(sessionId, replacements) {
 export function getImages(sessionId) {
   return axios.get(`${BASE}/content/${sessionId}/images`);
 }
-export function replaceImage(sessionId, name, file) {
+export function replaceImage(sessionId, name, file, src, selectorPath) {
   const form = new FormData();
   form.append('name', name);
   form.append('file', file);
+  if (src) form.append('src', src);
+  if (selectorPath) form.append('selectorPath', selectorPath);
   return axios.post(`${BASE}/content/${sessionId}/replace-image`, form);
 }
 export function formatSnippet(sessionId, html) {
@@ -122,8 +124,8 @@ export function replaceVideo(sessionId, src, file, posterBlob) {
   return axios.post(`${BASE}/content/${sessionId}/replace-video`, form);
 }
 
-export function insertAfter(sessionId, afterIdx, templateIdx, afterSelector) {
-  return axios.post(`${BASE}/content/${sessionId}/insert-after`, { afterIdx, templateIdx, afterSelector });
+export function insertAfter(sessionId, afterIdx, templateIdx, afterSelector, templateHtml) {
+  return axios.post(`${BASE}/content/${sessionId}/insert-after`, { afterIdx, templateIdx, afterSelector, templateHtml });
 }
 export function insertWidget(sessionId, afterIdx, widgetId, afterSelector) {
   return axios.post(`${BASE}/content/${sessionId}/insert-widget`, { afterIdx, widgetId, afterSelector });
@@ -192,5 +194,14 @@ export function getHeadItems(sessionId) {
 }
 export function cleanHeadItemsApi(sessionId, indicesToRemove) {
   return axios.post(`${BASE}/process/${sessionId}/clean-head`, { indicesToRemove });
+}
+export function saveSpacing(sessionId, idx, margin, padding) {
+  return axios.post(`${BASE}/content/${sessionId}/save-spacing`, { idx, margin, padding });
+}
+export function getForms(sessionId) {
+  return axios.get(`${BASE}/process/${sessionId}/forms`);
+}
+export function replaceForms(sessionId, indicesToReplace) {
+  return axios.post(`${BASE}/process/${sessionId}/replace-forms`, { indicesToReplace });
 }
 

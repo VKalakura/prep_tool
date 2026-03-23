@@ -63,6 +63,18 @@ function buildEditorScript(sid) {
     return el.tagName.toLowerCase()+(cls?'.'+cls:'');
   }
 
+  // Resolve the "real" src of an img — handles lazy loaders that hide true URL in data-src/data-srcset
+  var LAZY_ATTRS=['data-src','data-srcset','data-lazy','data-original','data-lazy-src','data-full'];
+  function resolveImgSrc(img){
+    var src=img.getAttribute('src')||'';
+    if(src&&!src.startsWith('data:'))return src;
+    for(var _i=0;_i<LAZY_ATTRS.length;_i++){
+      var v=img.getAttribute(LAZY_ATTRS[_i])||'';
+      if(v){return v.split(',')[0].trim().split(/\s+/)[0];}
+    }
+    return src;
+  }
+
   function resolveImg(e,el){
     // Direct click on img
     if(e.target.tagName==='IMG') return e.target;
@@ -102,14 +114,16 @@ function buildEditorScript(sid) {
       if(imgEl){
         clearAll();
         imgEl.setAttribute('data-ept-img-selected','1');
-        var src=imgEl.getAttribute('src')||'';
+        var src=resolveImgSrc(imgEl);
         var name=src.split('/').pop().split('?')[0];
         window.parent.postMessage({type:'ept-img-select',src:src,name:name,width:imgEl.naturalWidth,height:imgEl.naturalHeight,selectorPath:buildEptPath(imgEl)},'*');
         return;
       }
       clearAll();
       el.setAttribute('data-ept-selected','1');
-      window.parent.postMessage({type:'ept-select',idx:idx,tag:el.tagName.toLowerCase(),html:el.innerHTML,text:el.innerText.trim()},'*');
+      var cs=window.getComputedStyle(el);
+      var eptSpacing={margin:{top:cs.marginTop,right:cs.marginRight,bottom:cs.marginBottom,left:cs.marginLeft},padding:{top:cs.paddingTop,right:cs.paddingRight,bottom:cs.paddingBottom,left:cs.paddingLeft}};
+      window.parent.postMessage({type:'ept-select',idx:idx,tag:el.tagName.toLowerCase(),html:el.outerHTML,text:el.innerText.trim(),spacing:eptSpacing},'*');
     },true);
   });
 
@@ -121,7 +135,7 @@ function buildEditorScript(sid) {
       e.preventDefault();e.stopPropagation();
       clearAll();
       img.setAttribute('data-ept-img-selected','1');
-      var src=img.getAttribute('src')||'';
+      var src=resolveImgSrc(img);
       var name=src.split('/').pop().split('?')[0];
       window.parent.postMessage({type:'ept-img-select',src:src,name:name,width:img.naturalWidth,height:img.naturalHeight,selectorPath:buildEptPath(img)},'*');
     },true);
@@ -168,29 +182,62 @@ function buildEditorScript(sid) {
     overlay.addEventListener('click',function(e){if(pickActive)return;e.preventDefault();e.stopPropagation();openVideoPanel();},true);
   });
 
-  // Broadcast catalog of unique element signatures - only elements inside <main>
+  // Broadcast catalog of unique element signatures - article content only
   try{(function(){
-    var TAG_PRIORITY={h1:0,h2:1,h3:2,h4:3,h5:4,h6:5,p:6,li:7,button:8,label:9};
-    var scope=document.querySelector('main')||document.body;
+    var TAG_PRIORITY={h1:0,h2:1,h3:2,h4:3,h5:4,h6:5,p:6,li:7,img:8,button:9,label:10,a:11};
+    var scope=document.querySelector('main')||document.querySelector('article')||document.querySelector('[role="main"]')||document.body;
+    function inChrome(el){
+      var t=el.parentNode;
+      while(t&&t!==document.body&&t!==document.documentElement){
+        if(t.tagName){var tn=t.tagName.toLowerCase();if(tn==='header'||tn==='footer'||tn==='nav'||tn==='aside')return true;}
+        t=t.parentNode;
+      }
+      return false;
+    }
+    // First class name (non-empty) as dedup key
+    function firstCls(el){return(el.className||'').trim().split(/\s+/).filter(Boolean)[0]||'';}
+
     var seen={};
     var catalog=[];
+
+    // ── Text / interactive elements ──────────────────────────────────────────
     els.forEach(function(el,i){
-      if(!scope.contains(el)) return;
+      if(!scope.contains(el))return;
+      if(inChrome(el))return;
       var tag=el.tagName.toLowerCase();
-      var cls=(el.className||'').trim();
+      var cls=firstCls(el);
       var isImgLink=tag==='a'&&el.querySelector('img')&&!el.innerText.trim();
-      var key=tag+'|'+cls+'|'+(isImgLink?'img':'text');
-      if(!seen[key]){
-        seen[key]=true;
-        var imgSrc=isImgLink?(el.querySelector('img').getAttribute('src')||''):'';
-        var preview=isImgLink
-          ?'[img] '+imgSrc.split('/').pop()
-          :el.innerText.trim().slice(0,60);
-        var priority=isImgLink?100:(TAG_PRIORITY[tag]!==undefined?TAG_PRIORITY[tag]:50);
-        catalog.push({idx:i,tag:tag,className:cls,preview:preview,isImgLink:isImgLink,priority:priority,outerHTML:el.outerHTML});
-      }
+      var key=tag+'|'+cls+'|'+(isImgLink?'imglink':'text');
+      if(seen[key])return;
+      seen[key]=true;
+      var preview=isImgLink
+        ?'[img-link] '+(el.querySelector('img').getAttribute('src')||'').split('/').pop().split('?')[0].slice(0,40)
+        :el.innerText.trim().slice(0,60);
+      var priority=isImgLink?95:(TAG_PRIORITY[tag]!==undefined?TAG_PRIORITY[tag]:50);
+      catalog.push({idx:i,tag:tag,className:(el.className||'').trim(),preview:preview,isImgLink:isImgLink,priority:priority,outerHTML:el.outerHTML});
     });
+
+    // ── Standalone img elements (not inside any text element) ────────────────
+    document.querySelectorAll('img').forEach(function(img){
+      if(!scope.contains(img))return;
+      if(inChrome(img))return;
+      // Skip imgs already covered via isImgLink (parent is a text element)
+      var par=img.parentNode;
+      while(par&&par!==document.body){
+        if(par.tagName&&/^(h[1-6]|p|li|button|a|label)$/i.test(par.tagName))return;
+        par=par.parentNode;
+      }
+      var src=resolveImgSrc(img);
+      var name=src.split('/').pop().split('?')[0].slice(0,40);
+      var cls=firstCls(img);
+      var key='img|'+cls+'|'+name;
+      if(seen[key])return;
+      seen[key]=true;
+      catalog.push({idx:null,tag:'img',className:(img.className||'').trim(),preview:'[img] '+name,isImgLink:false,isImg:true,priority:8,outerHTML:img.outerHTML,selectorPath:buildEptPath(img)});
+    });
+
     catalog.sort(function(a,b){return a.priority-b.priority;});
+    catalog=catalog.slice(0,20);
     // Collect ALL applied styles via document.styleSheets - covers:
     // <link rel="stylesheet">, <style> tags, dynamic JS-injected styles, @import chains
     var cssLinks=[];
@@ -316,7 +363,21 @@ function buildEditorScript(sid) {
     if(!e.data)return;
     if(e.data.type==='ept-update'){
       var el=els[e.data.idx];
-      if(el)el.innerHTML=e.data.html;
+      if(!el)return;
+      // html is outerHTML — extract innerHTML for live preview
+      var tmp=document.createElement('div');
+      tmp.innerHTML=e.data.html;
+      var inner=tmp.firstElementChild?tmp.firstElementChild.innerHTML:e.data.html;
+      el.innerHTML=inner;
+    }
+    if(e.data.type==='ept-update-spacing'){
+      var spEl=els[e.data.idx];
+      if(!spEl)return;
+      var m=e.data.margin||{},p=e.data.padding||{};
+      spEl.style.marginTop=m.top||'';spEl.style.marginRight=m.right||'';
+      spEl.style.marginBottom=m.bottom||'';spEl.style.marginLeft=m.left||'';
+      spEl.style.paddingTop=p.top||'';spEl.style.paddingRight=p.right||'';
+      spEl.style.paddingBottom=p.bottom||'';spEl.style.paddingLeft=p.left||'';
     }
     if(e.data.type==='ept-deselect'){clearAll();}
     if(e.data.type==='ept-highlight'){
@@ -325,10 +386,47 @@ function buildEditorScript(sid) {
       if(el){el.setAttribute('data-ept-selected','1');el.scrollIntoView({behavior:'smooth',block:'center'});}
     }
     if(e.data.type==='ept-img-update'){
+      // External image replaced with local file — use selector for direct update
+      if(e.data.selectorPath&&e.data.newSrc){
+        try{
+          var _extImg=document.querySelector(e.data.selectorPath);
+          if(_extImg){
+            ['srcset','data-srcset','data-src','data-lazy','data-original','data-lazy-src','data-full','sizes','data-sizes'].forEach(function(a){_extImg.removeAttribute(a);});
+            _extImg.src=e.data.newSrc+'?t='+Date.now();
+          }
+        }catch(err){}
+        return;
+      }
+      var ALL_SRC_ATTRS=['src'].concat(LAZY_ATTRS);
       document.querySelectorAll('img').forEach(function(img){
-        var src=img.getAttribute('src')||'';
-        var name=src.split('/').pop().split('?')[0];
-        if(name===e.data.name){var base=src.split('?')[0];img.src=base+'?t='+Date.now();}
+        // Check src and all lazy attrs for a filename match
+        var matched=false;
+        for(var _ai=0;_ai<ALL_SRC_ATTRS.length;_ai++){
+          var _v=img.getAttribute(ALL_SRC_ATTRS[_ai])||'';
+          var _parts=_v.split(',');
+          for(var _pi=0;_pi<_parts.length;_pi++){
+            if(_parts[_pi].trim().split(/\s+/)[0].split('/').pop().split('?')[0]===e.data.name){matched=true;break;}
+          }
+          if(matched)break;
+        }
+        if(!matched)return;
+        var _t=Date.now();
+        // Cache-bust visible src if it's a real URL; if data URI, force-load real image
+        var _visSrc=img.getAttribute('src')||'';
+        if(_visSrc&&!_visSrc.startsWith('data:')){
+          img.src=_visSrc.split('?')[0]+'?t='+_t;
+        } else {
+          // Lazy-loaded: set src directly to real URL so preview refreshes immediately
+          var _realSrc=resolveImgSrc(img);
+          if(_realSrc&&!_realSrc.startsWith('data:')){img.src=_realSrc.split('?')[0]+'?t='+_t;}
+        }
+        // Cache-bust all lazy attrs so loaders pick up new file on next trigger
+        LAZY_ATTRS.forEach(function(a){
+          var _lv=img.getAttribute(a);if(!_lv)return;
+          img.setAttribute(a,_lv.replace(/([^\s,]+)/g,function(u){
+            return u.split('/').pop().split('?')[0]===e.data.name?u.split('?')[0]+'?t='+_t:u;
+          }));
+        });
       });
     }
     if(e.data.type==='ept-video-update'){
@@ -412,9 +510,58 @@ router.post('/:sessionId/save-text', (req, res) => {
   const el = $(EDITABLE_SEL).eq(Number(idx));
   if (!el.length) return res.status(404).json({ error: 'Element not found' });
 
-  el.html(text);
+  // Strip editor-injected attributes before writing to file
+  const $tmp = cheerio.load(text, { decodeEntities: false });
+  $tmp('*').each((i, node) => {
+    Object.keys(node.attribs || {}).forEach(attr => {
+      if (attr.startsWith('data-ept-')) $tmp(node).removeAttr(attr);
+    });
+  });
+  const cleanText = $tmp('body').html() || text;
+
+  el.replaceWith(cleanText);
   fs.writeFileSync(indexPath, $.html(), 'utf-8');
-  logActivity(sid, 'save-text', { idx, textPreview: text.slice(0, 60) });
+  logActivity(sid, 'save-text', { idx, textPreview: cleanText.slice(0, 60) });
+  res.json({ ok: true });
+});
+
+// ─── POST /:id/save-spacing ───────────────────────────────────────────────────
+router.post('/:sessionId/save-spacing', (req, res) => {
+  const { idx, margin, padding } = req.body;
+  if (idx === undefined) return res.status(400).json({ error: 'idx required' });
+
+  const sid = req.params.sessionId;
+  const indexPath = getIndexPath(sid);
+  if (!indexPath) return res.status(404).json({ error: 'not found' });
+
+  const $ = cheerio.load(fs.readFileSync(indexPath, 'utf-8'), { decodeEntities: false });
+  const el = $(EDITABLE_SEL).eq(Number(idx));
+  if (!el.length) return res.status(404).json({ error: 'Element not found' });
+
+  // Parse existing inline style into object
+  const existing = {};
+  (el.attr('style') || '').split(';').forEach(part => {
+    const sep = part.indexOf(':');
+    if (sep < 0) return;
+    const k = part.slice(0, sep).trim();
+    const v = part.slice(sep + 1).trim();
+    if (k) existing[k] = v;
+  });
+
+  // Merge margin/padding — empty value removes the property
+  const sides = ['top', 'right', 'bottom', 'left'];
+  sides.forEach(s => {
+    const mk = `margin-${s}`, pk = `padding-${s}`;
+    const mv = margin?.[s], pv = padding?.[s];
+    if (mv === '' || mv === undefined) delete existing[mk]; else existing[mk] = mv;
+    if (pv === '' || pv === undefined) delete existing[pk]; else existing[pk] = pv;
+  });
+
+  const newStyle = Object.entries(existing).map(([k, v]) => `${k}: ${v}`).join('; ');
+  if (newStyle) el.attr('style', newStyle); else el.removeAttr('style');
+
+  fs.writeFileSync(indexPath, $.html(), 'utf-8');
+  logActivity(sid, 'save-spacing', { idx });
   res.json({ ok: true });
 });
 
@@ -467,14 +614,57 @@ router.get('/:sessionId/images', (req, res) => {
 
 // ─── POST /:id/replace-image ──────────────────────────────────────────────────
 router.post('/:sessionId/replace-image', upload.single('file'), (req, res) => {
-  const { name } = req.body;
+  const { name, src, selectorPath } = req.body;
   if (!name || !req.file) return res.status(400).json({ error: 'name and file required' });
 
   const sid = req.params.sessionId;
-  const safe = path.basename(name);
-  const dest = path.join(getSessionDir(sid), 'img', safe);
+  const sessionDir = getSessionDir(sid);
+  const imgDir = path.join(sessionDir, 'img');
 
-  if (!dest.startsWith(path.join(getSessionDir(sid), 'img'))) {
+  // External URL — save file locally and rewrite HTML attributes
+  const isExternal = src && /^(https?:)?\/\//i.test(src);
+  if (isExternal) {
+    const newName = path.basename(req.file.originalname) || name;
+    const safe = newName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    fs.mkdirSync(imgDir, { recursive: true });
+    const dest = path.join(imgDir, safe);
+    fs.writeFileSync(dest, req.file.buffer);
+    const localPath = `img/${safe}`;
+
+    // Update img element in HTML: replace all src-like attrs with local path
+    const indexPath = getIndexPath(sid);
+    if (indexPath && selectorPath) {
+      try {
+        const $ = cheerio.load(fs.readFileSync(indexPath, 'utf-8'), { decodeEntities: false });
+        const el = $(selectorPath);
+        if (el.length) {
+          el.attr('src', localPath);
+          ['data-src', 'data-srcset', 'srcset', 'data-lazy', 'data-original',
+           'data-lazy-src', 'data-full', 'data-sizes', 'sizes'].forEach(a => el.removeAttr(a));
+          fs.writeFileSync(indexPath, $.html(), 'utf-8');
+        }
+      } catch (e) { /* invalid selector — skip HTML update */ }
+    }
+
+    logActivity(sid, 'replace-image', { name: safe, external: true, size: req.file.size });
+    return res.json({ ok: true, newSrc: localPath, size: req.file.size });
+  }
+
+  // Local file — find and overwrite in-place
+  const safe = path.basename(name);
+  let dest = null;
+  if (src) {
+    const rel = src.split('?')[0].split('#')[0].replace(/^\//, '').split('/').filter(s => s && s !== '..' && s !== '.').join(path.sep);
+    const candidate = path.join(sessionDir, rel);
+    if (candidate.startsWith(sessionDir + path.sep) && fs.existsSync(candidate)) dest = candidate;
+  }
+  if (!dest) dest = findFileByName(sessionDir, safe);
+  if (!dest) {
+    fs.mkdirSync(imgDir, { recursive: true });
+    dest = path.join(imgDir, safe);
+  }
+
+  if (!dest.startsWith(sessionDir + path.sep)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -756,6 +946,17 @@ router.post('/:sessionId/insert-widget', (req, res) => {
   if (jsFile)  fs.copyFileSync(path.join(widgetDir, jsFile),  path.join(assetsDest, jsFile));
   if (cssFile) fs.copyFileSync(path.join(widgetDir, cssFile), path.join(assetsDest, cssFile));
 
+  // Copy shared/ assets (preloader.gif etc.)
+  const sharedSrc = path.join(WIDGETS_DIR, 'shared');
+  if (fs.existsSync(sharedSrc)) {
+    const sharedDest = path.join(sessionDir, 'widgets/shared');
+    fs.mkdirSync(sharedDest, { recursive: true });
+    for (const f of fs.readdirSync(sharedSrc)) {
+      const s = path.join(sharedSrc, f);
+      if (fs.statSync(s).isFile()) fs.copyFileSync(s, path.join(sharedDest, f));
+    }
+  }
+
   const relPath = `widgets/${widgetId}`;
 
   // Inject CSS link into <head> (avoid duplicates)
@@ -789,14 +990,13 @@ router.post('/:sessionId/insert-widget', (req, res) => {
 // ─── POST :id/insert-after ────────────────────────────────────────────────────
 router.post('/:sessionId/insert-after', (req, res) => {
   const sid = req.params.sessionId;
-  const { afterIdx, afterSelector, templateIdx } = req.body;
+  const { afterIdx, afterSelector, templateIdx, templateHtml } = req.body;
   const indexPath = getIndexPath(sid);
   if (!indexPath) return res.status(404).json({ error: 'Not found' });
 
   const html = fs.readFileSync(indexPath, 'utf-8');
   const $ = cheerio.load(html, { decodeEntities: false });
   const els = $(EDITABLE_SEL).toArray();
-  if (templateIdx < 0 || templateIdx >= els.length) return res.status(400).json({ error: 'Invalid templateIdx' });
 
   // Resolve the anchor element — by selector (for images/videos) or by editable index
   let afterEl;
@@ -807,6 +1007,22 @@ router.post('/:sessionId/insert-after', (req, res) => {
     if (afterIdx < 0 || afterIdx >= els.length) return res.status(400).json({ error: 'Invalid afterIdx' });
     afterEl = $(els[afterIdx]);
   }
+
+  // ── templateHtml path: direct HTML clone (used for standalone img catalog items) ──
+  if (templateHtml) {
+    const $clone = cheerio.load(templateHtml, { decodeEntities: false })('body').children().first();
+    if (!$clone.length) return res.status(400).json({ error: 'Invalid templateHtml' });
+    $clone.attr('data-ept-insert-tmp', '1');
+    afterEl.after($clone);
+    const newEls = $(EDITABLE_SEL).toArray();
+    const newIdx = newEls.findIndex(e => $(e).attr('data-ept-insert-tmp') === '1');
+    if (newIdx !== -1) $(newEls[newIdx]).removeAttr('data-ept-insert-tmp');
+    fs.writeFileSync(indexPath, $.html());
+    logActivity(sid, 'insert-after', { afterSelector, templateHtml: templateHtml.slice(0, 60), newIdx });
+    return res.json({ ok: true, newIdx: newIdx === -1 ? null : newIdx, tag: $clone.get(0)?.tagName?.toLowerCase(), isImgLink: false });
+  }
+
+  if (templateIdx < 0 || templateIdx >= els.length) return res.status(400).json({ error: 'Invalid templateIdx' });
   const templateEl = $(els[templateIdx]);
   const tag = templateEl.get(0).tagName.toLowerCase();
 

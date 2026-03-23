@@ -1,0 +1,107 @@
+.wf-light {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 40px 36px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.wf-light__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.wf-light__field {
+  display: flex;
+  flex-direction: column;
+}
+
+.wf-light input {
+  display: block;
+  width: 100%;
+  padding: 13px 16px;
+  margin-bottom: 4px;
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  color: #111827;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.wf-light input:focus {
+  border-color: #3b82f6;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+/* Error: плавна поява без стрибків */
+@keyframes wf-light-error-in {
+  from { opacity: 0; max-height: 0; margin-bottom: 0; }
+  to   { opacity: 1; max-height: 40px; margin-bottom: 14px; }
+}
+
+.wf-light .error {
+  display: block;
+  overflow: hidden;
+  color: #ef4444;
+  font-size: 12px;
+  padding-left: 2px;
+  animation: wf-light-error-in 0.25s ease forwards;
+}
+
+.wf-light #preloader {
+  display: none;
+  text-align: center;
+  padding: 14px 0 6px;
+}
+
+.wf-light #preloader img {
+  width: 40px;
+  height: 40px;
+}
+
+.wf-light #submit-btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  margin-top: 10px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.15s, filter 0.15s;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.wf-light #submit-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45);
+}
+
+.wf-light #submit-btn:active {
+  transform: scale(0.96);
+  filter: brightness(0.82);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+@media (max-width: 480px) {
+  .wf-light { padding: 28px 20px; }
+  .wf-light__row { grid-template-columns: 1fr; gap: 0; }
+}

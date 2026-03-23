@@ -1,0 +1,102 @@
+.wf-outline {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 32px 0;
+  max-width: 440px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.wf-outline input {
+  display: block;
+  width: 100%;
+  padding: 14px 0;
+  margin-bottom: 4px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #d1d5db;
+  border-radius: 0;
+  color: inherit;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+}
+
+.wf-outline input:focus {
+  border-bottom-color: #111827;
+}
+
+/* Animated underline accent on focus */
+.wf-outline {
+  --accent: #111827;
+}
+
+.wf-outline input {
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-size: 0 2px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: border-color 0.2s, background-size 0.3s ease;
+}
+
+.wf-outline input:focus {
+  border-bottom-color: transparent;
+  background-size: 100% 2px;
+}
+
+/* Error: плавна поява без стрибків */
+@keyframes wf-outline-error-in {
+  from { opacity: 0; max-height: 0; margin-bottom: 0; }
+  to   { opacity: 1; max-height: 40px; margin-bottom: 14px; }
+}
+
+.wf-outline .error {
+  display: block;
+  overflow: hidden;
+  color: #ef4444;
+  font-size: 12px;
+  animation: wf-outline-error-in 0.25s ease forwards;
+}
+
+.wf-outline #preloader {
+  display: none;
+  text-align: center;
+  padding: 14px 0 6px;
+}
+
+.wf-outline #preloader img {
+  width: 40px;
+  height: 40px;
+}
+
+.wf-outline #submit-btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  margin-top: 20px;
+  background: #111827;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, filter 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.wf-outline #submit-btn:hover {
+  background: #1f2937;
+  transform: translateY(-1px);
+}
+
+.wf-outline #submit-btn:active {
+  transform: scale(0.96);
+  filter: brightness(0.75);
+}

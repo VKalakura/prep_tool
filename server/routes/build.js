@@ -3,6 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const archiver = require('archiver');
 
+const WIDGETS_SHARED_SRC = path.join(__dirname, '../../widgets/shared');
+
 const router = express.Router();
 
 function getSessionDir(sessionId) {
@@ -54,6 +56,13 @@ router.post('/:sessionId', (req, res) => {
     ignore: ['_*', '_*/**', 'raw', 'raw/**'],
     dot: false,
   });
+
+  // If session has widgets/ but widgets/shared/ is missing, inject shared assets from source
+  const sessionWidgetsDir = path.join(sessionDir, 'widgets');
+  const sessionSharedDir = path.join(sessionDir, 'widgets', 'shared');
+  if (fs.existsSync(sessionWidgetsDir) && !fs.existsSync(sessionSharedDir) && fs.existsSync(WIDGETS_SHARED_SRC)) {
+    archive.directory(WIDGETS_SHARED_SRC, 'widgets/shared');
+  }
 
   archive.finalize();
 });

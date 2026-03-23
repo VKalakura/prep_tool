@@ -2,6 +2,8 @@ const path = require('path');
 const fs = require('fs');
 const cheerio = require('cheerio');
 
+const WIDGETS_DIR = path.join(__dirname, '../../widgets');
+
 /**
  * Inject a widget into the HTML.
  * Copies widget JS/CSS into the session directory and links them.
@@ -20,12 +22,23 @@ function inject(html, widgetDir, widgetId, position, sessionDir) {
   const widgetAssetsDest = path.join(sessionDir, widgetAssetsRelDir);
   fs.mkdirSync(widgetAssetsDest, { recursive: true });
 
-  // Copy JS and CSS into session
-  if (jsFile) {
-    fs.copyFileSync(path.join(widgetDir, jsFile), path.join(widgetAssetsDest, jsFile));
+  // Copy all non-HTML, non-meta assets (js, css, images, fonts, etc.)
+  for (const f of files) {
+    if (f.endsWith('.html') || f.endsWith('.json')) continue;
+    fs.copyFileSync(path.join(widgetDir, f), path.join(widgetAssetsDest, f));
   }
-  if (cssFile) {
-    fs.copyFileSync(path.join(widgetDir, cssFile), path.join(widgetAssetsDest, cssFile));
+
+  // Copy shared/ assets (preloader.gif etc.) into session once
+  const sharedSrc = path.join(WIDGETS_DIR, 'shared');
+  const sharedDest = path.join(sessionDir, path.join(indexRelDir, 'widgets/shared'));
+  if (fs.existsSync(sharedSrc)) {
+    fs.mkdirSync(sharedDest, { recursive: true });
+    for (const f of fs.readdirSync(sharedSrc)) {
+      const src = path.join(sharedSrc, f);
+      if (fs.statSync(src).isFile()) {
+        fs.copyFileSync(src, path.join(sharedDest, f));
+      }
+    }
   }
 
   // Relative path from index.html to widget assets

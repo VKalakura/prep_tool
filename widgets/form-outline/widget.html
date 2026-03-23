@@ -1,0 +1,36 @@
+<div class="wf-outline">
+  <form method="POST" id="mainForm" class="" action="send.php">
+    <input
+      id="first_name"
+      type="text"
+      name="<?php echo FIRST_NAME ?>"
+      required />
+    <?php echo getValidationError(FIRST_NAME, '<label id="first_name-error" class="error" for="first_name">%s</label>') ?>
+
+    <input
+      id="last_name"
+      type="text"
+      name="<?php echo LAST_NAME ?>"
+      required />
+    <?php echo getValidationError(LAST_NAME, '<label id="last_name-error" class="error" for="last_name">%s</label>') ?>
+
+    <input
+      type="email"
+      id="email"
+      name="<?php echo EMAIL ?>"
+      required />
+    <?php echo getValidationError(EMAIL, '<label id="email-error" class="error" for="email">%s</label>') ?>
+
+    <input
+      type="tel"
+      id="tel"
+      name="<?php echo PHONE ?>"
+      required />
+    <?php echo getValidationError(PHONE, '<label id="phone-error" class="error" for="tel">%s</label>') ?>
+
+    <div id="preloader">
+      <img src="widgets/shared/preloader.gif" alt="" />
+    </div>
+    <button type="submit" id="submit-btn" class="">Submit</button>
+  </form>
+</div>

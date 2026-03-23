@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import MonacoEditor from '@monaco-editor/react';
 import { emmetHTML, emmetCSS, emmetJSX } from 'emmet-monaco-es';
 import {
-  getEditableElements, saveText, bulkReplace,
+  getEditableElements, saveText, saveSpacing, bulkReplace,
   getImages, replaceImage, compressImage, compressAll, replaceVideo, formatSnippet,
   insertAfter, deleteElement, deleteBySelector, undoDelete, insertWidget, getWidgets,
   getDevFile, saveDevFile, getDevState,
@@ -58,12 +58,10 @@ function ElementCard({ item, sessionId, cssLinks, inlineStyles, onClick }) {
         />
       </div>
       <div className="element-card__footer">
+        <code className="element-card__tag">
+          &lt;{item.tag}{item.className ? ` .${item.className.split(' ')[0]}` : ''}&gt;
+        </code>
         <span className="element-card__label">{label}</span>
-        {item.className && (
-          <span className="element-card__class" title={item.className}>
-            .{item.className.split(' ')[0]}
-          </span>
-        )}
       </div>
     </button>
   );
@@ -96,6 +94,8 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
   const [imgDeleteConfirm, setImgDeleteConfirm] = useState(false);
   const [videoDeleteConfirm, setVideoDeleteConfirm] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
+  const [spacing, setSpacing] = useState(null); // { margin:{top,right,bottom,left}, padding:{...} } in px numbers
+  const [spacingSaving, setSpacingSaving] = useState(false);
   const [previewMode, setPreviewMode] = useState('desktop'); // 'responsive' | 'desktop' | 'mobile'
   const [previewSize, setPreviewSize] = useState({ w: 0, h: 0 });
   const iframeWrapRef = useRef(null);
@@ -120,6 +120,14 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
         setSelected({ idx: e.data.idx, tag: e.data.tag, text: clean });
         setEditText(clean);
         setShowPicker(false);
+        if (e.data.spacing) {
+          const px = (v) => parseInt(v, 10) || 0;
+          const { margin: m, padding: p } = e.data.spacing;
+          setSpacing({
+            margin:  { top: px(m.top),  right: px(m.right),  bottom: px(m.bottom),  left: px(m.left)  },
+            padding: { top: px(p.top),  right: px(p.right),  bottom: px(p.bottom),  left: px(p.left)  },
+          });
+        }
       }
       if (e.data.type === 'ept-img-select') {
         setSelected({ _img: true, name: e.data.name, src: e.data.src, width: e.data.width, height: e.data.height, selectorPath: e.data.selectorPath });
@@ -165,6 +173,7 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
   const handleDeselect = () => {
     setSelected(null);
     setEditText('');
+    setSpacing(null);
     setShowPicker(false);
     setImgDeleteConfirm(false);
     setVideoDeleteConfirm(false);
@@ -203,6 +212,7 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
   const handleReload = useCallback(() => {
     setSelected(null);
     setEditText('');
+    setSpacing(null);
     setDeletePickMode(false);
     deletePickModeRef.current = false;
     setPendingDelete(null);
@@ -271,7 +281,7 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
     }, 120);
   };
 
-  const handleInsertAfter = async (templateIdx) => {
+  const handleInsertAfter = async (item) => {
     if (!selected) return;
     setInserting(true);
     setShowPicker(false);
@@ -279,12 +289,14 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
       const isMedia = selected._img || selected._video;
       const afterSelector = isMedia ? selected.selectorPath : undefined;
       const afterIdx = isMedia ? undefined : selected.idx;
-      const res = await insertAfter(sessionId, afterIdx, templateIdx, afterSelector);
+      const templateIdx = item.isImg ? undefined : item.idx;
+      const templateHtml = item.isImg ? item.outerHTML : undefined;
+      const res = await insertAfter(sessionId, afterIdx, templateIdx, afterSelector, templateHtml);
       const { newIdx, tag, isImgLink } = res.data;
       if (!isMedia) {
         pendingSelectRef.current = isImgLink
           ? { idx: newIdx, tag, text: null }
-          : { idx: newIdx, tag, text: 'Новий текст' };
+          : { idx: newIdx, tag, text: `<${tag}>Новий текст</${tag}>` };
       }
       setSavedCount(c => c + 1);
       setSelected(null);
@@ -371,14 +383,51 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
     if (!file || !selected?._img) return;
     setImgReplacing(true);
     try {
-      await replaceImage(sessionId, selected.name, file);
+      const imgRes = await replaceImage(sessionId, selected.name, file, selected.src, selected.selectorPath);
       setSavedCount(c => c + 1);
-      sendToIframe({ type: 'ept-img-update', name: selected.name });
+      if (imgRes.data.newSrc) {
+        sendToIframe({ type: 'ept-img-update', selectorPath: selected.selectorPath, newSrc: imgRes.data.newSrc });
+      } else {
+        sendToIframe({ type: 'ept-img-update', name: selected.name });
+      }
     } catch (err) {
       onError(err.response?.data?.error || 'Failed to replace image');
     } finally {
       setImgReplacing(false);
       e.target.value = '';
+    }
+  };
+
+  const toStyleVal = (n) => n > 0 ? `${n}px` : '';
+
+  const handleSpacingChange = (type, side, val) => {
+    const num = Math.max(0, parseInt(val, 10) || 0);
+    const next = { ...spacing, [type]: { ...spacing[type], [side]: num } };
+    setSpacing(next);
+    sendToIframe({
+      type: 'ept-update-spacing',
+      idx: selected.idx,
+      margin:  { top: `${next.margin.top}px`,  right: `${next.margin.right}px`,  bottom: `${next.margin.bottom}px`,  left: `${next.margin.left}px`  },
+      padding: { top: `${next.padding.top}px`, right: `${next.padding.right}px`, bottom: `${next.padding.bottom}px`, left: `${next.padding.left}px` },
+    });
+  };
+
+  const handleApplySpacing = async () => {
+    if (!selected || !spacing) return;
+    setSpacingSaving(true);
+    try {
+      await saveSpacing(
+        sessionId, selected.idx,
+        { top: toStyleVal(spacing.margin.top),   right: toStyleVal(spacing.margin.right),
+          bottom: toStyleVal(spacing.margin.bottom), left: toStyleVal(spacing.margin.left) },
+        { top: toStyleVal(spacing.padding.top),  right: toStyleVal(spacing.padding.right),
+          bottom: toStyleVal(spacing.padding.bottom), left: toStyleVal(spacing.padding.left) },
+      );
+      setSavedCount(c => c + 1);
+    } catch (err) {
+      onError(err.response?.data?.error || 'Failed to save spacing');
+    } finally {
+      setSpacingSaving(false);
     }
   };
 
@@ -677,6 +726,39 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
               </button>
             )}
 
+            {spacing && (
+              <div className="spacing-panel">
+                <div className="spacing-panel__title">Spacing</div>
+                {[['margin', 'Margin'], ['padding', 'Padding']].map(([type, label]) => (
+                  <div key={type} className="spacing-panel__row">
+                    <span className="spacing-panel__label">{label}</span>
+                    <div className="spacing-panel__inputs">
+                      {['top', 'right', 'bottom', 'left'].map(side => (
+                        <label key={side} className="spacing-panel__field">
+                          <span>{side[0].toUpperCase()}</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={spacing[type][side]}
+                            onChange={e => handleSpacingChange(type, side, e.target.value)}
+                            className="spacing-panel__input"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <button
+                  className="btn btn--sm btn--primary"
+                  style={{ marginTop: 8, width: '100%' }}
+                  onClick={handleApplySpacing}
+                  disabled={spacingSaving}
+                >
+                  {spacingSaving ? 'Saving…' : 'Apply Spacing'}
+                </button>
+              </div>
+            )}
+
             <div className="text-editor-actions">
               <button
                 className="btn btn--sm btn--clone"
@@ -736,12 +818,12 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
             <div className="element-card-grid">
               {catalog.map((item) => (
                 <ElementCard
-                  key={item.idx}
+                  key={item.idx ?? item.selectorPath}
                   item={item}
                   sessionId={sessionId}
                   cssLinks={cssLinks}
                   inlineStyles={inlineStyles}
-                  onClick={() => handleInsertAfter(item.idx)}
+                  onClick={() => handleInsertAfter(item)}
                 />
               ))}
             </div>

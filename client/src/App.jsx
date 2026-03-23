@@ -177,11 +177,12 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
         setAutoCleaning(true);
         try {
           const res = await autoClean(sessionId);
-          const { scriptsRemoved, scriptsPreserved, iframesRemoved, unusedDeleted, headCleaned } = res.data;
+          const { scriptsRemoved, scriptsPreserved, formsReplaced, iframesRemoved, unusedDeleted, headCleaned } = res.data;
           const parts = [];
           if (headCleaned) parts.push(`${headCleaned} head item${headCleaned !== 1 ? 's' : ''} cleaned`);
           if (scriptsRemoved) parts.push(`${scriptsRemoved} script${scriptsRemoved !== 1 ? 's' : ''} removed`);
           if (scriptsPreserved) parts.push(`${scriptsPreserved} interactive script${scriptsPreserved !== 1 ? 's' : ''} kept`);
+          if (formsReplaced) parts.push(`${formsReplaced} form${formsReplaced !== 1 ? 's' : ''} → div`);
           if (iframesRemoved) parts.push(`${iframesRemoved} iframe${iframesRemoved !== 1 ? 's' : ''}`);
           if (unusedDeleted) parts.push(`${unusedDeleted} unused file${unusedDeleted !== 1 ? 's' : ''}`);
           if (parts.length) notify(`Auto-cleaned: ${parts.join(', ')}`);

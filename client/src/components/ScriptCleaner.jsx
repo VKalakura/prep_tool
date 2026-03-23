@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getScripts, cleanScripts, getIframes, cleanIframes, getUnusedFiles, cleanUnusedFiles, getHeadItems, cleanHeadItemsApi } from '../api.js';
+import { getScripts, cleanScripts, getIframes, cleanIframes, getUnusedFiles, cleanUnusedFiles, getHeadItems, cleanHeadItemsApi, getForms, replaceForms } from '../api.js';
 
 // ─── Scripts tab ──────────────────────────────────────────────────────────────
 function ScriptsTab({ sessionId, onDone, onSkip, onError }) {
@@ -399,6 +399,110 @@ function HeadTab({ sessionId, onError }) {
   );
 }
 
+// ─── Forms tab ────────────────────────────────────────────────────────────────
+function FormsTab({ sessionId, onError }) {
+  const [forms, setForms] = useState([]);
+  const [selected, setSelected] = useState(new Set());
+  const [expanded, setExpanded] = useState(new Set());
+  const [loading, setLoading] = useState(true);
+  const [replacing, setReplacing] = useState(false);
+  const [replacedCount, setReplacedCount] = useState(0);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    getForms(sessionId)
+      .then(res => {
+        setForms(res.data.forms);
+        setSelected(new Set(res.data.forms.map(f => f.index)));
+      })
+      .catch(err => onError(err.response?.data?.error || 'Failed to load forms'))
+      .finally(() => setLoading(false));
+  }, [sessionId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const toggle = (idx) => setSelected(prev => {
+    const n = new Set(prev); n.has(idx) ? n.delete(idx) : n.add(idx); return n;
+  });
+
+  const toggleExpand = (idx) => setExpanded(prev => {
+    const n = new Set(prev); n.has(idx) ? n.delete(idx) : n.add(idx); return n;
+  });
+
+  const handleReplace = async () => {
+    if (!selected.size) return;
+    setReplacing(true);
+    try {
+      const res = await replaceForms(sessionId, Array.from(selected));
+      setReplacedCount(prev => prev + res.data.replaced);
+      load();
+    } catch (err) {
+      onError(err.response?.data?.error || 'Failed to replace forms');
+    } finally {
+      setReplacing(false);
+    }
+  };
+
+  if (loading) return <div className="loading-state"><div className="spinner" /> Scanning forms…</div>;
+
+  return (
+    <>
+      <div className="script-stats">
+        <div className="stat stat--yellow"><span className="stat__num">{forms.length}</span><span className="stat__label">Found</span></div>
+        <div className="stat stat--green"><span className="stat__num">{replacedCount}</span><span className="stat__label">Replaced</span></div>
+      </div>
+
+      <div className="toolbar">
+        <button className="btn btn--sm" onClick={() => setSelected(new Set(forms.map(f => f.index)))}>Select All</button>
+        <button className="btn btn--sm" onClick={() => setSelected(new Set())}>Clear</button>
+        <span className="toolbar__count">{selected.size} selected</span>
+      </div>
+
+      <div className="script-list">
+        {forms.length === 0 && (
+          <div className="empty-state">
+            {replacedCount > 0 ? `All ${replacedCount} form${replacedCount !== 1 ? 's' : ''} replaced with divs.` : 'No forms found.'}
+          </div>
+        )}
+        {forms.map(form => {
+          const isSelected = selected.has(form.index);
+          const isExpanded = expanded.has(form.index);
+          return (
+            <div key={form.index} className={`script-item ${isSelected ? 'script-item--selected' : ''} ${isExpanded ? 'script-item--expanded' : ''}`}>
+              <div className="script-item__row" onClick={() => toggle(form.index)}>
+                <input type="checkbox" checked={isSelected} onChange={() => toggle(form.index)} onClick={e => e.stopPropagation()} />
+                <div className="script-item__body">
+                  <code>
+                    {[form.id && `#${form.id}`, form.cls && `.${form.cls.split(' ')[0]}`].filter(Boolean).join(' ') || '(no id/class)'}
+                  </code>
+                  {form.action && <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 6 }}>action={form.action}</span>}
+                  {form.text && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{form.text}</div>}
+                </div>
+                {form.method && <span className="badge">{form.method.toUpperCase()}</span>}
+                <span className="badge badge--yellow">form</span>
+                <button
+                  className="script-expand-btn"
+                  title={isExpanded ? 'Collapse' : 'Expand markup'}
+                  onClick={e => { e.stopPropagation(); toggleExpand(form.index); }}
+                >{isExpanded ? '▲' : '▼'}</button>
+              </div>
+              {isExpanded && (
+                <pre className="script-item__source">{form.outerHtml}</pre>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="panel__footer">
+        <button className="btn btn--danger btn--lg" onClick={handleReplace} disabled={!selected.size || replacing || !forms.length}>
+          {replacing ? 'Replacing…' : `Replace ${selected.size} Form${selected.size !== 1 ? 's' : ''} with Div`}
+        </button>
+      </div>
+    </>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function ScriptCleaner({ sessionId, onDone, onSkip, onError }) {
   const [tab, setTab] = useState('scripts');
@@ -411,7 +515,7 @@ export default function ScriptCleaner({ sessionId, onDone, onSkip, onError }) {
       </div>
 
       <div className="clean-tabs">
-        {[['scripts', '📜 Scripts'], ['head', '🔖 Head'], ['iframes', '🖼 iFrames'], ['unused', '🗑 Unused Files']].map(([id, label]) => (
+        {[['scripts', '📜 Scripts'], ['head', '🔖 Head'], ['iframes', '🖼 iFrames'], ['forms', '📋 Forms'], ['unused', '🗑 Unused Files']].map(([id, label]) => (
           <button key={id} className={`clean-tab-btn ${tab === id ? 'active' : ''}`} onClick={() => setTab(id)}>{label}</button>
         ))}
       </div>
@@ -419,6 +523,7 @@ export default function ScriptCleaner({ sessionId, onDone, onSkip, onError }) {
       {tab === 'scripts' && <ScriptsTab sessionId={sessionId} onDone={onDone} onSkip={onSkip} onError={onError} />}
       {tab === 'head'    && <HeadTab sessionId={sessionId} onError={onError} />}
       {tab === 'iframes' && <IframesTab sessionId={sessionId} onError={onError} />}
+      {tab === 'forms'   && <FormsTab sessionId={sessionId} onError={onError} />}
       {tab === 'unused'  && <UnusedFilesTab sessionId={sessionId} onError={onError} />}
     </div>
   );

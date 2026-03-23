@@ -24,7 +24,13 @@
       "Bash(node --input-type=module --eval \"import\\(''''./src/components/ContentEditor.jsx''''\\)\")",
       "Bash(grep -v \"^[[:space:]]*$\")",
       "Bash(grep -v \"\\\\.css$\")",
-      "Bash(find /Users/vk/Desktop/awesome-mvp/server/sessions/8l1k6t9m-mmz42a87/_originals/ -name *.bin -o -name *.woff* -o -name *.ttf -o -name *.eot)"
+      "Bash(find /Users/vk/Desktop/awesome-mvp/server/sessions/8l1k6t9m-mmz42a87/_originals/ -name *.bin -o -name *.woff* -o -name *.ttf -o -name *.eot)",
+      "Bash(cat /Users/vk/Desktop/awesome-mvp/config/*)",
+      "Bash(sed -i '' 's|widgets/form-dark/preloader.gif|widgets/shared/preloader.gif|g' /Users/vk/Desktop/awesome-mvp/widgets/form-dark/widget.html)",
+      "Bash(sed -i '' 's|widgets/form-light/preloader.gif|widgets/shared/preloader.gif|g' /Users/vk/Desktop/awesome-mvp/widgets/form-light/widget.html)",
+      "Bash(sed -i '' 's|widgets/form-gradient/preloader.gif|widgets/shared/preloader.gif|g' /Users/vk/Desktop/awesome-mvp/widgets/form-gradient/widget.html)",
+      "Bash(sed -i '' 's|widgets/form-outline/preloader.gif|widgets/shared/preloader.gif|g' /Users/vk/Desktop/awesome-mvp/widgets/form-outline/widget.html)",
+      "Bash(grep -l \"preloader\\\\|wf-dark\\\\|wf-light\\\\|wf-grad\\\\|wf-outline\" /Users/vk/Desktop/awesome-mvp/server/sessions/3u2ova63-mn2xuucx/*.html)"
     ]
   }
 }

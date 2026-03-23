@@ -451,7 +451,23 @@ router.post('/:sessionId/auto-clean', (req, res) => {
     appendRemovedScripts(sessionDir, removedWithMeta);
   }
 
-  // 2. Remove all iframes
+  // 2. Replace all forms with divs
+  const FORM_ATTRS = ['action', 'method', 'enctype', 'target', 'novalidate', 'autocomplete', 'accept-charset'];
+  let $ac = cheerio.load(currentHtml, { decodeEntities: false });
+  let formsReplaced = 0;
+  $ac('form').each((i, el) => {
+    const $el = $ac(el);
+    FORM_ATTRS.forEach(attr => $el.removeAttr(attr));
+    const attrsStr = Object.entries(el.attribs || {})
+      .map(([k, v]) => v ? `${k}="${v}"` : k)
+      .join(' ');
+    const inner = $el.html();
+    $el.replaceWith(`<div${attrsStr ? ' ' + attrsStr : ''}>${inner}</div>`);
+    formsReplaced++;
+  });
+  currentHtml = $ac.html();
+
+  // 3. Remove all iframes
   const $ = cheerio.load(currentHtml, { decodeEntities: false });
   $('iframe').each((i, el) => { $(el).remove(); iframesRemoved++; });
   currentHtml = $.html();
@@ -471,8 +487,68 @@ router.post('/:sessionId/auto-clean', (req, res) => {
   }
   removeEmptyDirs(sessionDir, ['js', 'css', 'img', 'fonts']);
 
-  logActivity(sid, 'auto-clean', { scriptsRemoved, scriptsPreserved, iframesRemoved, unusedDeleted, headCleaned });
-  res.json({ ok: true, scriptsRemoved, scriptsPreserved, iframesRemoved, unusedDeleted, headCleaned });
+  logActivity(sid, 'auto-clean', { scriptsRemoved, scriptsPreserved, formsReplaced, iframesRemoved, unusedDeleted, headCleaned });
+  res.json({ ok: true, scriptsRemoved, scriptsPreserved, formsReplaced, iframesRemoved, unusedDeleted, headCleaned });
+});
+
+// ─── Forms routes ─────────────────────────────────────────────────────────────
+
+router.get('/:sessionId/forms', (req, res) => {
+  const indexPath = getIndexPath(req.params.sessionId);
+  if (!indexPath) return res.status(404).json({ error: 'not found' });
+
+  const $ = cheerio.load(fs.readFileSync(indexPath, 'utf-8'), { decodeEntities: false });
+  const forms = [];
+
+  $('form').each((i, el) => {
+    const $el = $(el);
+    const text = $el.text().replace(/\s+/g, ' ').trim().slice(0, 100);
+    forms.push({
+      index: i,
+      id:     $el.attr('id') || null,
+      cls:    $el.attr('class') || null,
+      action: $el.attr('action') || null,
+      method: $el.attr('method') || null,
+      text,
+      outerHtml: $.html(el).slice(0, 3000),
+    });
+  });
+
+  res.json({ forms });
+});
+
+router.post('/:sessionId/replace-forms', (req, res) => {
+  const { indicesToReplace } = req.body;
+  if (!Array.isArray(indicesToReplace)) {
+    return res.status(400).json({ error: 'indicesToReplace must be an array' });
+  }
+
+  const sid = req.params.sessionId;
+  const indexPath = getIndexPath(sid);
+  if (!indexPath) return res.status(404).json({ error: 'not found' });
+
+  const FORM_ATTRS = ['action', 'method', 'enctype', 'target', 'novalidate', 'autocomplete', 'accept-charset'];
+  const $ = cheerio.load(fs.readFileSync(indexPath, 'utf-8'), { decodeEntities: false });
+  const toReplace = new Set(indicesToReplace.map(Number));
+  let replaced = 0;
+
+  $('form').each((i, el) => {
+    if (!toReplace.has(i)) return;
+    const $el = $(el);
+    // Remove form-specific attributes
+    FORM_ATTRS.forEach(attr => $el.removeAttr(attr));
+    // Change tag: wrap contents in a div with same remaining attrs
+    const attrsStr = Object.entries(el.attribs || {})
+      .map(([k, v]) => v ? `${k}="${v}"` : k)
+      .join(' ');
+    const inner = $el.html();
+    $el.replaceWith(`<div${attrsStr ? ' ' + attrsStr : ''}>${inner}</div>`);
+    replaced++;
+  });
+
+  fs.writeFileSync(indexPath, $.html(), 'utf-8');
+  logActivity(sid, 'replace-forms', { replaced });
+  res.json({ ok: true, replaced });
 });
 
 // ─── Helper: append removed scripts to _removed_scripts.json ─────────────────
