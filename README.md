@@ -103,19 +103,13 @@ offer-tools/
 
 ## Залити на Bitbucket
 
-Якщо репозиторій ще вказує на інший remote — переключити на Bitbucket:
+Покрокова інструкція (створення репо, SSH-ключ, заміна/додавання remote, push) — у [`BITBUCKET.md`](./BITBUCKET.md).
+
+Коротко:
 
 ```bash
-# подивитись поточний remote
-git remote -v
-
-# замінити origin на Bitbucket (порожній репо вже створений у workspace)
-git remote set-url origin git@bitbucket.org:<workspace>/<repo>.git
-#   або додати окремий remote:
-# git remote add bitbucket git@bitbucket.org:<workspace>/<repo>.git
-
-# залити поточну гілку
-git push -u origin <branch>
+git remote add bitbucket git@bitbucket.org:<workspace>/<repo>.git
+git push -u bitbucket OPT-3
 ```
 
 > Перед першим push переконайся, що `server/.env` не в індексі: `git status` не має показувати `.env`.
