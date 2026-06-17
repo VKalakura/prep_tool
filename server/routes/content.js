@@ -4,6 +4,79 @@ const fs = require('fs');
 const cheerio = require('cheerio');
 const multer = require('multer');
 const { logActivity } = require('../services/activityLogger');
+const { getContentScopedEditables, getScopedImages, getScopedVideos, hasFormInScope, resolveScope, buildEptPathCheerio } = require('../services/xaiScope');
+const { parsePhotoMarkers, parseVideoMarkers, parsePlaceholderMarkers } = require('../services/photoMarkers');
+const {
+  applySlotExtensionPlan,
+  listScopedEditablesPostExtension,
+  extendMediaInScope,
+} = require('../services/xaiSlotExtender');
+const { chatCompletion, DEFAULT_MODEL } = require('../services/xaiClient');
+const { rewritePrompt } = require('../services/xaiPrompts');
+
+// ─── Brief → blocks (deterministic paragraph splitter) ──────────────────────
+
+const MEDIA_LINE_RE = /^\s*(фото|photo|відео|видео|video)\s*\d+\s*$/i;
+const FORM_LINE_RE = /^\s*форм[аи]\s+(регистрации|реєстрації)(?=$|[\s.,!?:;()\-])/iu;
+
+const PHOTO_LINE_RE = /^\s*(?:фото|photo)\s*(\d+)\s*$/i;
+const VIDEO_LINE_RE = /^\s*(?:відео|видео|video)\s*(\d+)\s*$/i;
+
+/**
+ * Split the operator's pasted text into paragraph blocks for verbatim slot
+ * mapping. Paragraphs are separated by ONE OR MORE blank lines. Marker-only
+ * lines (ФОТО N / VIDEO N / ФОРМА РЕГИСТРАЦИИ) are extracted as POSITION
+ * directives — we record which block each marker sits BEFORE, so the photo /
+ * video can later be moved into the matching position in the DOM.
+ *
+ * Within a block, individual hard line breaks are PRESERVED — they're often
+ * line-by-line dialogue ("Speaker A: …" / "Speaker B: …") that should land in
+ * one slot, not be split.
+ *
+ * @returns {{
+ *   blocks: string[],
+ *   photoSlots: { num: number, beforeBlockIdx: number }[],
+ *   videoSlots: { num: number, beforeBlockIdx: number }[]
+ * }}
+ *   beforeBlockIdx is the 0-based block index this marker should appear
+ *   BEFORE in DOM order. Markers at the very end of the brief get
+ *   beforeBlockIdx = blocks.length (i.e. "after the last block").
+ */
+function parseBrief(brief) {
+  const text = String(brief || '').replace(/\r\n/g, '\n').trim();
+  if (!text) return { blocks: [], photoSlots: [], videoSlots: [] };
+
+  const blocks = [];
+  const photoSlots = [];
+  const videoSlots = [];
+
+  for (const raw of text.split(/\n{2,}/)) {
+    const lines = raw.split('\n').map((l) => l.trim()).filter(Boolean);
+    const cleanedLines = [];
+    for (const line of lines) {
+      const photoMatch = line.match(PHOTO_LINE_RE);
+      if (photoMatch) {
+        photoSlots.push({ num: Number(photoMatch[1]), beforeBlockIdx: blocks.length });
+        continue;
+      }
+      const videoMatch = line.match(VIDEO_LINE_RE);
+      if (videoMatch) {
+        videoSlots.push({ num: Number(videoMatch[1]), beforeBlockIdx: blocks.length });
+        continue;
+      }
+      if (FORM_LINE_RE.test(line)) continue;
+      cleanedLines.push(line);
+    }
+    if (cleanedLines.length) blocks.push(cleanedLines.join('\n'));
+  }
+
+  return { blocks, photoSlots, videoSlots };
+}
+
+// Backwards-compat shim — kept for any external caller that still imports it.
+function splitBriefIntoBlocks(brief) {
+  return parseBrief(brief).blocks;
+}
 const WIDGETS_DIR = path.join(__dirname, '../../widgets');
 
 const router = express.Router();
@@ -12,7 +85,34 @@ const SESSIONS_DIR = path.join(__dirname, '../sessions');
 // Selector used BOTH in browser (injected script) and server (cheerio) — must match exactly
 const EDITABLE_SEL = 'h1,h2,h3,h4,h5,h6,p,button,a,label,li';
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB per file (raw photos / 4K screenshots fit)
+});
+
+/**
+ * Wrap an upload middleware so multer errors (file too large, unexpected field,
+ * truncated parts) reach the client as readable JSON instead of disappearing
+ * into Express's default 500 handler. Without this, hitting LIMIT_FILE_SIZE
+ * on one file produces a generic 500 and the operator just sees "got fewer
+ * files than expected" downstream.
+ */
+function uploadOrJsonError(uploader) {
+  return (req, res, next) => {
+    uploader(req, res, (err) => {
+      if (!err) return next();
+      let detail = err.message || 'Upload failed';
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        detail = `One of the files exceeds the 100 MB upload limit (${err.field || 'photo/video'} field).`;
+      } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+        detail = `Unexpected file field "${err.field}" — fix the form name.`;
+      } else if (err.code === 'LIMIT_PART_COUNT' || err.code === 'LIMIT_FILE_COUNT') {
+        detail = `Too many files in one request (${err.code}).`;
+      }
+      return res.status(400).json({ error: detail, code: err.code });
+    });
+  };
+}
 
 function getSessionDir(sid) { return path.join(SESSIONS_DIR, sid); }
 
@@ -265,8 +365,9 @@ function buildEditorScript(sid) {
     window.parent.postMessage({type:'ept-catalog',items:catalog,cssLinks:cssLinks,inlineStyles:inlineStyles},'*');
   })()}catch(catalogErr){console.warn('ept catalog error',catalogErr);}
 
-  // ─── Pick-to-delete mode ──────────────────────────────────────────────────────
+  // ─── Pick mode (delete or scope) ──────────────────────────────────────────────
   var pickActive=false;
+  var pickPurpose='delete';
   var pickStyleEl=document.createElement('style');
   pickStyleEl.textContent='[data-ept-ph]{outline:2px dashed #ef4444!important;outline-offset:2px!important;background:rgba(239,68,68,0.07)!important;cursor:crosshair!important}'+
     '[data-ept-hidden]{display:block!important;visibility:visible!important;opacity:0.4!important;'+
@@ -294,7 +395,8 @@ function buildEditorScript(sid) {
       ac=ac.parentNode;
     }
     window.parent.postMessage({
-      type:'ept-pick-delete',
+      type: pickPurpose==='scope' ? 'ept-scope-pick' : 'ept-pick-delete',
+      purpose: pickPurpose,
       selector:buildEptPath(t),label:eptLabel(t),
       preview:t.outerHTML.slice(0,300),
       ancestors:ancestors
@@ -327,8 +429,9 @@ function buildEditorScript(sid) {
     sendPickMessage(t);
   }
 
-  function setPickMode(on){
+  function setPickMode(on, purpose){
     pickActive=on;
+    pickPurpose=purpose||'delete';
     if(on){
       // Temporarily reveal hidden elements so they can be picked
       document.querySelectorAll('*').forEach(function(el){
@@ -436,7 +539,7 @@ function buildEditorScript(sid) {
         if(name===e.data.name){var base=src.split('?')[0];vid.src=base+'?t='+Date.now();vid.load();}
       });
     }
-    if(e.data.type==='ept-pick-mode'){setPickMode(!!e.data.active);}
+    if(e.data.type==='ept-pick-mode'){setPickMode(!!e.data.active, e.data.purpose);}
     if(e.data.type==='ept-pick-highlight'){
       try{
         document.querySelectorAll('[data-ept-ph]').forEach(function(x){x.removeAttribute('data-ept-ph');});
@@ -565,11 +668,746 @@ router.post('/:sessionId/save-spacing', (req, res) => {
   res.json({ ok: true });
 });
 
-// ─── POST /:id/bulk-replace ───────────────────────────────────────────────────
-router.post('/:sessionId/bulk-replace', (req, res) => {
-  const { replacements } = req.body;
-  if (!Array.isArray(replacements)) {
-    return res.status(400).json({ error: 'replacements must be an array' });
+// ─── Scoped content rewrite (deterministic paragraph mapping — no AI call) ───
+function normalizeReplacements(rawList, allowedIdx) {
+  const out = [];
+  const seen = new Set();
+  for (const r of rawList) {
+    const idx = Number(r.idx);
+    if (!Number.isInteger(idx) || idx < 0 || !allowedIdx.has(idx)) continue;
+    if (seen.has(idx)) continue;
+    seen.add(idx);
+    let text = typeof r.text === 'string' ? r.text : '';
+    text = text.replace(/\r/g, '');
+    if (/<\s*script/i.test(text)) continue;
+    if (text.length > 16000) text = text.slice(0, 16000);
+    out.push({ idx, text });
+  }
+  return out;
+}
+
+// ─── GET /:id/detect-scope — preview detected (or custom) scope without calling xAI ──
+router.get('/:sessionId/detect-scope', (req, res) => {
+  const sid = req.params.sessionId;
+  const indexPath = getIndexPath(sid);
+  if (!indexPath) return res.status(404).json({ error: 'not found' });
+  const $ = cheerio.load(fs.readFileSync(indexPath, 'utf-8'), { decodeEntities: false });
+  const sel = typeof req.query?.scopeSelector === 'string' && req.query.scopeSelector.trim() ? req.query.scopeSelector.trim() : null;
+  const { scopeLabel, scopeSelectorPath, scopeUsedCustom, elements } = getContentScopedEditables($, EDITABLE_SEL, sel);
+  const imgs = getScopedImages($, sel);
+  const vids = getScopedVideos($, sel);
+  const hasForm = hasFormInScope($, sel);
+  res.json({
+    ok: true,
+    scopeLabel,
+    scopeSelectorPath,
+    scopeUsedCustom,
+    editableCount: elements.length,
+    imageCount: imgs.length,
+    videoCount: vids.length,
+    hasForm,
+    sampleTexts: elements.slice(0, 6).map((e) => ({ tag: e.tag, text: e.text.slice(0, 140) })),
+  });
+});
+
+router.post('/:sessionId/xai-suggest', async (req, res) => {
+  const sid = req.params.sessionId;
+  const indexPath = getIndexPath(sid);
+  if (!indexPath) return res.status(404).json({ error: 'not found' });
+
+  const brief = typeof req.body?.brief === 'string' ? req.body.brief.trim() : '';
+  if (!brief || brief.length > 120000) {
+    return res.status(400).json({ error: 'brief required (max 120000 chars)' });
+  }
+
+  const scopeSelector = typeof req.body?.scopeSelector === 'string' && req.body.scopeSelector.trim()
+    ? req.body.scopeSelector.trim()
+    : null;
+  const $ = cheerio.load(fs.readFileSync(indexPath, 'utf-8'), { decodeEntities: false });
+  const { scopeLabel, scopeSelectorPath, scopeUsedCustom, elements } = getContentScopedEditables($, EDITABLE_SEL, scopeSelector);
+  const scopedImages = getScopedImages($, scopeSelector);
+  const scopedVideos = getScopedVideos($, scopeSelector);
+  const photoMarkersList = parsePhotoMarkers(brief);
+  const videoMarkersList = parseVideoMarkers(brief);
+  const placeholderRaw = parsePlaceholderMarkers(brief);
+  const scopeHasForm = hasFormInScope($, scopeSelector);
+  const placeholderInfo = {
+    needsFormParagraph: placeholderRaw.needsForm && !scopeHasForm,
+    formText: placeholderRaw.formText,
+    hasForm: scopeHasForm,
+    formInBrief: placeholderRaw.needsForm,
+  };
+  const scopedImagesPreview = scopedImages.slice(0, 36).map((im, index) => ({
+    index,
+    name: im.name,
+    url: `/session-files/${sid}/${im.src.replace(/^\//, '')}`,
+  }));
+  const scopedVideosPreview = scopedVideos.slice(0, 24).map((v, index) => {
+    let posterUrl = null;
+    try {
+      const node = $(v.selectorPath).get(0);
+      if (node) {
+        const poster = $(node).attr('poster') || '';
+        if (poster.trim() && !poster.startsWith('data:')) {
+          posterUrl = `/session-files/${sid}/${poster.replace(/^\//, '')}`;
+        }
+      }
+    } catch (_) { /* ignore */ }
+    return {
+      index,
+      name: v.name,
+      posterUrl,
+      srcLabel: (v.src || '').split('/').pop() || v.name,
+    };
+  });
+
+  if (!elements.length) {
+    return res.status(400).json({
+      error: 'No editable text blocks in content scope (inside main/article, excluding header/footer/nav/aside).',
+      scopeLabel,
+    });
+  }
+
+  try {
+    const { blocks, photoSlots, videoSlots } = parseBrief(brief);
+    if (!blocks.length) {
+      return res.status(400).json({
+        error: 'Pasted text has no readable paragraphs (only photo/video markers were detected).',
+      });
+    }
+
+    // Build the SLOTS manifest the LLM will reason over. Slot numbers are
+    // 1-based DOM order in the picked zone (n=1..elements.length). We hand
+    // a short preview of the slot's current text so the model can match
+    // headings / dialogue / list items semantically.
+    const slotsManifest = elements.map((e, i) => ({
+      n: i + 1,
+      tag: e.tag,
+      current: (e.text || '').slice(0, 180),
+    }));
+
+    // Single Grok call. The prompt does ALL the placement, tag-swapping,
+    // overflow-cloning and photo-positioning. Server post-processes the
+    // returned JSON deterministically; no second AI call.
+    const briefForModel = brief.slice(0, 24000);
+    const userMessage = [
+      '### TEXT (article body to place; keep verbatim)',
+      briefForModel,
+      '',
+      '### SLOTS (DOM order, 1-based)',
+      JSON.stringify(slotsManifest, null, 0),
+    ].join('\n');
+
+    let aiPlan = null;
+    let aiUsage = null;
+    try {
+      const aiRes = await chatCompletion({
+        messages: [
+          { role: 'system', content: rewritePrompt },
+          { role: 'user', content: userMessage },
+        ],
+        jsonMode: true,
+        maxCompletionTokens: 12000,
+      });
+      aiUsage = aiRes.usage;
+      try {
+        aiPlan = JSON.parse(aiRes.content);
+      } catch (parseErr) {
+        const stripped = aiRes.content
+          .replace(/^[\s\S]*?\{/, '{')
+          .replace(/\}[\s\S]*$/, '}');
+        try {
+          aiPlan = JSON.parse(stripped);
+        } catch (_) {
+          throw new Error(`AI returned non-JSON: ${aiRes.content.slice(0, 240)}`);
+        }
+      }
+    } catch (apiErr) {
+      console.error('[xai-suggest] LLM call failed:', apiErr.message);
+      return res.status(502).json({
+        error: `AI placement failed: ${apiErr.message}. Check XAI_API_KEY in server/.env.`,
+        code: apiErr.code || 'AI_FAIL',
+      });
+    }
+
+    if (!aiPlan || typeof aiPlan !== 'object') {
+      return res.status(502).json({ error: 'AI returned an empty plan' });
+    }
+
+    const aiFills = Array.isArray(aiPlan.fills) ? aiPlan.fills : [];
+    const aiDeletes = Array.isArray(aiPlan.deletes) ? aiPlan.deletes : [];
+    const aiExtensions = Array.isArray(aiPlan.extensions) ? aiPlan.extensions : [];
+    const aiPhotos = Array.isArray(aiPlan.photos) ? aiPlan.photos : [];
+    const aiVideos = Array.isArray(aiPlan.videos) ? aiPlan.videos : [];
+
+    // Apply extensions (clone N body slots after slotN). aiExtensions:
+    // [{afterSlot:int, tag:'p'|'li', texts:[...]}] in slot-order. We translate
+    // each entry into a single applySlotExtensionPlan op (cloning the
+    // afterSlot's element `texts.length` times) and remember the cloned
+    // slots' eventual texts in `extensionTexts` keyed by clone-order.
+    const validTags = new Set(['p', 'li']);
+    const slotExtensionPlan = [];
+    const extensionFillTexts = []; // ordered list of (text) for cloned slots
+    for (const ext of aiExtensions) {
+      if (!ext || !Number.isInteger(ext.afterSlot)) continue;
+      const slotNum = ext.afterSlot;
+      const sourceIdx = slotNum >= 1 && slotNum <= elements.length
+        ? elements[slotNum - 1].idx
+        : null;
+      if (sourceIdx == null) continue;
+      const tag = validTags.has(String(ext.tag).toLowerCase())
+        ? String(ext.tag).toLowerCase()
+        : 'p';
+      const texts = Array.isArray(ext.texts) ? ext.texts.filter((t) => typeof t === 'string') : [];
+      if (!texts.length) continue;
+      slotExtensionPlan.push({ sourceIdx, count: texts.length, tag });
+      for (const t of texts) extensionFillTexts.push(t);
+    }
+    let slotsCloned = 0;
+    let workingElements = elements;
+    let workingScopeMeta = { scopeLabel, scopeSelectorPath, scopeUsedCustom };
+    if (slotExtensionPlan.length) {
+      slotsCloned = applySlotExtensionPlan($, slotExtensionPlan, EDITABLE_SEL);
+      const rescan = listScopedEditablesPostExtension($, EDITABLE_SEL, scopeSelector);
+      workingElements = rescan.elements;
+      workingScopeMeta = {
+        scopeLabel: rescan.scopeLabel,
+        scopeSelectorPath: rescan.scopeSelectorPath,
+        scopeUsedCustom: rescan.scopeUsedCustom,
+      };
+    }
+
+    // Build replacement records for original slots.
+    const fillsBySlot = new Map();
+    for (const f of aiFills) {
+      if (!f || !Number.isInteger(f.slot)) continue;
+      if (f.slot < 1 || f.slot > elements.length) continue;
+      fillsBySlot.set(f.slot, f);
+    }
+    const deleteSet = new Set(aiDeletes.filter((n) => Number.isInteger(n) && n >= 1 && n <= elements.length));
+
+    const replacements = [];
+    let deleted = 0;
+    let tagSwaps = 0;
+    elements.forEach((e, i) => {
+      const slotNum = i + 1;
+      const fill = fillsBySlot.get(slotNum);
+      if (fill && typeof fill.text === 'string' && fill.text.trim() !== '') {
+        const rec = { idx: e.idx, text: fill.text, slot: slotNum };
+        const reqTag = String(fill.replaceTag || '').toLowerCase();
+        if (reqTag && reqTag !== e.tag && /^(p|h1|h2|h3|h4|h5|h6|li)$/.test(reqTag)) {
+          rec.replaceTag = reqTag;
+          tagSwaps++;
+        }
+        replacements.push(rec);
+        return;
+      }
+      // Either explicitly listed in deletes OR not mentioned anywhere — both
+      // mean "remove". The LLM was instructed to enumerate every slot;
+      // anything missing gets removed for cleanliness.
+      replacements.push({ idx: e.idx, text: '', slot: slotNum });
+      deleted++;
+    });
+
+    // Cloned slots get the extension texts. After applySlotExtensionPlan +
+    // rescan, workingElements > elements; the new entries (cloned===true)
+    // appear right after their source slot in DOM order. We feed them
+    // extensionFillTexts in order. Cloned slots don't need a slot number —
+    // photos never reference them (the LLM only sees original 1..N).
+    if (extensionFillTexts.length) {
+      const cloneSlots = workingElements.filter((e) => e.cloned);
+      for (let k = 0; k < cloneSlots.length && k < extensionFillTexts.length; k++) {
+        replacements.push({
+          idx: cloneSlots[k].idx,
+          text: extensionFillTexts[k],
+        });
+      }
+    }
+
+    // Photo / video positioning. The LLM gives `beforeSlot` (the slot
+    // number BEFORE which the marker sits). Apply-time will resolve this
+    // against `[data-ept-slot="N"]` markers we'll stamp during xai-apply,
+    // so deletions / tag-swaps / clone insertions don't break the lookup.
+    // No CSS paths needed — `data-ept-slot` is anchored to the node itself.
+    function buildPositionPlan(markers) {
+      const list = (Array.isArray(markers) ? markers : [])
+        .filter((m) => m && Number.isInteger(m.num) && m.num >= 1);
+      const seen = new Set();
+      const out = [];
+      for (const m of list) {
+        if (seen.has(m.num)) continue;
+        seen.add(m.num);
+        const before = Number.isInteger(m.beforeSlot) ? m.beforeSlot : null;
+        const atEnd = before == null || before > elements.length;
+        out.push({
+          num: m.num,
+          beforeSlot: before,
+          atEnd,
+        });
+      }
+      out.sort((a, b) => a.num - b.num);
+      return out;
+    }
+    let photoMoves = buildPositionPlan(aiPhotos);
+    let videoMoves = buildPositionPlan(aiVideos);
+    if (!photoMoves.length && photoSlots.length) {
+      photoMoves = photoSlots.map((m) => ({ num: m.num, beforeSlot: null, atEnd: true }))
+        .sort((a, b) => a.num - b.num);
+    }
+    if (!videoMoves.length && videoSlots.length) {
+      videoMoves = videoSlots.map((m) => ({ num: m.num, beforeSlot: null, atEnd: true }))
+        .sort((a, b) => a.num - b.num);
+    }
+
+    const mediaTrim = {
+      photoCount: photoMoves.length,
+      videoCount: videoMoves.length,
+    };
+
+    const previewRows = replacements.map((r) => {
+      const prev = workingElements.find((el) => el.idx === r.idx);
+      const willDelete = typeof r.text !== 'string' || r.text.trim() === '';
+      return {
+        idx: r.idx,
+        slot: r.slot || null,
+        tag: prev?.tag || '?',
+        oldText: prev?.cloned ? '' : (prev?.text || ''),
+        newText: r.text,
+        cloned: !!prev?.cloned,
+        deleting: willDelete,
+        kept: false,
+        replaceTag: r.replaceTag || null,
+      };
+    });
+
+    logActivity(sid, 'xai-suggest', {
+      mode: 'llm-place',
+      replacementsCount: replacements.length,
+      blocksCount: blocks.length,
+      scopeLabel: workingScopeMeta.scopeLabel,
+      slotsCloned,
+      deletedCount: deleted,
+      tagSwaps,
+      photoMoves: photoMoves.length,
+      videoMoves: videoMoves.length,
+      imagesInScope: scopedImages.length,
+      videosInScope: scopedVideos.length,
+      ...(aiUsage ? { xai_usage: aiUsage } : {}),
+    });
+
+    res.json({
+      ok: true,
+      scopeLabel: workingScopeMeta.scopeLabel,
+      scopeSelectorPath: workingScopeMeta.scopeSelectorPath,
+      scopeUsedCustom: workingScopeMeta.scopeUsedCustom,
+      scopedBlockCount: workingElements.length,
+      blocksCount: blocks.length,
+      replacements,
+      previewRows,
+      slotExtensionPlan,
+      slotsCloned,
+      deletedCount: deleted,
+      tagSwaps,
+      photoMarkers: photoMarkersList,
+      videoMarkers: videoMarkersList,
+      photoMoves,
+      videoMoves,
+      mediaTrim,
+      scopedImageCount: scopedImages.length,
+      scopedImagesPreview,
+      scopedVideoCount: scopedVideos.length,
+      scopedVideosPreview,
+      placeholderInfo,
+      aiUsage,
+      aiModel: aiUsage?.model || DEFAULT_MODEL,
+    });
+  } catch (err) {
+    console.error('[xai-suggest]', err);
+    return res.status(500).json({ error: err.message || 'rewrite failed' });
+  }
+});
+
+// ─── GET /:id/scoped-images — ordered imgs in content scope (for ФОТО picker UI) ─
+router.get('/:sessionId/scoped-images', (req, res) => {
+  const sid = req.params.sessionId;
+  const indexPath = getIndexPath(sid);
+  if (!indexPath) return res.status(404).json({ error: 'not found' });
+  const $ = cheerio.load(fs.readFileSync(indexPath, 'utf-8'), { decodeEntities: false });
+  const sel = typeof req.query?.scopeSelector === 'string' && req.query.scopeSelector.trim() ? req.query.scopeSelector.trim() : null;
+  const imgs = getScopedImages($, sel);
+  const list = imgs.map((im, index) => ({
+    index,
+    name: im.name,
+    src: im.src,
+    url: `/session-files/${sid}/${im.src.replace(/^\//, '')}`,
+  }));
+  res.json({ images: list, count: list.length });
+});
+
+// ─── POST /:id/apply-photo-markers — ФОТО N → scoped img[n-1], save as WebP ───
+router.post('/:sessionId/apply-photo-markers', uploadOrJsonError(upload.array('photo', 24)), async (req, res) => {
+  const sid = req.params.sessionId;
+  const indexPath = getIndexPath(sid);
+  if (!indexPath) return res.status(404).json({ error: 'not found' });
+
+  let slots;
+  try {
+    slots = JSON.parse(req.body.slots || '[]');
+  } catch {
+    return res.status(400).json({ error: 'slots must be JSON array of numbers, e.g. [1,2]' });
+  }
+  if (!Array.isArray(slots) || !slots.length) {
+    return res.status(400).json({ error: 'slots required' });
+  }
+  const files = req.files || [];
+  if (files.length !== slots.length) {
+    return res.status(400).json({
+      error: `Photo upload mismatch: ${slots.length} slot(s) selected (ФОТО ${slots.join(', ')}) but server received ${files.length} file(s). Likely a file was cleared in the picker, or a single file was over 100 MB.`,
+      slotsExpected: slots.length,
+      filesReceived: files.length,
+    });
+  }
+
+  let sharp;
+  try {
+    sharp = require('sharp');
+  } catch {
+    return res.status(501).json({ error: 'sharp required for WebP. Run: npm install sharp in server/' });
+  }
+
+  const sessionDir = getSessionDir(sid);
+  const imgDir = path.join(sessionDir, 'img');
+  fs.mkdirSync(imgDir, { recursive: true });
+
+  const $ = cheerio.load(fs.readFileSync(indexPath, 'utf-8'), { decodeEntities: false });
+  const scopeSel = typeof req.body?.scopeSelector === 'string' && req.body.scopeSelector.trim() ? req.body.scopeSelector.trim() : null;
+  let imgs = getScopedImages($, scopeSel);
+  if (!imgs.length) {
+    return res.status(400).json({ error: 'No images found in content scope' });
+  }
+
+  for (let i = 0; i < slots.length; i++) {
+    const slot = Number(slots[i]);
+    if (!Number.isInteger(slot) || slot < 1) {
+      return res.status(400).json({ error: `Invalid slot: ${slots[i]}` });
+    }
+  }
+
+  // Auto-clone last <img> when ФОТО N markers exceed available images in scope.
+  // "the same kind by analogy until all the photos fit". Cloned <img> inherits
+  // wrapper/class/style; src and lazy attrs are stripped (we set src below).
+  const maxSlot = Math.max(...slots.map((s) => Number(s)));
+  let imagesCloned = 0;
+  if (maxSlot > imgs.length) {
+    const { node: scopeNode } = resolveScope($, scopeSel);
+    const deficit = maxSlot - imgs.length;
+    // Clone the LAST IN-FLOW article photo as template — not the very last
+    // <img> in scope (often a footer share-toolbar icon), which would be
+    // filtered out again by getScopedImages.
+    const templateEl = imgs.length ? $(imgs[imgs.length - 1].selectorPath).get(0) : null;
+    const inserted = extendMediaInScope($, scopeNode, 'img', deficit, (node) => buildEptPathCheerio(node), templateEl);
+    imagesCloned = inserted.length;
+    if (imagesCloned < deficit) {
+      return res.status(400).json({
+        error: `ФОТО ${maxSlot}: scope has only ${imgs.length} image(s) and no template <img> to clone — pick a scope that contains at least one image.`,
+      });
+    }
+    // Cloned <img> have no src (extendMediaInScope strips it so the upload
+    // overwrites it cleanly), so getScopedImages — which requires a real src
+    // — would silently drop them on rescan. Append cloned imgs explicitly
+    // by their data-ept-cloned marker, in DOM order, AFTER the existing
+    // in-flow list. ФОТО N then maps to imgs[N-1] as expected.
+    const seen = new Set(imgs.map((i) => i.selectorPath));
+    $('img[data-ept-cloned="1"]').each((_i, el) => {
+      if (!el || el.type !== 'tag') return;
+      let cur = el;
+      let inScope = false;
+      while (cur) { if (cur === scopeNode) { inScope = true; break; } cur = cur.parent; }
+      if (!inScope) return;
+      const sp = buildEptPathCheerio(el);
+      if (seen.has(sp)) return;
+      seen.add(sp);
+      const src = $(el).attr('src') || '';
+      imgs.push({
+        selectorPath: sp,
+        src,
+        name: (src || `clone-${imgs.length + 1}`).replace(/^\//, '').split('/').pop().split('?')[0],
+      });
+    });
+  }
+
+  const LAZY_ATTRS = ['data-src', 'data-srcset', 'srcset', 'data-lazy', 'data-original', 'data-lazy-src', 'data-full', 'data-sizes', 'sizes'];
+
+  try {
+    for (let i = 0; i < slots.length; i++) {
+      const slot = Number(slots[i]);
+      const imgIdx = slot - 1;
+      const meta = imgs[imgIdx];
+      if (!meta) {
+        return res.status(400).json({ error: `ФОТО ${slot}: image slot missing after auto-clone (have ${imgs.length})` });
+      }
+      const fileName = `ept-${Date.now()}-${i}-slot${slot}.webp`;
+      const destAbs = path.join(imgDir, fileName);
+      const relPath = `img/${fileName}`;
+
+      await sharp(files[i].buffer)
+        .webp({ quality: 82 })
+        .toFile(destAbs);
+
+      const el = $(meta.selectorPath);
+      if (!el.length) {
+        return res.status(500).json({ error: `Selector failed for ФОТО ${slot}` });
+      }
+      el.attr('src', relPath);
+      LAZY_ATTRS.forEach((a) => el.removeAttr(a));
+
+      // For cloned imgs we also wrap in <a data-ept-cloned="1"> with no href.
+      // Now that the photo file exists, point that wrapper at the new image
+      // (lightbox-style click-to-open). For the original (non-cloned) img we
+      // leave its existing wrapping alone — the designer's link target may
+      // intentionally differ from the photo source.
+      const parent = el.parent();
+      if (
+        parent.length
+        && (parent.get(0).name || '').toLowerCase() === 'a'
+        && parent.attr('data-ept-cloned') === '1'
+      ) {
+        parent.attr('href', relPath);
+      }
+    }
+
+    // Reposition each <img> (or its <a>/<figure>/<picture> wrapper) so it
+    // appears in the SAME order in the DOM as the operator's brief.
+    //
+    // CRITICAL: cheerio nth-child selectors are evaluated against the LIVE
+    // tree, so as soon as we move the first photo the selector paths for
+    // the remaining ones become stale (every sibling has shifted). We
+    // therefore resolve ALL source + target nodes UPFRONT in two passes,
+    // holding cheerio node references (not selector strings) — node refs
+    // survive any number of subsequent moves.
+    let movedPhotos = 0;
+    if (req.body.photoMoves) {
+      let moves = req.body.photoMoves;
+      if (typeof moves === 'string') {
+        try { moves = JSON.parse(moves); } catch { moves = []; }
+      }
+      if (Array.isArray(moves)) {
+        const scopeNode = resolveScope($, scopeSel).node;
+        const resolved = [];
+        for (const move of moves) {
+          if (!move || !Number.isInteger(move.num) || move.num < 1) continue;
+          const meta = imgs[move.num - 1];
+          if (!meta) continue;
+          const imgNode = $(meta.selectorPath).get(0);
+          if (!imgNode) continue;
+          // Pick the OUTERMOST wrapper that exists solely for this image —
+          // typically <a><img></a> or <figure><img></figure>.
+          let moveNode = imgNode;
+          const $img = $(imgNode);
+          let $cur = $img;
+          for (let depth = 0; depth < 3; depth++) {
+            const $p = $cur.parent();
+            if (!$p.length) break;
+            const pTag = ($p.get(0).name || '').toLowerCase();
+            if (pTag !== 'a' && pTag !== 'figure' && pTag !== 'picture') break;
+            // wrapper must hold ONLY this image (and at most a <figcaption>
+            // in <figure>), otherwise we'd drag unrelated siblings around
+            const sibCount = $p.children().toArray()
+              .filter((c) => c.type === 'tag' && (c.name || '').toLowerCase() !== 'figcaption')
+              .length;
+            if (sibCount > 1) break;
+            moveNode = $p.get(0);
+            $cur = $p;
+          }
+          let targetNode = null;
+          if (!move.atEnd) {
+            if (Number.isInteger(move.beforeSlot) && move.beforeSlot >= 1) {
+              targetNode = $(`[data-ept-slot="${move.beforeSlot}"]`).get(0) || null;
+            }
+            if (!targetNode && move.beforeSelectorPath) {
+              targetNode = $(move.beforeSelectorPath).get(0) || null;
+            }
+          }
+          resolved.push({ moveNode, targetNode, atEnd: !!move.atEnd || !targetNode, num: move.num });
+        }
+        // Pass 2: actually move. Order doesn't matter because we hold node
+        // refs — but DOM-order (ascending num) is the natural fit.
+        for (const r of resolved) {
+          if (r.atEnd || !r.targetNode) {
+            if (scopeNode) {
+              $(scopeNode).append(r.moveNode);
+              movedPhotos++;
+            }
+            continue;
+          }
+          $(r.targetNode).before(r.moveNode);
+          movedPhotos++;
+        }
+      }
+    }
+
+    fs.writeFileSync(indexPath, $.html(), 'utf-8');
+    logActivity(sid, 'apply-photo-markers', { slots, count: slots.length, imagesCloned, movedPhotos });
+    res.json({ ok: true, applied: slots.length, imagesCloned, movedPhotos });
+  } catch (e) {
+    console.error('[apply-photo-markers]', e);
+    res.status(500).json({ error: e.message || 'WebP / write failed' });
+  }
+});
+
+// ─── POST /:id/apply-video-markers — VIDEO N → scoped video[N-1], replace file ─
+router.post('/:sessionId/apply-video-markers', uploadOrJsonError(upload.array('video', 24)), async (req, res) => {
+  const sid = req.params.sessionId;
+  const indexPath = getIndexPath(sid);
+  if (!indexPath) return res.status(404).json({ error: 'not found' });
+
+  let slots;
+  try {
+    slots = JSON.parse(req.body.slots || '[]');
+  } catch {
+    return res.status(400).json({ error: 'slots must be JSON array of numbers, e.g. [1,2]' });
+  }
+  if (!Array.isArray(slots) || !slots.length) {
+    return res.status(400).json({ error: 'slots required' });
+  }
+  const files = req.files || [];
+  if (files.length !== slots.length) {
+    return res.status(400).json({
+      error: `Video upload mismatch: ${slots.length} slot(s) selected (VIDEO ${slots.join(', ')}) but server received ${files.length} file(s). Likely a file was cleared in the picker, or a single file was over 100 MB.`,
+      slotsExpected: slots.length,
+      filesReceived: files.length,
+    });
+  }
+
+  const sessionDir = getSessionDir(sid);
+  const videoDir = path.join(sessionDir, 'video');
+  fs.mkdirSync(videoDir, { recursive: true });
+
+  const $ = cheerio.load(fs.readFileSync(indexPath, 'utf-8'), { decodeEntities: false });
+  const scopeSelV = typeof req.body?.scopeSelector === 'string' && req.body.scopeSelector.trim() ? req.body.scopeSelector.trim() : null;
+  let vids = getScopedVideos($, scopeSelV);
+  if (!vids.length) {
+    return res.status(400).json({ error: 'No videos found in content scope' });
+  }
+
+  for (let i = 0; i < slots.length; i++) {
+    const slot = Number(slots[i]);
+    if (!Number.isInteger(slot) || slot < 1) {
+      return res.status(400).json({ error: `Invalid slot: ${slots[i]}` });
+    }
+  }
+
+  // Auto-clone last <video> when VIDEO N markers exceed available videos in
+  // scope. Cloned <video> keeps wrapper/class/style; src + <source> children
+  // are stripped (set fresh below).
+  const maxSlotV = Math.max(...slots.map((s) => Number(s)));
+  let videosCloned = 0;
+  if (maxSlotV > vids.length) {
+    const { node: scopeNode } = resolveScope($, scopeSelV);
+    const deficit = maxSlotV - vids.length;
+    const inserted = extendMediaInScope($, scopeNode, 'video', deficit, (node) => buildEptPathCheerio(node));
+    videosCloned = inserted.length;
+    if (videosCloned < deficit) {
+      return res.status(400).json({
+        error: `VIDEO ${maxSlotV}: scope has only ${vids.length} video(s) and no template <video> to clone — pick a scope that contains at least one video.`,
+      });
+    }
+    vids = getScopedVideos($, scopeSelV);
+  }
+
+  try {
+    for (let i = 0; i < slots.length; i++) {
+      const slot = Number(slots[i]);
+      const vidIdx = slot - 1;
+      const meta = vids[vidIdx];
+      if (!meta) {
+        return res.status(400).json({ error: `VIDEO ${slot}: video slot missing after auto-clone (have ${vids.length})` });
+      }
+      const origName = files[i].originalname || `upload-${i}.mp4`;
+      let ext = path.extname(origName);
+      if (!ext || !/^\.[a-z0-9]{1,8}$/i.test(ext)) ext = '.mp4';
+      const fileName = `ept-${Date.now()}-${i}-slot${slot}${ext}`;
+      const relPath = `video/${fileName}`;
+      const destAbs = path.join(sessionDir, relPath);
+      fs.writeFileSync(destAbs, files[i].buffer);
+
+      const el = $(meta.selectorPath);
+      if (!el.length) {
+        return res.status(500).json({ error: `Selector failed for VIDEO ${slot}` });
+      }
+      const $v = el;
+      const $sources = $v.find('source');
+      if ($sources.length) {
+        $sources.first().attr('src', relPath);
+        $v.removeAttr('src');
+      } else {
+        $v.attr('src', relPath);
+      }
+      $v.attr('controls', '');
+    }
+
+    // Reposition each <video> to match the brief's order. Same two-pass
+    // resolve-then-move dance as apply-photo-markers — see comment there.
+    let movedVideos = 0;
+    if (req.body.videoMoves) {
+      let moves = req.body.videoMoves;
+      if (typeof moves === 'string') {
+        try { moves = JSON.parse(moves); } catch { moves = []; }
+      }
+      if (Array.isArray(moves)) {
+        const scopeNode = resolveScope($, scopeSelV).node;
+        const resolved = [];
+        for (const move of moves) {
+          if (!move || !Number.isInteger(move.num) || move.num < 1) continue;
+          const meta = vids[move.num - 1];
+          if (!meta) continue;
+          const node = $(meta.selectorPath).get(0);
+          if (!node) continue;
+          let targetNode = null;
+          if (!move.atEnd) {
+            if (Number.isInteger(move.beforeSlot) && move.beforeSlot >= 1) {
+              targetNode = $(`[data-ept-slot="${move.beforeSlot}"]`).get(0) || null;
+            }
+            if (!targetNode && move.beforeSelectorPath) {
+              targetNode = $(move.beforeSelectorPath).get(0) || null;
+            }
+          }
+          resolved.push({ moveNode: node, targetNode, atEnd: !!move.atEnd || !targetNode, num: move.num });
+        }
+        for (const r of resolved) {
+          if (r.atEnd || !r.targetNode) {
+            if (scopeNode) {
+              $(scopeNode).append(r.moveNode);
+              movedVideos++;
+            }
+            continue;
+          }
+          $(r.targetNode).before(r.moveNode);
+          movedVideos++;
+        }
+      }
+    }
+
+    fs.writeFileSync(indexPath, $.html(), 'utf-8');
+    logActivity(sid, 'apply-video-markers', { slots, count: slots.length, videosCloned, movedVideos });
+    res.json({ ok: true, applied: slots.length, videosCloned, movedVideos });
+  } catch (e) {
+    console.error('[apply-video-markers]', e);
+    res.status(500).json({ error: e.message || 'Video write failed' });
+  }
+});
+
+router.post('/:sessionId/xai-apply', (req, res) => {
+  const {
+    replacements,
+    usageSnapshot,
+    scopeSelector,
+    placeholderInsertions,
+    slotExtensionPlan,
+    mediaTrim,
+  } = req.body || {};
+  if (!Array.isArray(replacements) || !replacements.length) {
+    return res.status(400).json({ error: 'replacements array required' });
   }
 
   const sid = req.params.sessionId;
@@ -577,18 +1415,224 @@ router.post('/:sessionId/bulk-replace', (req, res) => {
   if (!indexPath) return res.status(404).json({ error: 'not found' });
 
   const $ = cheerio.load(fs.readFileSync(indexPath, 'utf-8'), { decodeEntities: false });
-  let applied = 0;
+  const sel = typeof scopeSelector === 'string' && scopeSelector.trim() ? scopeSelector.trim() : null;
 
-  for (const { idx, text } of replacements) {
-    if (typeof text !== 'string') continue;
+  // Re-apply the same slot-extension plan that xai-suggest used in-memory, so
+  // the idx values returned by the suggest step still address the right DOM
+  // positions. The plan is deterministic (descending sourceIdx + cheerio
+  // .clone/.after) so suggest-time and apply-time DOMs match.
+  let slotsCloned = 0;
+  if (Array.isArray(slotExtensionPlan) && slotExtensionPlan.length) {
+    slotsCloned = applySlotExtensionPlan($, slotExtensionPlan, EDITABLE_SEL);
+  }
+
+  // Use post-extension scope listing so cloned slots count toward allowedIdx.
+  const { scopeLabel, elements } = slotsCloned > 0
+    ? listScopedEditablesPostExtension($, EDITABLE_SEL, sel)
+    : getContentScopedEditables($, EDITABLE_SEL, sel);
+  const allowedIdx = new Set(elements.map(e => e.idx));
+  const normalized = normalizeReplacements(replacements, allowedIdx);
+  if (!normalized.length) {
+    return res.status(400).json({ error: 'No valid replacements for current content scope' });
+  }
+
+  // Apply replacements. Empty text == "delete this slot from the article"
+  // (compact bulk-replace semantics — operator opted out of the default
+  // keep-original behaviour in xai-suggest).
+  //
+  // CRITICAL: process in DESCENDING idx order so that .remove() on a later
+  // slot doesn't shift the global EDITABLE_SEL indices of earlier slots.
+  // Replacements operate on $(EDITABLE_SEL).eq(idx); removing idx N only
+  // affects positions > N in the live cheerio collection.
+  let applied = 0;
+  let removed = 0;
+  let skippedNoop = 0;
+  let tagSwaps = 0;
+
+  // replacements carry: replaceTag (heading→paragraph demotion) and `slot`
+  // (1-based slot number from xai-suggest's LLM plan). We stamp `slot` on
+  // the surviving element so apply-photo-markers can resolve photo
+  // anchors via [data-ept-slot="N"], surviving deletions / DOM shifts.
+  const tagSwapByIdx = new Map();
+  const slotNumByIdx = new Map();
+  for (const r of (Array.isArray(replacements) ? replacements : [])) {
+    if (!r || !Number.isInteger(Number(r.idx))) continue;
+    const idxNum = Number(r.idx);
+    if (typeof r.replaceTag === 'string') {
+      tagSwapByIdx.set(idxNum, String(r.replaceTag).toLowerCase());
+    }
+    if (Number.isInteger(Number(r.slot)) && Number(r.slot) >= 1) {
+      slotNumByIdx.set(idxNum, Number(r.slot));
+    }
+  }
+
+  const sortedNormalized = [...normalized].sort((a, b) => Number(b.idx) - Number(a.idx));
+  for (const { idx, text } of sortedNormalized) {
     const el = $(EDITABLE_SEL).eq(Number(idx));
-    if (el.length) { setTextPreserveMarkup($, el, text); applied++; }
+    if (!el.length) continue;
+    const isEmpty = typeof text !== 'string' || text.trim() === '';
+    const slotNum = slotNumByIdx.get(Number(idx));
+    if (isEmpty) {
+      const parent = el.parent();
+      if (
+        parent.length
+        && parent.children().length === 1
+        && parent.attr('data-ept-cloned') === '1'
+      ) {
+        parent.remove();
+      } else {
+        el.remove();
+      }
+      removed++;
+    } else {
+      const wantTag = tagSwapByIdx.get(Number(idx));
+      const currentTag = (el.get(0)?.name || '').toLowerCase();
+      if (wantTag && wantTag !== currentTag) {
+        const safe = escapeHtmlText(text).replace(/\n/g, '<br>');
+        const slotAttr = slotNum ? ` data-ept-slot="${slotNum}"` : '';
+        el.replaceWith(`<${wantTag}${slotAttr}>${safe}</${wantTag}>`);
+        tagSwaps++;
+        applied++;
+        continue;
+      }
+
+      const existingText = el.text().trim();
+      const incomingText = text.trim();
+      if (existingText && existingText === incomingText) {
+        if (slotNum) el.attr('data-ept-slot', String(slotNum));
+        skippedNoop++;
+        continue;
+      }
+      setTextPreserveMarkup($, el, text);
+      if (slotNum) el.attr('data-ept-slot', String(slotNum));
+      applied++;
+    }
+  }
+
+  // Lead-capture widget heading (#form-feedback-title) is inside <article>
+  // but excluded from editable slots — strict pour never overwrites it, so
+  // the old locale (e.g. "Regístrese ahora") survives. Clear when this apply
+  // run included mediaTrim (strict article replace flow).
+  let formTitlesCleared = 0;
+  if (mediaTrim && typeof mediaTrim === 'object') {
+    const { node: scopeAfter } = resolveScope($, sel);
+    if (scopeAfter) {
+      $(scopeAfter).find('#form-feedback-title, h2.form-feedback-title').each((_i, n) => {
+        if ($(n).text().trim()) {
+          $(n).empty();
+          formTitlesCleared++;
+        }
+      });
+    }
+  }
+
+  // Trim media that the brief doesn't account for. The strict-pour contract
+  // is "the brief is the only source of truth": if the operator pasted N
+  // ФОТО markers, only N images stay in scope. Anything beyond that — and
+  // any leftover <video> beyond videoCount — is removed.
+  //
+  // If photoCount/videoCount > current count, apply-photo-markers will clone
+  // the missing ones later; we never delete a slot it would need to clone.
+  // mediaTrim is OPTIONAL (older clients omit it) — when missing, no media
+  // changes happen here.
+  let trimmedImages = 0;
+  let trimmedVideos = 0;
+  if (mediaTrim && typeof mediaTrim === 'object') {
+    const photoCount = Number.isInteger(mediaTrim.photoCount) ? mediaTrim.photoCount : null;
+    const videoCount = Number.isInteger(mediaTrim.videoCount) ? mediaTrim.videoCount : null;
+
+    if (photoCount !== null) {
+      const imgs = getScopedImages($, sel);
+      const survivors = Math.max(photoCount, imgs.length); // never delete what'll be cloned later
+      // Sanity: keep first `photoCount`, remove anything beyond, but only when
+      // there ARE images to remove (don't touch when photoCount >= imgs.length).
+      if (photoCount < imgs.length) {
+        for (let i = imgs.length - 1; i >= photoCount; i--) {
+          const node = $(imgs[i].selectorPath).get(0);
+          if (!node) continue;
+          const $node = $(node);
+          // Drop the <a> wrapper if it exists ONLY to hold this <img>.
+          const parent = $node.parent();
+          if (
+            parent.length
+            && (parent.get(0).name || '').toLowerCase() === 'a'
+            && parent.children().length === 1
+          ) {
+            parent.remove();
+          } else {
+            $node.remove();
+          }
+          trimmedImages++;
+        }
+      }
+      // survivors variable kept as documentation; not used further
+      void survivors;
+    }
+
+    if (videoCount !== null) {
+      const vids = getScopedVideos($, sel);
+      if (videoCount < vids.length) {
+        for (let i = vids.length - 1; i >= videoCount; i--) {
+          const node = $(vids[i].selectorPath).get(0);
+          if (!node) continue;
+          $(node).remove();
+          trimmedVideos++;
+        }
+      }
+    }
+  }
+
+  // Append a placeholder <p>ФОРМА РЕГИСТРАЦИИ</p> only when the scope has no
+  // real <form> / lead-capture widget. Server re-checks state to avoid duplicates.
+  let placeholdersInserted = 0;
+  if (placeholderInsertions && typeof placeholderInsertions === 'object') {
+    const { node: scopeNode } = resolveScope($, sel);
+    const $scope = scopeNode ? $(scopeNode) : $('body').first();
+    const formScopeHasIt = hasFormInScope($, sel);
+    const wantForm = !!placeholderInsertions.needsFormParagraph && !formScopeHasIt;
+
+    if (wantForm) {
+      const txt = String(placeholderInsertions.formText || 'ФОРМА РЕГИСТРАЦИИ').slice(0, 200);
+      $scope.append(`<p data-ept-placeholder="form">${escapeHtmlText(txt)}</p>`);
+      placeholdersInserted++;
+    }
   }
 
   fs.writeFileSync(indexPath, $.html(), 'utf-8');
-  logActivity(sid, 'bulk-replace', { applied });
-  res.json({ ok: true, applied });
+  logActivity(sid, 'xai-apply', {
+    applied,
+    removed,
+    skippedNoop,
+    scopeLabel,
+    placeholdersInserted,
+    slotsCloned,
+    trimmedImages,
+    trimmedVideos,
+    tagSwaps,
+    formTitlesCleared,
+    ...(usageSnapshot && typeof usageSnapshot === 'object' ? { xai_usage: usageSnapshot } : {}),
+  });
+  res.json({
+    ok: true,
+    applied,
+    removed,
+    skippedNoop,
+    scopeLabel,
+    placeholdersInserted,
+    slotsCloned,
+    trimmedImages,
+    trimmedVideos,
+    tagSwaps,
+    formTitlesCleared,
+  });
 });
+
+function escapeHtmlText(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
 // ─── GET /:id/images ──────────────────────────────────────────────────────────
 router.get('/:sessionId/images', (req, res) => {
@@ -613,7 +1657,7 @@ router.get('/:sessionId/images', (req, res) => {
 });
 
 // ─── POST /:id/replace-image ──────────────────────────────────────────────────
-router.post('/:sessionId/replace-image', upload.single('file'), (req, res) => {
+router.post('/:sessionId/replace-image', uploadOrJsonError(upload.single('file')), (req, res) => {
   const { name, src, selectorPath } = req.body;
   if (!name || !req.file) return res.status(400).json({ error: 'name and file required' });
 

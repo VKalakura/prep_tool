@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import MonacoEditor from '@monaco-editor/react';
 import { emmetHTML, emmetCSS, emmetJSX } from 'emmet-monaco-es';
 import {
-  getEditableElements, saveText, saveSpacing, bulkReplace,
+  getEditableElements, saveText, saveSpacing, xaiSuggest, xaiApply, applyPhotoMarkers, applyVideoMarkers, detectScope,
   getImages, replaceImage, compressImage, compressAll, replaceVideo, formatSnippet,
   insertAfter, deleteElement, deleteBySelector, undoDelete, insertWidget, getWidgets,
   getDevFile, saveDevFile, getDevState,
@@ -96,7 +96,7 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
   const [canUndo, setCanUndo] = useState(false);
   const [spacing, setSpacing] = useState(null); // { margin:{top,right,bottom,left}, padding:{...} } in px numbers
   const [spacingSaving, setSpacingSaving] = useState(false);
-  const [previewMode, setPreviewMode] = useState('desktop'); // 'responsive' | 'desktop' | 'mobile'
+  const [previewMode, setPreviewMode] = useState('responsive'); // 'responsive' | 'desktop' | 'mobile'
   const [previewSize, setPreviewSize] = useState({ w: 0, h: 0 });
   const iframeWrapRef = useRef(null);
   const DESKTOP_W = 1280;
@@ -465,17 +465,46 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
     }
   };
 
+  const drawerOpen = Boolean(pendingDelete || selected);
+
+  const closeEditorDrawer = () => {
+    if (pendingDelete) {
+      setPendingDelete(null);
+      return;
+    }
+    handleDeselect();
+  };
+
+  let drawerTitle = 'Edit';
+  if (pendingDelete) drawerTitle = 'Delete block';
+  else if (selected?._img) drawerTitle = 'Image';
+  else if (selected?._video) drawerTitle = 'Video';
+  else if (selected) drawerTitle = `Text · <${selected.tag}>`;
+
   return (
     <>
-    <div className="text-editor-layout">
-      {/* Left: iframe preview */}
-      <div className="text-editor-preview">
+    <div className={`text-editor-layout text-editor-layout--dashboard${drawerOpen ? ' text-editor-layout--drawer-open' : ''}`}>
+      <div className="text-editor-preview text-editor-preview--solo">
         <div className="text-editor-preview__bar">
-          {deletePickMode
-            ? <span className="text-editor-preview__hint" style={{ color: '#ef4444' }}>🗑 Click → selects block · Dbl-click → exact element · Hidden shown in orange</span>
-            : <span className="text-editor-preview__hint">Click text to edit · Click image or video to replace</span>
-          }
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="text-editor-preview__bar-main">
+            {deletePickMode ? (
+              <span className="text-editor-preview__hint" style={{ color: '#ef4444' }}>
+                🗑 Click → block · Dbl-click → exact element · Hidden = orange outline
+              </span>
+            ) : (
+              <span className="text-editor-preview__hint">Click text, image, or video in the preview</span>
+            )}
+            {!drawerOpen && !deletePickMode && (
+              <span className="text-editor-preview__subhint">— editor slides in from the right when you select something</span>
+            )}
+            {!drawerOpen && deletePickMode && (
+              <span className="text-editor-preview__subhint">— pick an element in the preview; the delete panel opens here</span>
+            )}
+          </div>
+          <div className="text-editor-preview__bar-actions">
+            {savedCount > 0 && (
+              <span className="badge badge--green" style={{ marginRight: 4 }} title="Saves in this session">✓ {savedCount}</span>
+            )}
             {canUndo && (
               <button className="btn btn--sm" onClick={handleUndo} title="Undo last delete">↩ Undo</button>
             )}
@@ -527,19 +556,20 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
         </div>
       </div>
 
-      {/* Right: edit panel */}
-      <div className="text-editor-panel">
-        <div className="text-editor-panel__header">
-          <h3>Edit Element</h3>
-          {savedCount > 0 && <span className="badge badge--green">✓ {savedCount} saved</span>}
-        </div>
-
+      {drawerOpen && (
+        <>
+          <button type="button" className="text-editor-drawer-backdrop" aria-label="Close panel" onClick={closeEditorDrawer} />
+          <aside className="text-editor-drawer" role="dialog" aria-modal="true" aria-labelledby="text-editor-drawer-title">
+            <div className="text-editor-drawer__header">
+              <h3 id="text-editor-drawer-title" className="text-editor-drawer__title">{drawerTitle}</h3>
+              <button type="button" className="btn btn--sm" onClick={closeEditorDrawer} aria-label="Close">✕</button>
+            </div>
+            <div className="text-editor-drawer__body">
         {pendingDelete ? (
           <div className="text-editor-form">
             <div className="text-editor-tag">
-              <span className="badge badge--red">Delete</span>
+              <span className="badge badge--red">Target</span>
               <code style={{ fontSize: 11, color: 'var(--text-muted)' }}>{pendingDelete.label}</code>
-              <button className="btn btn--sm" style={{ marginLeft: 'auto' }} onClick={() => { setPendingDelete(null); }}>✕</button>
             </div>
             {pendingDelete.ancestors && pendingDelete.ancestors.length > 0 && (
               <div style={{ margin: '8px 0 4px' }}>
@@ -578,32 +608,11 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
               Click another element in the preview to change selection.
             </p>
           </div>
-        ) : !selected ? (
-          <div className="text-editor-empty">
-            {deletePickMode ? (
-              <>
-                <div className="text-editor-empty__icon">🗑</div>
-                <p style={{ color: '#ef4444' }}>Hover over any element and click to delete it.</p>
-                <p style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>
-                  Works on any DOM element — sections, divs, images, buttons…
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="text-editor-empty__icon">👆</div>
-                <p>Click on any text or image in the preview.</p>
-                <p style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>
-                  Headings, paragraphs, buttons, links are editable. Images can be replaced.
-                </p>
-              </>
-            )}
-          </div>
         ) : selected._img ? (
           <div className="text-editor-form">
             <div className="text-editor-tag">
               <span className="badge" style={{ background: 'var(--warning)', color: '#fff' }}>img</span>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={selected.name}>{selected.name}</span>
-              <button className="btn btn--sm" style={{ marginLeft: 'auto' }} onClick={handleDeselect}>✕</button>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={selected.name}>{selected.name}</span>
             </div>
             <div className="text-editor-img-preview">
               <img
@@ -645,8 +654,7 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
           <div className="text-editor-form">
             <div className="text-editor-tag">
               <span className="badge" style={{ background: '#16a34a', color: '#fff' }}>video</span>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={selected.name}>{selected.name}</span>
-              <button className="btn btn--sm" style={{ marginLeft: 'auto' }} onClick={handleDeselect}>✕</button>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={selected.name}>{selected.name}</span>
             </div>
             <div className="text-editor-img-preview" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 80, background: '#0d0f18', borderRadius: 6 }}>
               {selected.poster ? (
@@ -695,8 +703,7 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
           <div className="text-editor-form">
             <div className="text-editor-tag">
               <span className="badge badge--blue">&lt;{selected.tag}&gt;</span>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>element #{selected.idx}</span>
-              <button className="btn btn--sm" style={{ marginLeft: 'auto' }} onClick={handleDeselect}>✕</button>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>#{selected.idx}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Inner HTML — tags preserved</span>
@@ -796,7 +803,10 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
             </div>
           </div>
         )}
-      </div>
+            </div>
+          </aside>
+        </>
+      )}
     </div>
 
     {/* Element / Widget picker modal */}
@@ -903,115 +913,893 @@ function TextEditorTab({ sessionId, onError, externalReloadKey }) {
   );
 }
 
-// ─── Bulk Text Replace ────────────────────────────────────────────────────────
-function BulkReplaceTab({ sessionId, onError }) {
-  const [elements, setElements] = useState([]);
-  const [rawText, setRawText] = useState('');
-  const [blocks, setBlocks] = useState([]);
-  const [mappings, setMappings] = useState([]); // [{idx, oldText, newText}]
-  const [loading, setLoading] = useState(true);
+// ─── Paste-and-replace content rewrite (deterministic 1:1, no AI) ────────────
+
+function XaiContentTab({ sessionId, onError }) {
+  const [brief, setBrief] = useState('');
+  const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState(false);
-  const [applied, setApplied] = useState(0);
-  const fileRef = useRef(null);
+  const [scopeLabel, setScopeLabel] = useState('');
+  const [scopedCount, setScopedCount] = useState(0);
+  const [scopeSelectorPath, setScopeSelectorPath] = useState('');
+  const [scopeUsedCustom, setScopeUsedCustom] = useState(false);
+  const [customScope, setCustomScope] = useState('');
+  const [scopePreview, setScopePreview] = useState(null);
+  const [scopeBusy, setScopeBusy] = useState(false);
+  const [scopePickerOpen, setScopePickerOpen] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [applied, setApplied] = useState(null);
+  const [removed, setRemoved] = useState(0);
+  const [photoMarkers, setPhotoMarkers] = useState([]);
+  const [videoMarkers, setVideoMarkers] = useState([]);
+  const [scopedImageCount, setScopedImageCount] = useState(0);
+  const [scopedImagesPreview, setScopedImagesPreview] = useState([]);
+  const [scopedVideoCount, setScopedVideoCount] = useState(0);
+  const [scopedVideosPreview, setScopedVideosPreview] = useState([]);
+  const [mediaModalOpen, setMediaModalOpen] = useState(false);
+  const [photoFiles, setPhotoFiles] = useState([]);
+  const [videoFiles, setVideoFiles] = useState([]);
+  const [pendingReplacements, setPendingReplacements] = useState(null);
+  const [progressMessage, setProgressMessage] = useState('');
+  const [placeholderInfo, setPlaceholderInfo] = useState(null);
+  const [blocksCount, setBlocksCount] = useState(0);
+  const [slotsCloned, setSlotsCloned] = useState(0);
+  const [slotExtensionPlan, setSlotExtensionPlan] = useState([]);
+  const [photoMoves, setPhotoMoves] = useState([]);
+  const [videoMoves, setVideoMoves] = useState([]);
+  const [mediaTrim, setMediaTrim] = useState(null);
+  const [deletedCount, setDeletedCount] = useState(0);
+  const [tagSwapsCount, setTagSwapsCount] = useState(0);
+  const [aiUsage, setAiUsage] = useState(null);
+  const [aiModel, setAiModel] = useState('');
 
-  useEffect(() => {
+  const clearProgress = () => setProgressMessage('');
+
+  const handleSuggest = async () => {
+    const b = brief.trim();
+    if (!b) {
+      onError('Paste the new article (or additions) into the box above.');
+      return;
+    }
     setLoading(true);
-    getEditableElements(sessionId)
-      .then(res => setElements(res.data.elements))
-      .catch(err => onError(err.response?.data?.error || 'Failed to load elements'))
-      .finally(() => setLoading(false));
-  }, [sessionId]);
-
-  const parseBlocks = useCallback((text) => {
-    return text.split(/\n{2,}/).map(b => b.replace(/\n/g, ' ').trim()).filter(Boolean);
-  }, []);
-
-  const handleTextChange = (val) => {
-    setRawText(val);
-    const parsed = parseBlocks(val);
-    setBlocks(parsed);
-    // Build mappings: block[i] → element[i]
-    const maps = parsed.map((block, i) => ({
-      idx: elements[i]?.idx,
-      tag: elements[i]?.tag,
-      oldText: elements[i]?.text || '',
-      newText: block,
-    })).filter(m => m.idx !== undefined);
-    setMappings(maps);
-  };
-
-  const handleFile = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => handleTextChange(ev.target.result);
-    reader.readAsText(file);
-  };
-
-  const handleApply = async () => {
-    if (!mappings.length) return;
-    setApplying(true);
+    setApplied(null);
+    setRemoved(0);
+    setRows([]);
+    setPhotoMarkers([]);
+    setVideoMarkers([]);
+    setScopedImageCount(0);
+    setScopedImagesPreview([]);
+    setScopedVideoCount(0);
+    setScopedVideosPreview([]);
+    setPhotoFiles([]);
+    setVideoFiles([]);
+    setMediaModalOpen(false);
+    setPendingReplacements(null);
+    setPlaceholderInfo(null);
+    setBlocksCount(0);
+    setSlotsCloned(0);
+    setSlotExtensionPlan([]);
+    setPhotoMoves([]);
+    setVideoMoves([]);
+    setMediaTrim(null);
+    setDeletedCount(0);
+    setProgressMessage('Sending to Grok → it places paragraphs, photos and tags…');
     try {
-      const res = await bulkReplace(sessionId, mappings.map(m => ({ idx: m.idx, text: m.newText })));
-      setApplied(res.data.applied);
+      const res = await xaiSuggest(sessionId, {
+        brief: b,
+        scopeSelector: customScope.trim() || undefined,
+      });
+      setScopeLabel(res.data.scopeLabel || '');
+      setScopeSelectorPath(res.data.scopeSelectorPath || '');
+      setScopeUsedCustom(!!res.data.scopeUsedCustom);
+      setScopedCount(res.data.scopedBlockCount ?? 0);
+      const pr = res.data.previewRows || [];
+      // Strict-pour: every row is either filled with a brief paragraph OR
+      // marked for deletion (text===''). Both are checked by default — the
+      // operator's brief is the only source of truth in the picked zone.
+      setRows(pr.map((r) => ({ ...r, checked: true })));
+      const pm = res.data.photoMarkers || [];
+      const vm = res.data.videoMarkers || [];
+      setPhotoMarkers(pm);
+      setVideoMarkers(vm);
+      setScopedImageCount(res.data.scopedImageCount ?? 0);
+      setScopedImagesPreview(res.data.scopedImagesPreview || []);
+      setScopedVideoCount(res.data.scopedVideoCount ?? 0);
+      setScopedVideosPreview(res.data.scopedVideosPreview || []);
+      setPlaceholderInfo(res.data.placeholderInfo || null);
+      setBlocksCount(res.data.blocksCount || 0);
+      setSlotsCloned(res.data.slotsCloned || 0);
+      setSlotExtensionPlan(res.data.slotExtensionPlan || []);
+      setPhotoMoves(res.data.photoMoves || []);
+      setVideoMoves(res.data.videoMoves || []);
+      setMediaTrim(res.data.mediaTrim || null);
+      setDeletedCount(res.data.deletedCount || 0);
+      setTagSwapsCount(res.data.tagSwaps || 0);
+      setAiUsage(res.data.aiUsage || null);
+      setAiModel(res.data.aiModel || '');
+      const sortedPm = [...pm].sort((a, b) => a.num - b.num);
+      const sortedVm = [...vm].sort((a, b) => a.num - b.num);
+      setPhotoFiles(sortedPm.length ? Array(sortedPm.length).fill(null) : []);
+      setVideoFiles(sortedVm.length ? Array(sortedVm.length).fill(null) : []);
     } catch (err) {
-      onError(err.response?.data?.error || 'Bulk replace failed');
+      onError(err.response?.data?.error || err.response?.data?.detail || err.message || 'Rewrite failed');
     } finally {
-      setApplying(false);
+      setLoading(false);
+      clearProgress();
     }
   };
 
-  if (loading) return <div className="loading-state"><div className="spinner" /> Loading elements…</div>;
+  const applyTextOnly = async (replacements) => {
+    const insertions = placeholderInfo && placeholderInfo.needsFormParagraph
+      ? {
+          needsFormParagraph: true,
+          formText: placeholderInfo.formText,
+        }
+      : undefined;
+    const res = await xaiApply(
+      sessionId,
+      replacements,
+      null,
+      customScope.trim() || undefined,
+      insertions,
+      slotExtensionPlan && slotExtensionPlan.length ? slotExtensionPlan : undefined,
+      mediaTrim || undefined,
+    );
+    setApplied(res.data.applied);
+    setRemoved(res.data.removed || 0);
+  };
+
+  const handleDetectScope = async () => {
+    setScopeBusy(true);
+    setScopePreview(null);
+    try {
+      const res = await detectScope(sessionId, customScope.trim() || undefined);
+      setScopePreview(res.data);
+    } catch (err) {
+      onError(err.response?.data?.error || err.message || 'Scope detect failed');
+    } finally {
+      setScopeBusy(false);
+    }
+  };
+
+  const handleResetScope = () => {
+    setCustomScope('');
+    setScopePreview(null);
+  };
+
+  const handleApply = async () => {
+    const replacements = rows.filter((r) => r.checked).map((r) => ({
+      idx: r.idx,
+      text: r.newText,
+      ...(r.slot ? { slot: r.slot } : {}),
+      ...(r.replaceTag ? { replaceTag: r.replaceTag } : {}),
+    }));
+    if (!replacements.length) {
+      onError('Select at least one replacement to apply.');
+      return;
+    }
+    const sortedPm = [...photoMarkers].sort((a, b) => a.num - b.num);
+    const sortedVm = [...videoMarkers].sort((a, b) => a.num - b.num);
+    // No hard cap on ФОТО N / VIDEO N versus existing media count — when the
+    // brief asks for more than the scope contains, the server clones the last
+    // <img> / <video> in scope as many times as needed (see extendMediaInScope).
+    // We only need the scope to have AT LEAST ONE element to clone from.
+    if (sortedPm.length > 0 && scopedImageCount === 0) {
+      onError('Brief contains ФОТО markers but no <img> exists in the picked zone — pick a zone that contains at least one image.');
+      return;
+    }
+    if (sortedVm.length > 0 && scopedVideoCount === 0) {
+      onError('Brief contains VIDEO markers but no <video> exists in the picked zone — pick a zone that contains at least one video.');
+      return;
+    }
+    if (sortedPm.length > 0 || sortedVm.length > 0) {
+      setPendingReplacements(replacements);
+      setMediaModalOpen(true);
+      return;
+    }
+    setProgressMessage('Writing text to page (index)…');
+    setApplying(true);
+    try {
+      await applyTextOnly(replacements);
+    } catch (err) {
+      onError(err.response?.data?.error || 'xAI apply failed');
+    } finally {
+      setApplying(false);
+      clearProgress();
+    }
+  };
+
+  const confirmMediaModal = async () => {
+    const sortedPm = [...photoMarkers].sort((a, b) => a.num - b.num);
+    const sortedVm = [...videoMarkers].sort((a, b) => a.num - b.num);
+    if (sortedPm.length > 0) {
+      const missingPhoto = sortedPm
+        .map((m, i) => (photoFiles[i] ? null : m.num))
+        .filter((n) => n != null);
+      if (photoFiles.length < sortedPm.length || missingPhoto.length) {
+        onError(`Photos: pick a file for ФОТО ${missingPhoto.join(', ФОТО ')}.`);
+        return;
+      }
+    }
+    if (sortedVm.length > 0) {
+      const missingVideo = sortedVm
+        .map((m, i) => (videoFiles[i] ? null : m.num))
+        .filter((n) => n != null);
+      if (videoFiles.length < sortedVm.length || missingVideo.length) {
+        onError(`Videos: pick a file for VIDEO ${missingVideo.join(', VIDEO ')}.`);
+        return;
+      }
+    }
+    setApplying(true);
+    const scopeArg = customScope.trim() || undefined;
+    try {
+      // Apply text FIRST — it clones any extra slots, deletes leftover ones,
+      // and trims media counts. Photos / videos are then placed onto the
+      // post-trim DOM with stable nth-child selector paths from photoMoves /
+      // videoMoves (computed against the same in-memory clone state).
+      setProgressMessage('Writing text to page…');
+      await applyTextOnly(pendingReplacements || rows.filter((r) => r.checked).map((r) => ({
+        idx: r.idx,
+        text: r.newText,
+        ...(r.replaceTag ? { replaceTag: r.replaceTag } : {}),
+      })));
+      if (sortedPm.length > 0) {
+        setProgressMessage('Photos → WebP, updating <img>, ordering by brief…');
+        await applyPhotoMarkers(sessionId, sortedPm.map((m) => m.num), photoFiles, scopeArg, photoMoves);
+      }
+      if (sortedVm.length > 0) {
+        setProgressMessage('Videos → file replace, ordering by brief…');
+        await applyVideoMarkers(sessionId, sortedVm.map((m) => m.num), videoFiles, scopeArg, videoMoves);
+      }
+      setMediaModalOpen(false);
+      setPendingReplacements(null);
+    } catch (err) {
+      onError(err.response?.data?.error || err.message || 'Media / text apply failed');
+    } finally {
+      setApplying(false);
+      clearProgress();
+    }
+  };
+
+  const skipMediaOnlyText = async () => {
+    const replacements = pendingReplacements
+      || rows.filter((r) => r.checked).map((r) => ({
+        idx: r.idx,
+        text: r.newText,
+        ...(r.replaceTag ? { replaceTag: r.replaceTag } : {}),
+      }));
+    setProgressMessage('Writing text (media skipped)…');
+    setApplying(true);
+    setMediaModalOpen(false);
+    setPendingReplacements(null);
+    try {
+      await applyTextOnly(replacements);
+    } catch (err) {
+      onError(err.response?.data?.error || 'xAI apply failed');
+    } finally {
+      setApplying(false);
+      clearProgress();
+    }
+  };
+
+  const sortedPhotoMarkers = [...photoMarkers].sort((a, b) => a.num - b.num);
+  const sortedVideoMarkers = [...videoMarkers].sort((a, b) => a.num - b.num);
+  const showProgressOverlay = (loading || applying) && Boolean(progressMessage);
 
   return (
-    <div className="bulk-replace">
-      <div className="bulk-replace__header">
-        <p className="panel__desc">
-          Paste or upload your text. Each paragraph (blank line between) maps to the next editable element sequentially.
-          Offer has <strong>{elements.length}</strong> editable elements.
-        </p>
-      </div>
-
-      <div className="bulk-replace__input-area">
-        <div className="bulk-replace__toolbar">
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Your text</span>
-          <input ref={fileRef} type="file" accept=".txt" style={{ display: 'none' }} onChange={handleFile} />
-          <button className="btn btn--sm" onClick={() => fileRef.current?.click()}>📄 Upload .txt</button>
-          <button className="btn btn--sm" onClick={() => { setRawText(''); setBlocks([]); setMappings([]); }}>Clear</button>
+    <div className="xai-panel">
+      <div className="xai-panel__form">
+        <div className="xai-panel__title-row">
+          <h3 className="xai-panel__title">Paste &amp; place (Grok)</h3>
+          <span className="panel__desc" style={{ fontSize: 12 }}>
+            Paste your article — Grok places it into the picked zone: paragraphs, headings, dialogue, ФОТО N positions, tag swaps and overflow are decided by the model in one call. Your wording is preserved verbatim.
+          </span>
         </div>
         <textarea
-          className="code-editor"
-          style={{ minHeight: 180 }}
-          value={rawText}
-          onChange={e => handleTextChange(e.target.value)}
-          placeholder={'Paragraph 1 (→ 1st editable element)\n\nParagraph 2 (→ 2nd editable element)\n\nParagraph 3 (→ 3rd editable element)'}
+          className="code-editor xai-panel__brief"
+          value={brief}
+          onChange={(e) => setBrief(e.target.value)}
+          placeholder={`Встав текст статті. Абзаци розділяй порожнім рядком. Grok сам розкладе по слотах — текст НЕ переписується, лише розподіляється; теги <h2>/<button>, що отримали діалог, він поміняє на <p>; зайве — видалить, недостатньо — клонує.\n\nФОТО 1, ФОТО 2 … окремим рядком — де стоять у тексті, туди й сядуть фото після Apply.`}
         />
+        <div className="xai-scope-pick">
+          <div className="xai-scope-pick__header">
+            <label className="xai-panel__label" style={{ margin: 0 }}>Edit zone (CSS selector)</label>
+            <span className="xai-scope-pick__hint">Pick the article zone on the live preview, or type a CSS selector. Leaving empty falls back to &lt;body&gt;.</span>
+          </div>
+          <div className="xai-scope-pick__row">
+            <input
+              className="xai-panel__input"
+              value={customScope}
+              onChange={(e) => { setCustomScope(e.target.value); setScopePreview(null); }}
+              placeholder="e.g. main, article, .story-content, #post-123"
+            />
+            <button type="button" className="btn btn--sm" onClick={() => setScopePickerOpen(true)}>
+              Pick on preview
+            </button>
+            <button type="button" className="btn btn--sm" disabled={scopeBusy} onClick={handleDetectScope}>
+              {scopeBusy ? 'Checking…' : 'Check zone'}
+            </button>
+            {customScope ? (
+              <button type="button" className="btn btn--sm" disabled={scopeBusy} onClick={handleResetScope}>
+                Reset
+              </button>
+            ) : null}
+          </div>
+          {scopePreview ? (
+            <div className={`xai-scope-pick__preview ${scopePreview.editableCount ? '' : 'xai-scope-pick__preview--warn'}`}>
+              <div>
+                <strong>{scopePreview.scopeUsedCustom ? 'Custom' : 'Auto'}:</strong> <code>{scopePreview.scopeLabel}</code>
+                <span className="xai-scope-pick__counts">
+                  {' '}— {scopePreview.editableCount} text block(s) · {scopePreview.imageCount} img · {scopePreview.videoCount} video
+                </span>
+              </div>
+              {scopePreview.sampleTexts?.length ? (
+                <ul className="xai-scope-pick__samples">
+                  {scopePreview.sampleTexts.map((s, i) => (
+                    <li key={i}>
+                      <span className="badge badge--blue">&lt;{s.tag}&gt;</span> {s.text}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="xai-scope-pick__warn">No editable blocks found in this zone.</p>
+              )}
+            </div>
+          ) : null}
+        </div>
+        <div className="xai-panel__row xai-panel__row--wrap">
+          <button type="button" className="btn btn--primary btn--lg" disabled={loading} onClick={handleSuggest}>
+            {loading ? 'Mapping…' : 'Generate preview'}
+          </button>
+        </div>
       </div>
 
-      {mappings.length > 0 && (
-        <>
-          <div className="bulk-replace__preview-header">
-            <span style={{ fontSize: 13, fontWeight: 600 }}>Preview — {mappings.length} replacements</span>
+      {scopeLabel && rows.length > 0 && (
+        <div className="xai-usage-card">
+          <p className="xai-scope-hint" style={{ margin: 0 }}>
+            Zone: <strong>{scopeLabel}</strong>{scopeUsedCustom ? ' (custom)' : ' (auto)'}
+            {' · '}{blocksCount} paragraph(s) → {scopedCount} slot(s)
+            {slotsCloned > 0 ? <> · <span style={{ color: '#22c55e' }}>+{slotsCloned} new slot(s) cloned</span></> : null}
+            {deletedCount > 0 ? <> · <span style={{ color: '#f87171' }}>−{deletedCount} leftover slot(s) deleted</span></> : null}
+            {tagSwapsCount > 0 ? <> · <span style={{ color: '#fcd34d' }}>{tagSwapsCount} tag swap(s)</span></> : null}
+            {scopeSelectorPath ? <> · path <code>{scopeSelectorPath.split('>').slice(-3).join('>')}</code></> : null}
+          </p>
+          {aiUsage && (
+            <p className="xai-scope-hint" style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>
+              <span className="badge" style={{ background: '#1e3a8a', color: '#bfdbfe' }}>Grok</span>
+              {' '}{aiModel || aiUsage.model || 'grok'}
+              {' · '}prompt {aiUsage.prompt_tokens ?? 0} + completion {aiUsage.completion_tokens ?? 0} = <strong>{aiUsage.total_tokens ?? 0}</strong> tok
+              {typeof aiUsage.cost_usd === 'number' ? <> · <strong>${aiUsage.cost_usd.toFixed(5)}</strong></> : null}
+            </p>
+          )}
+        </div>
+      )}
+
+      {rows.length > 0 && (
+        <div className="xai-preview">
+          <div className="xai-preview__toolbar">
+            <span className="xai-preview__count">{rows.filter((r) => r.checked).length} / {rows.length} selected</span>
+            <button
+              type="button"
+              className="btn btn--sm"
+              onClick={() => setRows((rs) => rs.map((r) => ({ ...r, checked: true })))}
+            >
+              Select all
+            </button>
+            <button
+              type="button"
+              className="btn btn--sm"
+              onClick={() => setRows((rs) => rs.map((r) => ({ ...r, checked: false })))}
+            >
+              Clear selection
+            </button>
+            <button type="button" className="btn btn--primary btn--lg" disabled={applying} onClick={handleApply}>
+              {applying ? 'Applying…' : 'Apply to page'}
+            </button>
           </div>
-          <div className="bulk-replace__table">
-            {mappings.map((m, i) => (
-              <div key={i} className="bulk-replace__row">
+          {applied != null && (
+            <p className="xai-preview__done">
+              Applied <strong>{applied}</strong> block(s)
+              {removed > 0 && <> · removed <strong>{removed}</strong> stale slot(s)</>}
+              . Reload Live Text preview to see changes.
+            </p>
+          )}
+          {slotsCloned > 0 && (
+            <ul className="xai-preview__notes">
+              <li>
+                <span className="badge" style={{ background: '#064e3b', color: '#a7f3d0' }}>+{slotsCloned}</span>
+                Pasted text was longer than the zone — {slotsCloned} extra slot{slotsCloned === 1 ? '' : 's'} cloned at the end (marked <em>NEW</em>) so every paragraph fits.
+              </li>
+            </ul>
+          )}
+          {deletedCount > 0 && (
+            <ul className="xai-preview__notes">
+              <li>
+                <span className="badge" style={{ background: '#7f1d1d', color: '#fecaca' }}>−{deletedCount}</span>
+                {deletedCount} leftover slot{deletedCount === 1 ? '' : 's'} (heading / button / link / paragraph) {deletedCount === 1 ? 'will be removed' : 'will be removed'} because your pasted text didn't reach {deletedCount === 1 ? 'it' : 'them'}. Untick a row to keep it.
+              </li>
+            </ul>
+          )}
+          {mediaTrim && (mediaTrim.photoCount < scopedImageCount || mediaTrim.videoCount < scopedVideoCount) && (
+            <ul className="xai-preview__notes">
+              <li>
+                <span className="badge" style={{ background: '#7f1d1d', color: '#fecaca' }}>media</span>
+                Brief carries {mediaTrim.photoCount} ФОТО / {mediaTrim.videoCount} VIDEO marker(s); the zone has {scopedImageCount} image(s) / {scopedVideoCount} video(s). Extras{' '}
+                {Math.max(0, scopedImageCount - mediaTrim.photoCount) + Math.max(0, scopedVideoCount - mediaTrim.videoCount)}
+                {' '}will be removed on Apply.
+              </li>
+            </ul>
+          )}
+          {(photoMoves.length > 0 || videoMoves.length > 0) && (
+            <ul className="xai-preview__notes">
+              <li>
+                <span className="badge" style={{ background: '#1e3a8a', color: '#bfdbfe' }}>order</span>
+                Photos / videos will be re-ordered in the DOM to match the position of ФОТО N / VIDEO N in your brief.
+              </li>
+            </ul>
+          )}
+          {placeholderInfo && placeholderInfo.formInBrief && (
+            <ul className="xai-preview__notes">
+              {placeholderInfo.hasForm ? (
+                <li>
+                  <span className="badge badge--green">form</span> ФОРМА РЕГИСТРАЦИИ → page already has a form/lead-capture in scope — kept as-is, marker line skipped.
+                </li>
+              ) : (
+                <li>
+                  <span className="badge badge--blue">form</span> ФОРМА РЕГИСТРАЦИИ → no form found in scope, will be appended as <code>&lt;p&gt;{placeholderInfo.formText}&lt;/p&gt;</code> at the end.
+                </li>
+              )}
+            </ul>
+          )}
+          <div className="xai-preview__table">
+            {rows.map((m, i) => (
+              <div key={i} className="xai-preview__row">
+                <label className="xai-preview__check">
+                  <input
+                    type="checkbox"
+                    checked={m.checked}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      setRows((rs) => rs.map((x, j) => (j === i ? { ...x, checked: on } : x)));
+                    }}
+                  />
+                </label>
                 <span className="badge badge--blue">&lt;{m.tag}&gt;</span>
-                <div className="bulk-replace__old">{m.oldText || <em style={{ color: 'var(--text-muted)' }}>(empty)</em>}</div>
-                <span className="bulk-replace__arrow">→</span>
-                <div className="bulk-replace__new">{m.newText}</div>
+                {m.cloned && <span className="badge badge--green">NEW</span>}
+                {m.deleting && <span className="badge" style={{ background: '#7f1d1d', color: '#fecaca' }}>DELETE</span>}
+                {m.kept && <span className="badge" style={{ background: '#1e3a8a', color: '#bfdbfe' }}>KEEP</span>}
+                <code className="xai-preview__idx">#{m.idx}</code>
+                <div className="xai-preview__old">{m.cloned ? <em style={{ color: 'var(--text-muted)' }}>(cloned slot)</em> : (m.oldText || <em style={{ color: 'var(--text-muted)' }}>(empty)</em>)}</div>
+                <span className="xai-preview__arrow">→</span>
+                <div className="xai-preview__new">
+                  {m.deleting ? (
+                    <em style={{ color: '#fca5a5' }}>(slot removed from page)</em>
+                  ) : m.kept ? (
+                    <em style={{ color: 'var(--text-muted)' }}>(kept — original text untouched)</em>
+                  ) : (
+                    m.newText
+                  )}
+                </div>
               </div>
             ))}
           </div>
-
-          <div className="panel__footer">
-            <button className="btn btn--primary btn--lg" onClick={handleApply} disabled={applying}>
-              {applying ? 'Applying…' : `Apply ${mappings.length} Replacements`}
-            </button>
-            {applied > 0 && <span className="badge badge--green">✓ {applied} replaced</span>}
-          </div>
-        </>
+        </div>
       )}
+
+      {mediaModalOpen && (
+        <div
+          className="picker-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="media-marker-modal-title"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !applying) setMediaModalOpen(false);
+          }}
+        >
+          <div className="photo-marker-modal photo-marker-modal--wide" onMouseDown={(e) => e.stopPropagation()}>
+            <div className="photo-marker-modal__header">
+              <h2 id="media-marker-modal-title" className="photo-marker-modal__title">Photos &amp; videos — upload</h2>
+              <button type="button" className="btn btn--sm" disabled={applying} onClick={() => setMediaModalOpen(false)}>
+                Close
+              </button>
+            </div>
+            <p className="photo-marker-modal__hint">
+              On confirm: images → WebP in <code>img/</code>, videos → file in <code>video/</code>; then text replacements apply. ФОТО N / VIDEO N = N-th element in scope.
+            </p>
+            {sortedPhotoMarkers.length > 0 && (() => {
+              const photosPicked = photoFiles.filter(Boolean).length;
+              const photosTotal = sortedPhotoMarkers.length;
+              const photosComplete = photosPicked === photosTotal;
+              return (
+                <>
+                  <h3 className="photo-marker-modal__section-title">
+                    Photos ({sortedPhotoMarkers.length} slot{sortedPhotoMarkers.length === 1 ? '' : 's'} → {scopedImageCount} img in scope)
+                    <span
+                      className="photo-marker-modal__counter"
+                      style={{
+                        marginLeft: 12,
+                        padding: '2px 10px',
+                        borderRadius: 999,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background: photosComplete ? '#064e3b' : '#7f1d1d',
+                        color: photosComplete ? '#a7f3d0' : '#fecaca',
+                      }}
+                    >
+                      {photosPicked} / {photosTotal} picked
+                    </span>
+                  </h3>
+                  {scopedImagesPreview.length > 0 && (
+                    <div className="photo-marker-modal__preview-strip">
+                      {scopedImagesPreview.slice(0, 12).map((im) => (
+                        <div key={im.index} className="photo-marker-modal__thumb-wrap" title={im.name || im.src}>
+                          <span className="photo-marker-modal__thumb-idx">{im.index + 1}</span>
+                          <img className="photo-marker-modal__thumb" src={im.url} alt="" />
+                        </div>
+                      ))}
+                      {scopedImageCount > 12 ? (
+                        <span className="photo-marker-modal__more">+{scopedImageCount - 12} more</span>
+                      ) : null}
+                    </div>
+                  )}
+                  {/* Bulk pick: pick all photos at once. Files go into slots
+                      in selection order — file 1 → ФОТО 1, file 2 → ФОТО 2.
+                      Any extras beyond slot count are dropped silently. */}
+                  <label
+                    className="photo-marker-modal__bulk"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '12px 14px',
+                      margin: '8px 0 12px',
+                      borderRadius: 8,
+                      border: '1px dashed var(--border-color, #475569)',
+                      background: 'var(--surface-2, rgba(148,163,184,0.08))',
+                      cursor: applying ? 'not-allowed' : 'pointer',
+                      opacity: applying ? 0.6 : 1,
+                    }}
+                  >
+                    <strong style={{ flex: '0 0 auto' }}>Pick all {photosTotal} at once →</strong>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={applying}
+                      onChange={(e) => {
+                        const picked = Array.from(e.target.files || []);
+                        if (!picked.length) return;
+                        setPhotoFiles((prev) => {
+                          const next = [...prev];
+                          for (let k = 0; k < photosTotal && k < picked.length; k++) {
+                            next[k] = picked[k];
+                          }
+                          return next;
+                        });
+                        // Reset input so picking the same files again still
+                        // fires onChange (browsers skip onChange when value is
+                        // unchanged, which traps people who try to "redo" the pick).
+                        e.target.value = '';
+                      }}
+                      style={{ flex: 1 }}
+                    />
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                      maps file 1 → ФОТО 1, file 2 → ФОТО 2…
+                    </span>
+                  </label>
+                  <ul className="photo-marker-modal__slots">
+                    {sortedPhotoMarkers.map((m, i) => {
+                      const file = photoFiles[i];
+                      return (
+                        <li
+                          key={m.num}
+                          className="photo-marker-modal__slot"
+                          style={!file ? { borderLeft: '3px solid #ef4444', paddingLeft: 8 } : undefined}
+                        >
+                          <label className="photo-marker-modal__slot-label">
+                            <span className="photo-marker-modal__slot-name">{m.label || `ФОТО ${m.num}`}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={applying}
+                              onChange={(e) => {
+                                const f = e.target.files?.[0] || null;
+                                // Cancelled picker (no file) MUST NOT clear an
+                                // already-chosen file — otherwise the slot looks
+                                // valid in the modal but the upload silently
+                                // arrives with one fewer file and the server
+                                // rejects the whole batch with "Expected N got M".
+                                if (!f) return;
+                                setPhotoFiles((prev) => {
+                                  const next = [...prev];
+                                  next[i] = f;
+                                  return next;
+                                });
+                                e.target.value = '';
+                              }}
+                            />
+                          </label>
+                          {file ? (
+                            <span className="photo-marker-modal__file-name">{file.name}</span>
+                          ) : (
+                            <span
+                              className="photo-marker-modal__file-name photo-marker-modal__file-name--empty"
+                              style={{ color: '#fca5a5', fontWeight: 600 }}
+                            >
+                              ⚠ MISSING
+                            </span>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              );
+            })()}
+            {sortedVideoMarkers.length > 0 && (() => {
+              const videosPicked = videoFiles.filter(Boolean).length;
+              const videosTotal = sortedVideoMarkers.length;
+              const videosComplete = videosPicked === videosTotal;
+              return (
+                <>
+                  <h3 className="photo-marker-modal__section-title">
+                    Videos ({sortedVideoMarkers.length} slot{sortedVideoMarkers.length === 1 ? '' : 's'} → {scopedVideoCount} &lt;video&gt; in scope)
+                    <span
+                      style={{
+                        marginLeft: 12,
+                        padding: '2px 10px',
+                        borderRadius: 999,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background: videosComplete ? '#064e3b' : '#7f1d1d',
+                        color: videosComplete ? '#a7f3d0' : '#fecaca',
+                      }}
+                    >
+                      {videosPicked} / {videosTotal} picked
+                    </span>
+                  </h3>
+                  {scopedVideosPreview.length > 0 && (
+                    <div className="photo-marker-modal__preview-strip">
+                      {scopedVideosPreview.slice(0, 8).map((v) => (
+                        <div key={v.index} className="photo-marker-modal__thumb-wrap photo-marker-modal__thumb-wrap--video" title={v.srcLabel}>
+                          <span className="photo-marker-modal__thumb-idx">{v.index + 1}</span>
+                          {v.posterUrl ? (
+                            <img className="photo-marker-modal__thumb" src={v.posterUrl} alt="" />
+                          ) : (
+                            <span className="photo-marker-modal__video-fallback">▶</span>
+                          )}
+                        </div>
+                      ))}
+                      {scopedVideoCount > 8 ? (
+                        <span className="photo-marker-modal__more">+{scopedVideoCount - 8}</span>
+                      ) : null}
+                    </div>
+                  )}
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '12px 14px',
+                      margin: '8px 0 12px',
+                      borderRadius: 8,
+                      border: '1px dashed var(--border-color, #475569)',
+                      background: 'var(--surface-2, rgba(148,163,184,0.08))',
+                      cursor: applying ? 'not-allowed' : 'pointer',
+                      opacity: applying ? 0.6 : 1,
+                    }}
+                  >
+                    <strong style={{ flex: '0 0 auto' }}>Pick all {videosTotal} at once →</strong>
+                    <input
+                      type="file"
+                      accept="video/*,.mp4,.webm,.mov"
+                      multiple
+                      disabled={applying}
+                      onChange={(e) => {
+                        const picked = Array.from(e.target.files || []);
+                        if (!picked.length) return;
+                        setVideoFiles((prev) => {
+                          const next = [...prev];
+                          for (let k = 0; k < videosTotal && k < picked.length; k++) {
+                            next[k] = picked[k];
+                          }
+                          return next;
+                        });
+                        e.target.value = '';
+                      }}
+                      style={{ flex: 1 }}
+                    />
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                      maps file 1 → VIDEO 1…
+                    </span>
+                  </label>
+                  <ul className="photo-marker-modal__slots">
+                    {sortedVideoMarkers.map((m, i) => {
+                      const file = videoFiles[i];
+                      return (
+                        <li
+                          key={`v-${m.num}`}
+                          className="photo-marker-modal__slot"
+                          style={!file ? { borderLeft: '3px solid #ef4444', paddingLeft: 8 } : undefined}
+                        >
+                          <label className="photo-marker-modal__slot-label">
+                            <span className="photo-marker-modal__slot-name">{m.label || `VIDEO ${m.num}`}</span>
+                            <input
+                              type="file"
+                              accept="video/*,.mp4,.webm,.mov"
+                              disabled={applying}
+                              onChange={(e) => {
+                                const f = e.target.files?.[0] || null;
+                                if (!f) return;
+                                setVideoFiles((prev) => {
+                                  const next = [...prev];
+                                  next[i] = f;
+                                  return next;
+                                });
+                                e.target.value = '';
+                              }}
+                            />
+                          </label>
+                          {file ? (
+                            <span className="photo-marker-modal__file-name">{file.name}</span>
+                          ) : (
+                            <span
+                              className="photo-marker-modal__file-name photo-marker-modal__file-name--empty"
+                              style={{ color: '#fca5a5', fontWeight: 600 }}
+                            >
+                              ⚠ MISSING
+                            </span>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              );
+            })()}
+            <div className="photo-marker-modal__actions">
+              <button type="button" className="btn btn--sm" disabled={applying} onClick={skipMediaOnlyText}>
+                Skip media — text only
+              </button>
+              <button type="button" className="btn btn--primary" disabled={applying} onClick={confirmMediaModal}>
+                {applying ? 'Saving…' : 'Apply media + text'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {scopePickerOpen && (
+        <ScopePickerModal
+          sessionId={sessionId}
+          onClose={() => setScopePickerOpen(false)}
+          onSelect={(sel) => {
+            setCustomScope(sel);
+            setScopePreview(null);
+            setScopePickerOpen(false);
+          }}
+        />
+      )}
+
+      {showProgressOverlay && (
+        <div className="xai-progress-overlay" role="status" aria-live="polite" aria-busy="true">
+          <div className="xai-progress-card">
+            <span className="spinner" aria-hidden="true" />
+            <p className="xai-progress-card__title">{loading ? 'Mapping paragraphs' : 'Applying'}</p>
+            <p className="xai-progress-card__step">{progressMessage}</p>
+            <div className="xai-progress-bar" aria-hidden="true">
+              <span className="xai-progress-bar__strip" />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Scope picker modal: live preview iframe + click-to-select ────────────────
+function ScopePickerModal({ sessionId, onClose, onSelect }) {
+  const iframeRef = useRef(null);
+  const [picked, setPicked] = useState(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const handler = (e) => {
+      const data = e.data;
+      if (!data || typeof data !== 'object') return;
+      if (data.type !== 'ept-scope-pick') return;
+      setPicked({
+        selector: data.selector,
+        label: data.label,
+        ancestors: Array.isArray(data.ancestors) ? data.ancestors : [],
+      });
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  const sendToFrame = (msg) => {
+    iframeRef.current?.contentWindow?.postMessage(msg, '*');
+  };
+
+  const enablePick = () => sendToFrame({ type: 'ept-pick-mode', active: true, purpose: 'scope' });
+  const highlightInFrame = (sel) => sendToFrame({ type: 'ept-pick-highlight', selector: sel });
+
+  const handleIframeLoad = () => {
+    setReady(true);
+    setTimeout(enablePick, 150);
+  };
+
+  const pickAncestor = (a, i) => {
+    setPicked((prev) => ({ selector: a.selector, label: a.label, ancestors: prev?.ancestors?.slice(i + 1) || [] }));
+    highlightInFrame(a.selector);
+  };
+
+  return (
+    <div
+      className="picker-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Pick edit zone on preview"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="scope-picker-modal" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="scope-picker-modal__header">
+          <h2 className="scope-picker-modal__title">Pick edit zone</h2>
+          <span className="scope-picker-modal__hint">
+            Single-click — nearest semantic / class block · Double-click — exact element under the cursor.
+          </span>
+          <button type="button" className="btn btn--sm" onClick={onClose}>Close</button>
+        </div>
+        <div className="scope-picker-modal__body">
+          <div className="scope-picker-modal__frame">
+            <iframe
+              ref={iframeRef}
+              src={`/api/content/${sessionId}/preview-iframe`}
+              className="scope-picker-modal__iframe"
+              title="Pick zone"
+              onLoad={handleIframeLoad}
+            />
+            {!ready ? (
+              <div className="scope-picker-modal__loading"><span className="spinner" /> Loading preview…</div>
+            ) : null}
+          </div>
+          {picked ? (
+            <div className="scope-picker-modal__bar">
+              <div className="scope-picker-modal__bar-info">
+                <span className="badge badge--blue">picked</span>
+                <code className="scope-picker-modal__sel">{picked.label}</code>
+                {picked.ancestors?.length ? (
+                  <div className="scope-picker-modal__ancestors-row">
+                    <span className="scope-picker-modal__ancestors-label">parents:</span>
+                    {picked.ancestors.slice(0, 6).map((a, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className="btn btn--sm scope-picker-modal__ancestor-btn"
+                        onClick={() => pickAncestor(a, i)}
+                        title={a.selector}
+                      >
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              <div className="scope-picker-modal__bar-actions">
+                <button type="button" className="btn btn--sm" onClick={enablePick}>Pick again</button>
+                <button type="button" className="btn btn--primary" onClick={() => onSelect(picked.selector)}>
+                  Use this zone
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="scope-picker-modal__bar scope-picker-modal__bar--placeholder">
+              Hover and click any element on the preview above.
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1327,7 +2115,7 @@ export default function ContentEditor({ sessionId, mode, onDone, onSkip, onError
 
   const tabs = [
     ['text', '✏️ Live Text Editor'],
-    ['bulk', '📋 Bulk Replace'],
+    ['xai', '✨ Paste & replace'],
     ['images', '🖼 Image Manager'],
     ...(mode === 'dev' ? [['code', '💻 Code Editor']] : []),
   ];
@@ -1338,7 +2126,7 @@ export default function ContentEditor({ sessionId, mode, onDone, onSkip, onError
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <h2>Content Editor</h2>
-            <p className="panel__desc">Edit texts, replace images, and do bulk content updates.</p>
+            <p className="panel__desc">Edit texts, replace images, and paste new content into a working zone.</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn btn--primary btn--lg" onClick={onDone}>Continue →</button>
@@ -1354,7 +2142,7 @@ export default function ContentEditor({ sessionId, mode, onDone, onSkip, onError
       </div>
 
       {tab === 'text'   && <TextEditorTab sessionId={sessionId} onError={onError} externalReloadKey={externalReloadKey} />}
-      {tab === 'bulk'   && <BulkReplaceTab sessionId={sessionId} onError={onError} />}
+      {tab === 'xai'    && <XaiContentTab sessionId={sessionId} onError={onError} />}
       {tab === 'images' && <ImageManagerTab sessionId={sessionId} onError={onError} />}
       {tab === 'code'   && <CodeEditorTab sessionId={sessionId} onError={onError} />}
     </div>

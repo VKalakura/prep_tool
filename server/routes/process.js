@@ -376,7 +376,7 @@ router.get('/:sessionId/stats', (req, res) => {
     if (entry.action === 'compress-image' || entry.action === 'compress-all') {
       imagesCompressed += entry.files || 1;
     }
-    if (entry.action === 'save-text' || entry.action === 'bulk-replace') {
+    if (entry.action === 'save-text' || entry.action === 'xai-apply') {
       textSaved += entry.applied || 1;
     }
   }

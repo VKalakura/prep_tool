@@ -3,6 +3,28 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
+// Load server/.env into process.env (no extra dependency)
+(function loadEnv() {
+  try {
+    const envFile = path.join(__dirname, '.env');
+    if (!fs.existsSync(envFile)) return;
+    fs.readFileSync(envFile, 'utf8').split(/\r?\n/).forEach((line) => {
+      const t = line.trim();
+      if (!t || t.startsWith('#')) return;
+      const eq = t.indexOf('=');
+      if (eq < 1) return;
+      const key = t.slice(0, eq).trim();
+      let val = t.slice(eq + 1).trim();
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      if (key && process.env[key] === undefined) process.env[key] = val;
+    });
+  } catch (e) {
+    console.warn('[env] Could not read .env:', e.message);
+  }
+})();
+
 const uploadRoutes = require('./routes/upload');
 const processRoutes = require('./routes/process');
 const widgetRoutes = require('./routes/widgets');

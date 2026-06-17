@@ -95,8 +95,78 @@ export function getEditableElements(sessionId) {
 export function saveText(sessionId, idx, text) {
   return axios.post(`${BASE}/content/${sessionId}/save-text`, { idx, text });
 }
-export function bulkReplace(sessionId, replacements) {
-  return axios.post(`${BASE}/content/${sessionId}/bulk-replace`, { replacements });
+
+/** xAI: suggest replacements (no write). Returns usage + previewRows.
+ *  Slots whose AI reply is empty keep their original text on Apply — operator
+ *  can untick them in the preview if they want those blocks gone.
+ */
+export function xaiSuggest(sessionId, { brief, model, scopeSelector } = {}) {
+  return axios.post(`${BASE}/content/${sessionId}/xai-suggest`, {
+    brief,
+    model,
+    scopeSelector,
+  });
+}
+
+/** xAI: apply validated replacements; optional usageSnapshot for activity log.
+ *  placeholderInsertions: { needsFormParagraph, formText }
+ *  When provided, server appends a <p>ФОРМА РЕГИСТРАЦИИ</p> if the page has no form widget.
+ *  slotExtensionPlan: opaque [{sourceIdx,count,tag}] returned by xai-suggest;
+ *  re-played by the server so cloned-slot idx values still address the right
+ *  DOM positions.
+ */
+export function xaiApply(sessionId, replacements, usageSnapshot, scopeSelector, placeholderInsertions, slotExtensionPlan, mediaTrim) {
+  return axios.post(`${BASE}/content/${sessionId}/xai-apply`, {
+    replacements,
+    usageSnapshot,
+    scopeSelector,
+    placeholderInsertions,
+    slotExtensionPlan,
+    mediaTrim,
+  });
+}
+
+/** Preview the resolved scope (auto-detect or custom selector) without calling Grok. */
+export function detectScope(sessionId, scopeSelector) {
+  const params = scopeSelector ? { scopeSelector } : undefined;
+  return axios.get(`${BASE}/content/${sessionId}/detect-scope`, { params });
+}
+
+/** Ordered images in content scope (same order as ФОТО 1 → first img). */
+export function getScopedImages(sessionId) {
+  return axios.get(`${BASE}/content/${sessionId}/scoped-images`);
+}
+
+/** slots: e.g. [1, 2] — ФОТО 1 → img[0]; files same length, WebP on server.
+ *  photoMoves (optional): [{num, beforeSelectorPath, atEnd}] — server moves
+ *  each photo into the matching DOM position so on-page order matches the
+ *  brief's order, not the original template's <img> order.
+ */
+export function applyPhotoMarkers(sessionId, slots, files, scopeSelector, photoMoves) {
+  const form = new FormData();
+  form.append('slots', JSON.stringify(slots));
+  for (const f of files) {
+    form.append('photo', f);
+  }
+  if (scopeSelector) form.append('scopeSelector', scopeSelector);
+  if (Array.isArray(photoMoves) && photoMoves.length) {
+    form.append('photoMoves', JSON.stringify(photoMoves));
+  }
+  return axios.post(`${BASE}/content/${sessionId}/apply-photo-markers`, form);
+}
+
+/** VIDEO N → N‑th scoped <video>; slots JSON + files field name `video`. */
+export function applyVideoMarkers(sessionId, slots, files, scopeSelector, videoMoves) {
+  const form = new FormData();
+  form.append('slots', JSON.stringify(slots));
+  for (const f of files) {
+    form.append('video', f);
+  }
+  if (scopeSelector) form.append('scopeSelector', scopeSelector);
+  if (Array.isArray(videoMoves) && videoMoves.length) {
+    form.append('videoMoves', JSON.stringify(videoMoves));
+  }
+  return axios.post(`${BASE}/content/${sessionId}/apply-video-markers`, form);
 }
 
 // Content Editor — Images
