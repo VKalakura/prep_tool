@@ -5,6 +5,7 @@ const fs = require('fs');
 const folderScanner = require('../services/folderScanner');
 const fileNormalizer = require('../services/fileNormalizer');
 const { formatHtml } = require('../services/htmlFormatter');
+const { cleanupSessions } = require('../services/sessionManager');
 
 const router = express.Router();
 
@@ -78,6 +79,10 @@ router.post('/', runMulter, async (req, res) => {
       return res.status(400).json({ error: 'X-Session-Id header is required' });
     }
 
+    // Enforce retention now that a new session dir exists: expire stale ones
+    // (> 2h) and keep at most 5. keepId guards the session being uploaded.
+    try { cleanupSessions(sessionId); } catch (e) { console.warn('[upload] cleanup skipped:', e.message); }
+
     const filesField = req.files;
 
     if (!filesField || filesField.length === 0) {
@@ -147,12 +152,18 @@ router.post('/', runMulter, async (req, res) => {
 
     const stats = fs.statSync(newIndex);
 
-    // Check if the offer already has our 3 core PHP includes (indicates pre-processed archive)
+    // Check if the offer already has our core PHP includes (indicates a
+    // pre-processed archive — either the legacy integration or the new one).
     const htmlForCheck = fmt.success ? fmt.html : rawHtml;
-    const hasPhpIncludes =
+    const hasLegacyIncludes =
       htmlForCheck.includes('global_new.php') &&
       htmlForCheck.includes('google_event.php') &&
       htmlForCheck.includes('offer_footer_script.php');
+    const hasNewIncludes =
+      htmlForCheck.includes('_autoload.php') &&
+      htmlForCheck.includes('File::getHeaderHtml') &&
+      htmlForCheck.includes('File::getFooterHtml');
+    const hasPhpIncludes = hasLegacyIncludes || hasNewIncludes;
 
     res.json({
       sessionId,

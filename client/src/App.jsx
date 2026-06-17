@@ -64,8 +64,8 @@ function ModeSelect() {
   return (
     <div className="mode-select">
       <div className="mode-select__inner">
-        <div className="mode-select__logo">🛠</div>
-        <h1 className="mode-select__title">Offer Prep Tool</h1>
+        <div className="mode-select__logo"><img src="/logo.svg" alt="Offer Tools" /></div>
+        <h1 className="mode-select__title">Offer Tools</h1>
         <p className="mode-select__sub">Select your workflow to get started</p>
         <div className="mode-select__cards">
           <a href="/standard" className="mode-card">
@@ -230,7 +230,7 @@ function PipelineApp({ mode, initialSession, startStep, buyerSession }) {
               }}
             >← Mode Select</button>
             <span className="header-sep" />
-            <span className="app-header__title">🛠 Offer Prep Tool</span>
+            <span className="app-header__title"><img className="app-header__logo" src="/logo.svg" alt="" />Offer Tools</span>
             <span className={`badge ${mode === 'dev' ? 'badge--purple' : 'badge--blue'}`}>
               {mode === 'dev' ? 'Developer' : 'Standard'}
             </span>

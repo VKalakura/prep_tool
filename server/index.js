@@ -33,10 +33,11 @@ const buildRoutes = require('./routes/build');
 const contentRoutes = require('./routes/content');
 const devRoutes = require('./routes/dev');
 
+const { cleanupSessions } = require('./services/sessionManager');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 const SESSIONS_DIR = path.join(__dirname, 'sessions');
-const SESSION_TTL_MS = 4 * 60 * 60 * 1000; // 4h fallback (completed sessions deleted immediately after download)
 
 app.use(cors({
   origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
@@ -77,7 +78,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use((req, res) => {
   res.status(200).send(`
     <html><body style="font-family:sans-serif;padding:40px;background:#0f1117;color:#e2e8f0">
-      <h2>Offer Prep Tool — API</h2>
+      <h2>Offer Tools — API</h2>
       <p>UI: <a href="http://localhost:5173" style="color:#6366f1">http://localhost:5173</a></p>
     </body></html>
   `);
@@ -90,39 +91,11 @@ app.use((err, req, res, _next) => {
   }
 });
 
-// ─── Session TTL cleanup (runs on start + every 6h) ──────────────────────────
-function cleanExpiredSessions() {
-  if (!fs.existsSync(SESSIONS_DIR)) return;
-  const now = Date.now();
-  let cleaned = 0;
-
-  for (const e of fs.readdirSync(SESSIONS_DIR, { withFileTypes: true })) {
-    if (!e.isDirectory()) continue;
-    const dir = path.join(SESSIONS_DIR, e.name);
-
-    let lastActivity = fs.statSync(dir).mtime.getTime();
-    const metaPath = path.join(dir, '_session_meta.json');
-    if (fs.existsSync(metaPath)) {
-      try {
-        const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
-        if (meta.lastActivity) lastActivity = new Date(meta.lastActivity).getTime();
-      } catch {}
-    }
-
-    if (now - lastActivity > SESSION_TTL_MS) {
-      try {
-        fs.rmSync(dir, { recursive: true, force: true });
-        cleaned++;
-        console.log(`[cleanup] Removed expired session: ${e.name}`);
-      } catch {}
-    }
-  }
-
-  if (cleaned) console.log(`[cleanup] Removed ${cleaned} expired session(s)`);
-}
-
-cleanExpiredSessions();
-setInterval(cleanExpiredSessions, 6 * 60 * 60 * 1000);
+// ─── Session retention: max 5 sessions, none inactive longer than 2h ─────────
+// Policy lives in services/sessionManager.js (also enforced on each upload).
+// Runs on boot + every 30 min so the 2h TTL is honoured promptly.
+cleanupSessions();
+setInterval(cleanupSessions, 30 * 60 * 1000);
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {

@@ -65,6 +65,12 @@ body {
 
 .app-header__icon { font-size: 20px; }
 
+.app-header__logo {
+  height: 24px;
+  width: auto;
+  display: inline-block;
+}
+
 .app-header__session {
   display: flex;
   align-items: center;
@@ -794,6 +800,31 @@ code {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.php-integration-switch {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.php-integration-switch__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.php-integration-switch__hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.php-config__req {
+  color: var(--danger, #f97316);
 }
 
 .php-config__field {
@@ -1692,8 +1723,13 @@ code {
 }
 
 .mode-select__logo {
-  font-size: 48px;
   margin-bottom: 16px;
+}
+
+.mode-select__logo img {
+  height: 64px;
+  width: auto;
+  display: inline-block;
 }
 
 .mode-select__title {

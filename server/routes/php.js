@@ -26,7 +26,12 @@ function getConfigPath(sid) {
 function loadConfig(sid) {
   const p = getConfigPath(sid);
   if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf-8'));
-  return { offerName: 'Quantum AI', countryCode: 'DE', langCode: 'de', applied: false };
+  return { offerName: 'Quantum AI', countryCode: 'DE', langCode: 'de', offerId: '1234', integration: 'legacy', applied: false };
+}
+
+/** Normalize the requested integration variant. 'new' or 'legacy' (default). */
+function normalizeIntegration(value) {
+  return String(value || '').toLowerCase() === 'new' ? 'new' : 'legacy';
 }
 
 function saveConfig(sid, config) {
@@ -44,8 +49,10 @@ function alreadyPresent(html, snippet) {
   const requireMatch = snippet.match(/require_once\s+'([^']+)'/);
   if (requireMatch) return html.includes(requireMatch[1]);
 
-  // echo functionName(...) — match on the function name itself
-  const echoMatch = snippet.match(/echo\s+(\w+)\s*\(/);
+  // echo functionName(...) / echo Class::method(...) — match on the call name.
+  // [\w:]+ keeps the class prefix so File::getHeaderHtml and File::getFooterHtml
+  // (or getFormJSCss vs Form::getHiddenParameters) are told apart correctly.
+  const echoMatch = snippet.match(/echo\s+([\w:]+)\s*\(/);
   if (echoMatch) return html.includes(echoMatch[1]);
 
   // hidden input with name attribute
@@ -129,6 +136,55 @@ function injectPhp(html, { offerName, langCode }) {
   return result;
 }
 
+/**
+ * New integration. POST handling is inline (Service::register at the top of the
+ * page), header/footer come from File::get*Html(), and the form carries a
+ * Form::getHiddenParameters([...]) block with COUNTRY_CODE / LANGUAGE_CODE /
+ * OFFER_NAME / OFFER_ID. Each injection is idempotent — skipped if present.
+ */
+function injectPhpNew(html, { offerName, countryCode, langCode, offerId }) {
+  let result = html;
+
+  // 1. Before <!DOCTYPE> — autoload + Service bootstrap + POST registration.
+  const autoloadSnippet = `<?php require_once '/var/www/keitaro/lander/include-thanks-page/prod/current/_autoload.php';
+
+Service::init();
+if (Request::isPost()) {
+    Service::register(RegistrationFieldsDto::fromRequest());
+}
+?>`;
+  if (!alreadyPresent(result, autoloadSnippet)) {
+    const doctypeIdx = result.search(/<!doctype\s+html/i);
+    if (doctypeIdx !== -1) {
+      result = result.slice(0, doctypeIdx) + autoloadSnippet + '\n' + result.slice(doctypeIdx);
+    } else {
+      result = autoloadSnippet + '\n' + result;
+    }
+  }
+
+  // 2. Right after <head ...> — server-rendered header markup.
+  result = injectAfter(result, '<head[^>]*>', `<?php echo File::getHeaderHtml(); ?>`);
+
+  // 3. Before </body> — server-rendered footer markup.
+  result = injectBefore(result, '<\\/body>', `<?php echo File::getFooterHtml(); ?>`);
+
+  // 4. After first <form ...> — hidden parameters block.
+  const formParamsSnippet = `<?php
+$formParams = [
+    Form::COUNTRY_CODE  => '${countryCode.toUpperCase()}',
+    Form::LANGUAGE_CODE => '${langCode.toUpperCase()}',
+    Form::OFFER_NAME    => '${offerName}',
+    Form::OFFER_ID      => '${offerId}',
+];
+echo Form::getHiddenParameters($formParams);
+?>`;
+  if (!alreadyPresent(result, formParamsSnippet)) {
+    result = result.replace(/(<form[^>]*>)/i, (m) => `${m}\n${formParamsSnippet}`);
+  }
+
+  return result;
+}
+
 function generateSendPhp({ offerName, countryCode, langCode }) {
   return `<?php
 require_once '/var/www/keitaro/lander/include-thanks-page/global.php';
@@ -160,6 +216,17 @@ sendToSpread(
 `;
 }
 
+/**
+ * New-integration send.php — registration runs inline at the top of index.php,
+ * so send.php just includes the page.
+ */
+function generateSendPhpNew(indexFile = 'index.html') {
+  return `<?php
+
+require_once __DIR__.'/${indexFile}';
+`;
+}
+
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
 router.get('/:sessionId/config', (req, res) => {
@@ -172,7 +239,13 @@ router.post('/:sessionId/preview-sendphp', (req, res) => {
   const offerName   = req.body.offerName   || saved.offerName   || 'Quantum AI';
   const countryCode = req.body.countryCode || saved.countryCode || 'DE';
   const langCode    = req.body.langCode    || saved.langCode    || 'de';
-  res.json({ content: generateSendPhp({ offerName, countryCode, langCode }) });
+  const integration = normalizeIntegration(req.body.integration || saved.integration);
+  const ip = getIndexPath(req.params.sessionId);
+  const indexFile = ip ? path.basename(ip) : 'index.html';
+  const content = integration === 'new'
+    ? generateSendPhpNew(indexFile)
+    : generateSendPhp({ offerName, countryCode, langCode });
+  res.json({ content, integration });
 });
 
 router.get('/:sessionId/preview-html', (req, res) => {
@@ -188,9 +261,13 @@ router.get('/:sessionId/preview-html', (req, res) => {
 
 router.post('/:sessionId/apply', async (req, res) => {
   try {
-    const { offerName, countryCode, langCode } = req.body;
+    const { offerName, countryCode, langCode, offerId } = req.body;
+    const integration = normalizeIntegration(req.body.integration);
     if (!offerName || !countryCode || !langCode) {
       return res.status(400).json({ error: 'offerName, countryCode, langCode are required' });
+    }
+    if (integration === 'new' && !String(offerId || '').trim()) {
+      return res.status(400).json({ error: 'offerId is required for the new integration' });
     }
 
     const sid = req.params.sessionId;
@@ -204,32 +281,34 @@ router.post('/:sessionId/apply', async (req, res) => {
     $('html').attr('lang', langCode.toLowerCase());
     html = $.html();
 
-    // Inject PHP (idempotent)
-    html = injectPhp(html, { offerName, langCode });
+    // Inject PHP (idempotent) — variant depends on the chosen integration.
+    const offerIdClean = String(offerId || '').trim();
+    html = integration === 'new'
+      ? injectPhpNew(html, { offerName, countryCode, langCode, offerId: offerIdClean })
+      : injectPhp(html, { offerName, langCode });
 
     // Try to format with Prettier (may fail due to PHP tags — that's expected)
     const fmt = await formatHtml(html);
     html = fmt.html;
 
-    // Save as index.php
-    const newIndexPath = path.join(sessionDir, 'index.php');
-    fs.writeFileSync(newIndexPath, html, 'utf-8');
+    // Keep the original main file as-is (do NOT convert index.html → index.php).
+    // PHP snippets live inside the .html file; the deploy target serves it.
+    fs.writeFileSync(indexPath, html, 'utf-8');
+    const indexFile = path.basename(indexPath);
 
-    // Remove old index.html if it's different from index.php
-    if (indexPath !== newIndexPath && fs.existsSync(indexPath)) {
-      fs.unlinkSync(indexPath);
-    }
-
-    // Generate send.php
+    // Generate send.php — new integration just re-includes the main page
+    // (inline registration); legacy builds the full sendToSpread() payload.
     fs.writeFileSync(
       path.join(sessionDir, 'send.php'),
-      generateSendPhp({ offerName, countryCode, langCode }),
+      integration === 'new'
+        ? generateSendPhpNew(indexFile)
+        : generateSendPhp({ offerName, countryCode, langCode }),
       'utf-8'
     );
 
-    saveConfig(sid, { offerName, countryCode, langCode, applied: true });
+    saveConfig(sid, { offerName, countryCode, langCode, offerId: offerIdClean, integration, applied: true });
 
-    res.json({ ok: true, indexFile: 'index.php', sendPhpGenerated: true, formatted: fmt.success });
+    res.json({ ok: true, indexFile, sendPhpGenerated: true, formatted: fmt.success, integration });
   } catch (err) {
     console.error('PHP apply error:', err);
     res.status(500).json({ error: err.message });

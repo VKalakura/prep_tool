@@ -71,12 +71,12 @@ export function getPhpPreviewHtml(sessionId) {
   return axios.get(`${BASE}/php/${sessionId}/preview-html`);
 }
 
-export function getPhpPreviewSendPhp(sessionId, { offerName, countryCode, langCode } = {}) {
-  return axios.post(`${BASE}/php/${sessionId}/preview-sendphp`, { offerName, countryCode, langCode });
+export function getPhpPreviewSendPhp(sessionId, { offerName, countryCode, langCode, offerId, integration } = {}) {
+  return axios.post(`${BASE}/php/${sessionId}/preview-sendphp`, { offerName, countryCode, langCode, offerId, integration });
 }
 
-export function applyPhpIntegration(sessionId, { offerName, countryCode, langCode }) {
-  return axios.post(`${BASE}/php/${sessionId}/apply`, { offerName, countryCode, langCode });
+export function applyPhpIntegration(sessionId, { offerName, countryCode, langCode, offerId, integration }) {
+  return axios.post(`${BASE}/php/${sessionId}/apply`, { offerName, countryCode, langCode, offerId, integration });
 }
 
 // Build
