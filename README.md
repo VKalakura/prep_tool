@@ -98,18 +98,3 @@ offer-tools/
 ```
 
 Тимчасові робочі сесії (`server/sessions/`) та build (`client/dist/`) **не комітяться** — генеруються локально.
-
----
-
-## Залити на Bitbucket
-
-Покрокова інструкція (створення репо, SSH-ключ, заміна/додавання remote, push) — у [`BITBUCKET.md`](./BITBUCKET.md).
-
-Коротко:
-
-```bash
-git remote add bitbucket git@bitbucket.org:<workspace>/<repo>.git
-git push -u bitbucket OPT-3
-```
-
-> Перед першим push переконайся, що `server/.env` не в індексі: `git status` не має показувати `.env`.
